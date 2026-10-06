@@ -4,7 +4,11 @@ from business_master.domain.models import Hypothesis
 
 
 def test_probe_is_zero_cash_by_default() -> None:
-    hypothesis = Hypothesis(name="charts", thesis="Charts can earn external attention", family="content")
+    hypothesis = Hypothesis(
+        name="charts",
+        thesis="Charts can earn external attention",
+        family="content",
+    )
     experiment = ExperimentController().create_probe(
         hypothesis,
         dimensions={"hook": "baseline", "topic": "market"},
@@ -18,7 +22,11 @@ def test_probe_is_zero_cash_by_default() -> None:
 
 def test_mutation_preserves_lineage_and_does_not_auto_graduate() -> None:
     controller = ExperimentController()
-    hypothesis = Hypothesis(name="charts", thesis="Charts can earn external attention", family="content")
+    hypothesis = Hypothesis(
+        name="charts",
+        thesis="Charts can earn external attention",
+        family="content",
+    )
     parent = controller.create_probe(
         hypothesis,
         dimensions={"hook": "A", "topic": "X", "visual": "bar"},
