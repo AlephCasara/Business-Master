@@ -1,0 +1,50 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+
+# Local state / generated assets
+var/
+data/
+models/
+outputs/
+artifacts/
+*.mp4
+*.mov
+*.webm
+*.wav
+*.mp3
+*.png
+*.jpg
+*.jpeg
+
+# Database / local runtime
+*.sqlite
+*.sqlite3
+*.db
+postgres-data/
+hatchet-data/
+
+# Browser/mobile/session state
+.browser-profiles/
+.sessions/
+android-state/
+
+# Secrets / credentials / KYC material
+secrets/
+credentials/
+kyc/
+*.pem
+*.key
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
