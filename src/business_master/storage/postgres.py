@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any, cast
+from typing import Any
 from uuid import UUID
 
 import psycopg
@@ -71,18 +71,16 @@ class PostgresStore:
                 "SELECT * FROM hypothesis WHERE id = %s",
                 (hypothesis_id,),
             ).fetchone()
-        return self._hypothesis_from_row(cast(dict[str, Any] | None, row))
+        if row is None:
+            return None
+        return self._hypothesis_from_row(row)
 
     def list_active_hypotheses(self) -> Sequence[Hypothesis]:
         with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
             rows = conn.execute(
                 "SELECT * FROM hypothesis WHERE active = true ORDER BY created_at ASC"
             ).fetchall()
-        return [
-            self._hypothesis_from_row(cast(dict[str, Any], row))
-            for row in rows
-            if row is not None
-        ]
+        return [self._hypothesis_from_row(row) for row in rows]
 
     def save_experiment(self, experiment: Experiment) -> None:
         mutation = experiment.mutation.model_dump(mode="json") if experiment.mutation else None
@@ -139,7 +137,9 @@ class PostgresStore:
                 "SELECT * FROM experiment WHERE id = %s",
                 (experiment_id,),
             ).fetchone()
-        return self._experiment_from_row(cast(dict[str, Any] | None, row))
+        if row is None:
+            return None
+        return self._experiment_from_row(row)
 
     def list_runnable_experiments(self) -> Sequence[Experiment]:
         with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
@@ -151,11 +151,7 @@ class PostgresStore:
                 ORDER BY created_at ASC
                 """
             ).fetchall()
-        return [
-            self._experiment_from_row(cast(dict[str, Any], row))
-            for row in rows
-            if row is not None
-        ]
+        return [self._experiment_from_row(row) for row in rows]
 
     def save_metric(self, snapshot: MetricSnapshot) -> None:
         with psycopg.connect(self._dsn) as conn:
@@ -289,9 +285,7 @@ class PostgresStore:
             )
 
     @staticmethod
-    def _hypothesis_from_row(row: dict[str, Any] | None) -> Hypothesis | None:
-        if row is None:
-            return None
+    def _hypothesis_from_row(row: dict[str, Any]) -> Hypothesis:
         return Hypothesis(
             id=row["id"],
             name=row["name"],
@@ -307,9 +301,7 @@ class PostgresStore:
         )
 
     @staticmethod
-    def _experiment_from_row(row: dict[str, Any] | None) -> Experiment | None:
-        if row is None:
-            return None
+    def _experiment_from_row(row: dict[str, Any]) -> Experiment:
         return Experiment(
             id=row["id"],
             hypothesis_id=row["hypothesis_id"],
