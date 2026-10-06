@@ -1,5 +1,24 @@
 # AGENTS.md — Business Master
 
+## Read this before changing the system
+
+Business Master deliberately stores its operating context in the repository instead of depending on old chat history.
+
+Before substantial implementation, read:
+
+1. `README.md`
+2. `docs/ECONOMIC_THESIS.md`
+3. `docs/PORTFOLIO_ARCHITECTURE.md`
+4. `docs/EXPERIMENTATION_AND_ALLOCATION.md`
+5. `docs/RFC-0001-autonomous-control-plane.md`
+6. the relevant engine document (`ENGINES_CONTENT`, `ENGINES_COMMERCE`, or `ENGINES_B2B_AND_ASSETS`)
+7. `docs/PLATFORMS_ACCOUNTS_AND_GATES.md` for external actions
+8. `docs/HARDWARE_AND_RUNTIME.md` and `docs/MEDIA_AND_AGENT_STACK.md` for executor/runtime work
+9. `docs/LOCAL_AGENT_HANDOFF.md`
+10. the GitHub issue/acceptance criteria for the task being implemented
+
+`docs/SOURCE_CATALOG.md` preserves the research surface; creator claims are inputs, not authoritative platform facts.
+
 ## Mission
 
 Build an autonomous economic control system, not an assistant-driven collection of scripts.
@@ -20,6 +39,9 @@ Normal operation must continue without a human requesting the next task. The sys
 10. **Real-world evidence outranks simulated confidence.** Views, clicks, sales, retention, leads and revenue update hypotheses. Do not manufacture success from internal scoring alone.
 11. **No AI sludge.** Quantity is subordinate to novelty, usefulness and platform-specific quality.
 12. **No platform-abuse architecture.** Do not build CAPTCHA bypass, fake engagement, identity/KYC evasion, fingerprint masquerading, or anti-abuse circumvention.
+13. **No hard-coded live registries.** Channels, businesses, accounts, suppliers, models and hypotheses come from the World Model/configuration, not stale Python dictionaries.
+14. **Technical failure is not market failure.** A broken renderer/API/browser path is repaired/retried and cannot silently become negative economic evidence.
+15. **Persist before irreversible dispatch.** Retries and process restarts must not duplicate posts, messages, listings, orders or experiments.
 
 ## Economic objective
 
@@ -33,6 +55,8 @@ Conceptual bootstrap value:
 experiment_value = information_gain * feedback_speed * downstream_reuse
                    / (compute_cost + cash_cost + human_time_cost)
 ```
+
+`parallelizability` and compute/platform opportunity cost are also explicit planning dimensions; see the canonical experimentation document.
 
 ## Graduation model
 
@@ -51,7 +75,14 @@ Do not confuse technical readiness with economic validation.
 - Python 3.13 is the control-plane language: orchestration, domain logic, statistics, AI integrations, platform adapters, tests.
 - PostgreSQL is the durable world model/event/evidence source of truth.
 - Rust is **not** a prestige dependency. Add Rust only when profiling shows a persistent need for lower latency, lower memory, safer long-running native daemons, high-throughput parsing, or hardware/OS integration that materially benefits from it.
+- TypeScript/Node is acceptable for an adapter whose current ecosystem is genuinely better there (for example Stagehand v3); keep the domain contract language-neutral.
 - Shell/Nix are deployment/bootstrap tools, not business logic.
+
+## Resource model
+
+The first host is a NixOS workstation. Operator-declared baseline: Ryzen 9 7900 and 32 GB DDR5-6000 (~30 GB application-usable). Do not hard-code GPU assumptions; discover GPU/VRAM locally with `bm doctor` and benchmark executors.
+
+Every substantial worker should eventually expose a resource profile (CPU/RAM/VRAM/browser/phone/platform capacity) so production does not starve measurement/reconciliation.
 
 ## First closed loop
 
@@ -71,3 +102,6 @@ The second experiment should be caused by evidence from the first, not by a huma
 - Separate domain decisions from platform/API mechanics.
 - Every autonomous action should expose: reason, policy version, evidence IDs, expected cost, blast radius, and result.
 - Build Probe/Pilot/Scale gates before automatic scaling.
+- Use real PostgreSQL integration tests for transactional/idempotency behavior when that is the feature being claimed.
+- Do not close an issue whose acceptance criterion depends on a real external platform/device result that has not occurred.
+- For large changes: feature branch → CI green → PR → merge → close issue with the evidence that satisfied acceptance.
