@@ -200,7 +200,11 @@ class PostgresStore:
             for row in rows
         ]
 
-    def save_decision(self, decision: Decision, chosen_action: dict[str, object] | None = None) -> None:
+    def save_decision(
+        self,
+        decision: Decision,
+        chosen_action: dict[str, object] | None = None,
+    ) -> None:
         with psycopg.connect(self._dsn) as conn:
             conn.execute(
                 """
