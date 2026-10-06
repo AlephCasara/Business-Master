@@ -59,13 +59,16 @@ class FeedbackPolicy:
                 "High cohort-relative external signal justifies a bounded child mutation.",
             )
 
-        # Cold start: real external interaction is valuable evidence even before a stable baseline exists.
+        # Cold start: external interaction is valuable before a stable baseline exists.
         if signal.external_observations > 0 and not baseline_ready:
             return self._mutation(
                 experiment_id,
                 evidence_ids,
                 features,
-                "Real external traction arrived during cold start; create a bounded replication to build baseline.",
+                (
+                    "Real external traction arrived during cold start; create a bounded "
+                    "replication to build baseline."
+                ),
             )
 
         if measurement_window_complete:
@@ -74,7 +77,10 @@ class FeedbackPolicy:
                     experiment_id,
                     evidence_ids,
                     features,
-                    "Measurement window completed with weak/no signal; mutate materially rather than repeating blindly.",
+                    (
+                        "Measurement window completed with weak/no signal; mutate materially "
+                        "rather than repeating blindly."
+                    ),
                 )
             return Decision(
                 entity_id=experiment_id,
@@ -84,7 +90,9 @@ class FeedbackPolicy:
                 evidence_ids=evidence_ids,
                 observed_features=features,
                 risk=RiskLevel.ZERO,
-                rationale="Evidence is non-terminal but not strong enough for winner replication yet.",
+                rationale=(
+                    "Evidence is non-terminal but not strong enough for winner replication yet."
+                ),
             )
 
         return None
