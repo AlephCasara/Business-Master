@@ -42,7 +42,10 @@ def doctor() -> None:
         "psql": _command_version("psql", ["--version"]),
         "docker": _command_version("docker", ["--version"]),
         "podman": _command_version("podman", ["--version"]),
-        "nvidia-smi": _command_version("nvidia-smi", ["--query-gpu=name,memory.total", "--format=csv,noheader"]),
+        "nvidia-smi": _command_version(
+            "nvidia-smi",
+            ["--query-gpu=name,memory.total", "--format=csv,noheader"],
+        ),
         "rocminfo": _command_version("rocminfo", ["--version"]),
         "adb": _command_version("adb", ["version"]),
         "git": _command_version("git", ["--version"]),
