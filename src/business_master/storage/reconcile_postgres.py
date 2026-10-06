@@ -91,142 +91,141 @@ class PostgresReconcileStore:
         decision: Decision,
         idempotency_key: str,
     ) -> bool:
-        with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
-            with conn.transaction():
-                hypothesis_row = conn.execute(
-                    """
-                    SELECT id, active, tier
-                    FROM hypothesis
-                    WHERE id = %s
-                    FOR UPDATE
-                    """,
-                    (action.entity_id,),
-                ).fetchone()
-                if hypothesis_row is None:
-                    return False
-                if not hypothesis_row["active"]:
-                    return False
-                if hypothesis_row["tier"] in {"paused", "killed"}:
-                    return False
+        with psycopg.connect(self._dsn, row_factory=dict_row) as conn, conn.transaction():
+            hypothesis_row = conn.execute(
+                """
+                SELECT id, active, tier
+                FROM hypothesis
+                WHERE id = %s
+                FOR UPDATE
+                """,
+                (action.entity_id,),
+            ).fetchone()
+            if hypothesis_row is None:
+                return False
+            if not hypothesis_row["active"]:
+                return False
+            if hypothesis_row["tier"] in {"paused", "killed"}:
+                return False
 
-                existing = conn.execute(
-                    "SELECT 1 FROM experiment WHERE hypothesis_id = %s LIMIT 1",
-                    (action.entity_id,),
-                ).fetchone()
-                if existing is not None:
-                    return False
+            existing = conn.execute(
+                "SELECT 1 FROM experiment WHERE hypothesis_id = %s LIMIT 1",
+                (action.entity_id,),
+            ).fetchone()
+            if existing is not None:
+                return False
 
-                intent_row = conn.execute(
-                    """
-                    INSERT INTO action_intent (
-                        idempotency_key, action_type, entity_id, reason,
-                        priority, payload, status
-                    ) VALUES (%s, %s, %s, %s, %s, %s, 'pending')
-                    ON CONFLICT (idempotency_key) DO NOTHING
-                    RETURNING id
-                    """,
-                    (
-                        idempotency_key,
-                        action.kind.value,
-                        action.entity_id,
-                        action.reason,
-                        action.priority,
-                        Jsonb(action.payload),
-                    ),
-                ).fetchone()
-                if intent_row is None:
-                    return False
+            intent_row = conn.execute(
+                """
+                INSERT INTO action_intent (
+                    idempotency_key, action_type, entity_id, reason,
+                    priority, payload, status
+                ) VALUES (%s, %s, %s, %s, %s, %s, 'pending')
+                ON CONFLICT (idempotency_key) DO NOTHING
+                RETURNING id
+                """,
+                (
+                    idempotency_key,
+                    action.kind.value,
+                    action.entity_id,
+                    action.reason,
+                    action.priority,
+                    Jsonb(action.payload),
+                ),
+            ).fetchone()
+            if intent_row is None:
+                return False
 
-                mutation = (
-                    experiment.mutation.model_dump(mode="json")
-                    if experiment.mutation is not None
-                    else None
+            mutation = (
+                experiment.mutation.model_dump(mode="json")
+                if experiment.mutation is not None
+                else None
+            )
+            conn.execute(
+                """
+                INSERT INTO experiment (
+                    id, hypothesis_id, parent_id, status, tier, business_family,
+                    channel_id, product_id, mutation, dimensions,
+                    expected_cash_cost, expected_compute_units,
+                    expected_human_minutes, created_at, started_at, completed_at
+                ) VALUES (
+                    %(id)s, %(hypothesis_id)s, %(parent_id)s, %(status)s,
+                    %(tier)s, %(business_family)s, %(channel_id)s,
+                    %(product_id)s, %(mutation)s, %(dimensions)s,
+                    %(expected_cash_cost)s, %(expected_compute_units)s,
+                    %(expected_human_minutes)s, %(created_at)s,
+                    %(started_at)s, %(completed_at)s
                 )
-                conn.execute(
-                    """
-                    INSERT INTO experiment (
-                        id, hypothesis_id, parent_id, status, tier, business_family,
-                        channel_id, product_id, mutation, dimensions,
-                        expected_cash_cost, expected_compute_units,
-                        expected_human_minutes, created_at, started_at, completed_at
-                    ) VALUES (
-                        %(id)s, %(hypothesis_id)s, %(parent_id)s, %(status)s,
-                        %(tier)s, %(business_family)s, %(channel_id)s,
-                        %(product_id)s, %(mutation)s, %(dimensions)s,
-                        %(expected_cash_cost)s, %(expected_compute_units)s,
-                        %(expected_human_minutes)s, %(created_at)s,
-                        %(started_at)s, %(completed_at)s
-                    )
-                    """,
-                    {
-                        "id": experiment.id,
-                        "hypothesis_id": experiment.hypothesis_id,
-                        "parent_id": experiment.parent_id,
-                        "status": experiment.status.value,
-                        "tier": experiment.tier.value,
-                        "business_family": experiment.business_family,
-                        "channel_id": experiment.channel_id,
-                        "product_id": experiment.product_id,
-                        "mutation": Jsonb(mutation) if mutation is not None else None,
-                        "dimensions": Jsonb(experiment.dimensions),
-                        "expected_cash_cost": experiment.expected_cash_cost,
-                        "expected_compute_units": experiment.expected_compute_units,
-                        "expected_human_minutes": experiment.expected_human_minutes,
-                        "created_at": experiment.created_at,
-                        "started_at": experiment.started_at,
-                        "completed_at": experiment.completed_at,
-                    },
-                )
+                """,
+                {
+                    "id": experiment.id,
+                    "hypothesis_id": experiment.hypothesis_id,
+                    "parent_id": experiment.parent_id,
+                    "status": experiment.status.value,
+                    "tier": experiment.tier.value,
+                    "business_family": experiment.business_family,
+                    "channel_id": experiment.channel_id,
+                    "product_id": experiment.product_id,
+                    "mutation": Jsonb(mutation) if mutation is not None else None,
+                    "dimensions": Jsonb(experiment.dimensions),
+                    "expected_cash_cost": experiment.expected_cash_cost,
+                    "expected_compute_units": experiment.expected_compute_units,
+                    "expected_human_minutes": experiment.expected_human_minutes,
+                    "created_at": experiment.created_at,
+                    "started_at": experiment.started_at,
+                    "completed_at": experiment.completed_at,
+                },
+            )
 
-                chosen_action: dict[str, object] = {
-                    "action_intent_id": str(intent_row["id"]),
-                    "idempotency_key": idempotency_key,
-                    "created_experiment_id": str(experiment.id),
-                }
-                conn.execute(
-                    """
-                    INSERT INTO decision (
-                        id, entity_id, decision_type, policy_name, policy_version,
-                        evidence_ids, observed_features, chosen_action,
-                        expected_value, expected_cash_cost,
-                        expected_compute_units, expected_human_minutes,
-                        risk, rationale, created_at
-                    ) VALUES (
-                        %(id)s, %(entity_id)s, %(decision_type)s,
-                        %(policy_name)s, %(policy_version)s, %(evidence_ids)s,
-                        %(observed_features)s, %(chosen_action)s,
-                        %(expected_value)s, %(expected_cash_cost)s,
-                        %(expected_compute_units)s, %(expected_human_minutes)s,
-                        %(risk)s, %(rationale)s, %(created_at)s
-                    )
-                    """,
-                    {
-                        "id": decision.id,
-                        "entity_id": decision.entity_id,
-                        "decision_type": decision.decision_type.value,
-                        "policy_name": decision.policy_name,
-                        "policy_version": decision.policy_version,
-                        "evidence_ids": decision.evidence_ids,
-                        "observed_features": Jsonb(decision.observed_features),
-                        "chosen_action": Jsonb(chosen_action),
-                        "expected_value": decision.expected_value,
-                        "expected_cash_cost": decision.expected_cash_cost,
-                        "expected_compute_units": decision.expected_compute_units,
-                        "expected_human_minutes": decision.expected_human_minutes,
-                        "risk": decision.risk.value,
-                        "rationale": decision.rationale,
-                        "created_at": decision.created_at,
-                    },
+            chosen_action: dict[str, object] = {
+                "action_intent_id": str(intent_row["id"]),
+                "idempotency_key": idempotency_key,
+                "created_experiment_id": str(experiment.id),
+            }
+            conn.execute(
+                """
+                INSERT INTO decision (
+                    id, entity_id, decision_type, policy_name, policy_version,
+                    evidence_ids, observed_features, chosen_action,
+                    expected_value, expected_cash_cost,
+                    expected_compute_units, expected_human_minutes,
+                    risk, rationale, created_at
+                ) VALUES (
+                    %(id)s, %(entity_id)s, %(decision_type)s,
+                    %(policy_name)s, %(policy_version)s, %(evidence_ids)s,
+                    %(observed_features)s, %(chosen_action)s,
+                    %(expected_value)s, %(expected_cash_cost)s,
+                    %(expected_compute_units)s, %(expected_human_minutes)s,
+                    %(risk)s, %(rationale)s, %(created_at)s
                 )
+                """,
+                {
+                    "id": decision.id,
+                    "entity_id": decision.entity_id,
+                    "decision_type": decision.decision_type.value,
+                    "policy_name": decision.policy_name,
+                    "policy_version": decision.policy_version,
+                    "evidence_ids": decision.evidence_ids,
+                    "observed_features": Jsonb(decision.observed_features),
+                    "chosen_action": Jsonb(chosen_action),
+                    "expected_value": decision.expected_value,
+                    "expected_cash_cost": decision.expected_cash_cost,
+                    "expected_compute_units": decision.expected_compute_units,
+                    "expected_human_minutes": decision.expected_human_minutes,
+                    "risk": decision.risk.value,
+                    "rationale": decision.rationale,
+                    "created_at": decision.created_at,
+                },
+            )
 
-                conn.execute(
-                    """
-                    UPDATE action_intent
-                    SET status = 'completed', updated_at = now()
-                    WHERE id = %s
-                    """,
-                    (intent_row["id"],),
-                )
+            conn.execute(
+                """
+                UPDATE action_intent
+                SET status = 'completed', updated_at = now()
+                WHERE id = %s
+                """,
+                (intent_row["id"],),
+            )
 
         return True
 
