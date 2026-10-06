@@ -1,163 +1,383 @@
-# Technical Stack — Bootstrap Selection
+# Technical Stack — Current Implementation Targets
 
 Last research pass: 2026-10-06.
 
-This file records current implementation targets, not permanent dependencies. Every external model/runtime/browser/media system must sit behind a port/adapter so SOTA can change without rewriting the economic control plane.
+This file records current technology targets, not permanent dependencies. Every external model/runtime/browser/media/platform system sits behind a port/adapter so SOTA can change without rewriting the economic control plane.
 
-## Core control plane
+The governing rule is:
+
+> best successful economic task per dollar/byte/human-minute, not technology for technology's sake.
+
+---
+
+## 1. Core control plane
 
 | Concern | Bootstrap choice | Why |
 |---|---|---|
-| Language | Python 3.13 | strongest combined AI/statistics/browser/media ecosystem; fastest local iteration |
-| Validation/types | Pydantic | typed boundaries and persisted decisions |
-| AI logic | PydanticAI only where needed | typed tools/outputs; model/provider flexibility |
-| Durable execution | Hatchet | event-driven tasks, retries, durable workflows, worker slots/labels, self-host, MIT |
-| World model | PostgreSQL | durable relational source of truth, JSONB, strong analytics path |
-| Schema migration | Alembic | standard Python/Postgres migration workflow |
-| Observability | OpenTelemetry first; Langfuse adapter for model traces | vendor-neutral traces + AI-specific evaluation |
-| API | FastAPI when HTTP ingress is actually needed | typed local/API boundary |
-| CLI | Typer | minimal operator/debug surface |
+| Language | Python 3.13 | strongest combined AI/statistics/browser/media ecosystem; fastest iteration |
+| Validation/types | Pydantic | typed domain/tool/persistence boundaries |
+| AI contracts | PydanticAI where useful | provider flexibility + typed outputs/tools |
+| Durable execution | Hatchet | events, tasks/workflows, retries, schedules, worker routing, self-host/embedded |
+| World Model | PostgreSQL | durable relational source of truth + JSONB + analytics path |
+| DB access | explicit psycopg initially | keep SQL/state semantics visible while schema evolves |
+| Schema migration | SQL now, Alembic when migration surface warrants it | avoid unnecessary abstraction in V0 |
+| API ingress | FastAPI when actually needed | typed local/webhook/API boundary |
+| CLI | Typer | operator/debug surface, not normal scheduler |
+| Observability | structured domain events + OpenTelemetry path | vendor-neutral traces/evidence lineage |
+| AI trace/evals | Langfuse adapter candidate | model/tool trace/evaluation when volume justifies it |
 
-## Hatchet deployment modes
+---
 
-Bootstrap order:
-1. **Embedded mode** for unit/integration development with no account and no Docker requirement.
-2. Local self-hosted Hatchet when persistent dashboard/worker coordination is needed.
-3. VPS/container deployment only after local closed loop is stable.
+## 2. Hatchet — durable orchestration target
 
-Domain code must not import Hatchet in policy modules. Hatchet belongs under runtime adapters.
+Current official Hatchet docs support Python embedded mode:
 
-## Inference
+```python
+from hatchet_sdk import Hatchet
 
-### Primary server candidate: SGLang
-Use when hardware/model support permits:
-- OpenAI-compatible serving;
-- multimodal/tool-use support;
-- prefix caching/RadixAttention;
-- throughput-oriented local serving.
+hatchet = Hatchet.from_embedded()
+```
 
-### Compatibility candidate: vLLM
-Use when model compatibility or tool-call support is better for the selected model.
+Python/TypeScript embedded clients run a local Hatchet engine through a sidecar; by default embedded mode provisions an embedded PostgreSQL instance and does not require an external service, tenant/API token or Docker for local testing.
 
-### Quant/offload candidate: llama.cpp
-Use for GGUF, aggressive quantization, CPU/GPU split and machines where model residency is more important than maximum throughput.
+This is a strong V0 fit because we can validate restart/retry/event semantics before deploying a permanent orchestration stack.
 
-### Workstation/operator: Hermes Agent
-Hermes can be an operator interface and local agent workstation. It is **not** the Business Master runtime or source of truth.
+### Deployment order
 
-## Computer use
+1. **Embedded mode** for local dev/integration/CI experiments.
+2. Embedded mode backed by our existing local PostgreSQL if sharing durability is useful.
+3. Local self-hosted Hatchet/dashboard when operational inspection matters.
+4. VPS/multi-worker only after real workload justifies it.
+
+### Rule
+
+Domain policies must not import Hatchet.
+
+```text
+policy decides WHAT
+runtime decides WHEN/WHERE/RETRY
+adapter decides HOW
+```
+
+---
+
+## 3. Python vs Rust
+
+Python is the control-plane default.
+
+Rust is introduced only when profiling proves value, for example:
+- long-running native resource daemon;
+- high-throughput parsing/media primitive;
+- low-overhead host/device agent;
+- CPU/memory bottleneck demonstrated by telemetry;
+- standalone binary where deployment reliability materially improves.
+
+Do not rewrite mature Python policy/state code into Rust for aesthetics.
+
+See `docs/ADR-0001-language-boundaries.md`.
+
+---
+
+## 4. Local inference routing
+
+Business Master should expose a provider-neutral internal model contract, ideally OpenAI-compatible where practical.
+
+### SGLang
+
+High-priority benchmark candidate.
+
+Current documentation provides:
+- OpenAI-compatible server;
+- structured outputs/JSON-schema paths;
+- broad accelerator/model support;
+- throughput-oriented inference/caching;
+- a growing diffusion subsystem for image/video generation.
+
+Potential use:
+- resident local text/VLM models;
+- high-throughput agent/research workers;
+- structured generation;
+- future shared image/video inference if hardware/model compatibility is good.
+
+### vLLM
+
+Compatibility/high-throughput benchmark candidate.
+
+Current vLLM exposes an OpenAI-compatible server and broad serving features.
+
+Use when:
+- selected model works better in vLLM;
+- tool/multimodal/quant support is superior for the workload;
+- throughput is better on actual hardware.
+
+Security: current docs explicitly warn that `--api-key` does **not** protect every server endpoint. Bind local inference privately or place behind a proper reverse proxy/auth boundary; do not expose raw vLLM publicly.
+
+### llama.cpp / GGUF
+
+Primary quantization/offload candidate for consumer hardware.
+
+Use when:
+- model does not fit fully in VRAM;
+- CPU/GPU split is useful;
+- GGUF quantization yields better successful-task economics;
+- simple native deployment beats a heavier server.
+
+Current llama.cpp-family server tooling exposes OpenAI-compatible chat/completion-style endpoints and supports multiple compute backends depending on build.
+
+### Selection rule
+
+Benchmark on actual Business Master work:
+
+```text
+successful tasks / wall hour
+successful tasks / GPU hour
+RAM/VRAM pressure
+quality/error rate
+energy/cash cost
+```
+
+Do not choose a server from public tokens/sec alone.
+
+---
+
+## 5. Computer use
 
 ### Holo4
+
 Research priority: high.
 
-Use case:
-- generalist computer-use fallback;
-- GUI + code + MCP/API tasks;
-- recovery when deterministic browser/UI automation cannot proceed.
+Holo4 was announced September 28, 2026 as a generalist agentic model family with:
+- Holo4-27B dense;
+- Holo4-35B-A3B Mixture-of-Experts;
+- interaction across GUI, code, MCP and APIs;
+- FP16/FP8/GGUF release variants in its model collection.
 
-Models to benchmark:
-- Holo4-27B: quality benchmark; non-commercial license currently constrains production use.
-- Holo4-35B-A3B: efficiency/commercially friendlier candidate; benchmark quality separately.
+Business Master use cases:
+- cross-application tasks;
+- unfamiliar GUI recovery;
+- combining visual computer use with tools/code;
+- fallback when DOM/accessibility/API paths are insufficient.
 
-Do not route known stable workflows to visual computer use by default.
+License must be checked for the exact model/version before production routing.
 
-### Browser execution hierarchy
+Do not route known stable workflows to a visual generalist by default.
+
+---
+
+## 6. Browser execution hierarchy
 
 ```text
 official API/SDK
--> structured HTTP integration
--> Playwright deterministic selectors/DOM/accessibility
--> Stagehand semantic recovery/extraction
--> Holo4/generalist browser-computer-use
--> human exception
+→ structured HTTP
+→ Playwright deterministic DOM/accessibility
+→ Stagehand semantic recovery/extraction
+→ Holo4/general computer-use
+→ human exception
 ```
 
-### Desktop
-Candidate: Cua Driver / accessibility-semantic execution where supported.
+### Playwright
 
-On the target NixOS workstation, benchmark Wayland/XWayland/desktop-environment behavior before making desktop automation a critical dependency.
+Default browser substrate for stable workflows.
 
-## Android / phone worker
+### Stagehand v3
+
+Current v3 is TypeScript-first and interoperates with Playwright over CDP. It exposes semantic methods including `act`, `extract` and `observe` while still allowing direct Playwright page control.
+
+Architecture choice:
+- Node/TypeScript sidecar/worker for Stagehand;
+- language-neutral task contract to Python control plane;
+- use semantic actions only where they improve success vs deterministic selectors.
+
+Do not depend on an archived Python client merely to keep everything one language.
+
+---
+
+## 7. Desktop execution
+
+Candidate layers:
+
+```text
+OS/process/filesystem API
+→ accessibility/semantic desktop substrate
+→ deterministic input where stable
+→ Holo4/general visual executor
+→ human
+```
+
+On NixOS, actual Wayland/XWayland/desktop environment must be inspected locally before desktop automation becomes critical infrastructure.
+
+Prefer process/API integration over GUI control whenever possible.
+
+---
+
+## 8. Android / phone worker
 
 The phone is opportunistic, not always-on.
 
-Initial candidates to benchmark while USB-connected:
-- `mobile-use` style agent running intelligence on the PC and actions over ADB;
-- semantic Android accessibility/UI-tree control;
-- deterministic ADB/uiautomator for stable flows.
-
-Preference hierarchy mirrors browser automation:
+Priority:
 
 ```text
 platform API
--> deterministic ADB/UI automation
--> semantic mobile agent
--> generalist visual agent
--> human gate
+→ ADB/uiautomator/accessibility tree
+→ semantic mobile agent with intelligence on workstation
+→ generalist visual agent
+→ human gate
 ```
 
-KYC, liveness, CAPTCHA, 2FA and identity verification are explicit human gates rather than anti-abuse automation targets.
+KYC/liveness/CAPTCHA/identity owner confirmation remain human gates.
 
-## Media
+The system should be disconnect-safe: phone-required jobs wait durably until the device is available.
 
-### Prototyping graph
-ComfyUI remains the preferred R&D graph for rapidly testing image/video model workflows.
+---
 
-### Production composition
-FFmpeg is the deterministic compositor/transcoder.
+## 9. Media R&D
 
-Remotion is optional for programmatic motion graphics/charts where browser-rendered composition materially simplifies the format.
+### ComfyUI
 
-### Model adapters
-No media model is a domain dependency.
+Preferred rapid graph laboratory for:
+- image/video model testing;
+- LoRA/quant/offload comparisons;
+- reference conditioning;
+- inpainting/replacement;
+- character/reference workflows;
+- experimental multi-model chains.
 
-Interfaces should resemble:
+Stable graphs can become versioned artifacts/adapters, but ComfyUI nodes do not belong in the economic domain.
+
+### FFmpeg
+
+Canonical deterministic media finishing/QC layer:
+- transcode;
+- mux;
+- crop/scale;
+- concat;
+- subtitles;
+- audio normalization;
+- frame extraction;
+- ffprobe validation;
+- simple programmatic composition.
+
+### Remotion
+
+Optional where React/browser-rendered programmatic motion graphics materially simplify:
+- animated charts;
+- reusable layout systems;
+- complex timed graphic compositions.
+
+Do not use it for tasks FFmpeg handles more simply.
+
+---
+
+## 10. Media model adapters
+
+Domain interfaces should resemble:
 
 ```text
 ImageGenerator
 VideoGenerator
 VoiceGenerator
 VisualEvaluator
+MediaComposer
 ```
 
-with adapters for current local models and future replacements.
+Current research candidates include:
+- MiniMax H3 workflows;
+- Qwen/Image-family character/reference workflows;
+- Wan/image/video model families where locally viable;
+- SGLang diffusion as a possible optimized future execution layer.
 
-Support at least two quality modes:
-- `probe`: cheaper/faster/lower resolution/fewer candidates;
-- `production`: only for evidence-backed work.
+No media model is a permanent dependency.
 
-## Persistence vs repository
+### Quality modes
 
-### Git repository contains
-- source code;
+At minimum:
+
+```text
+probe       → cheapest fair representation
+production  → evidence-backed premium generation
+```
+
+Aesthetic hypotheses may require a higher-quality PROBE than information-heavy chart/explainer formats. Cheapest does not mean unfairly bad.
+
+---
+
+## 11. Voice
+
+Routing:
+- local/lightweight TTS for volume/probes;
+- higher-quality local/paid voice for proven/premium work;
+- explicit provenance/rights for any persistent voice identity.
+
+Voice cost/quality is measured as another executor variable.
+
+---
+
+## 12. Observability and evals
+
+Every execution should produce enough data to compare technologies:
+
+```text
+runner / model / version
+hardware profile
+input/task class
+success/failure class
+wall time
+CPU seconds
+GPU seconds
+peak RAM/VRAM
+model tokens
+retries
+human intervention
+quality/eval score
+cash cost
+```
+
+For browser/computer-use also record:
+- invalid actions;
+- recovery count;
+- destructive-action attempts blocked by policy.
+
+---
+
+## 13. Repository vs runtime state
+
+### Git repository
+
+Contains:
+- code;
 - schemas/migrations;
-- policy defaults;
+- policies;
 - RFCs/ADRs;
-- adapter code;
+- adapters;
 - tests/benchmarks;
-- skills/prompts that are versioned behavior;
+- versioned skills/prompts;
 - deployment/Nix/container definitions;
-- synthetic/test fixtures.
+- synthetic fixtures.
 
-### Local machine data contains
-- PostgreSQL database;
-- platform tokens/secrets;
-- downloaded model weights;
+### Local machine/runtime
+
+Contains:
+- PostgreSQL state;
+- platform secrets/tokens;
+- model weights;
 - raw screenshots/video/audio;
 - generated media;
 - browser profiles/session state where permitted;
-- transient caches;
-- local benchmark outputs too large/sensitive for Git.
+- caches;
+- large/sensitive benchmark outputs.
 
 ### Never commit
+
 - credentials;
 - cookies/session tokens;
 - KYC material;
-- raw private customer/user data;
+- private customer raw data;
 - model weights;
 - large generated media.
 
-## No-cost bootstrap constraint
+---
+
+## 14. No-cost bootstrap constraint
 
 Until changed by policy:
 
@@ -168,18 +388,21 @@ cloud_GPU = 0
 paid_SaaS = 0
 ```
 
-Use existing local hardware, open-source tooling and free platform/account capabilities first.
+Use existing local hardware, open-source tooling and legitimate free development/platform capabilities first.
 
-## Technology routing policy
+---
 
-Technology choice is itself measurable. Record per adapter:
+## 15. Technology routing is itself an experiment
+
+Record per adapter/model:
 - success rate;
 - wall time;
-- GPU seconds;
-- model tokens;
+- resource use;
 - retries;
 - human interventions;
+- output quality;
 - effective cost per successful task;
-- downstream business result when attributable.
+- license/production restrictions;
+- downstream business result where attributable.
 
-The system may later run technology bandits/benchmarks just as it runs business experiments.
+Public SOTA is a candidate-generation mechanism. **Our own workloads decide production routing.**
