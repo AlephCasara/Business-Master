@@ -85,7 +85,10 @@ class ReconcilePolicy:
                 ReconcileAction(
                     kind=ReconcileActionType.CREATE_PROBE,
                     entity_id=hypothesis_id,
-                    reason="Active hypothesis lacks a live bounded experiment and probe capacity exists.",
+                    reason=(
+                        "Active hypothesis lacks a live bounded experiment "
+                        "and probe capacity exists."
+                    ),
                     priority=60,
                 )
             )
