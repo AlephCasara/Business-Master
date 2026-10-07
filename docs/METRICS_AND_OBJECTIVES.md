@@ -1,75 +1,102 @@
 # Metrics and Objective Hierarchy
 
-Business Master must not collapse views, retention, clicks, leads, orders and dollars into one fake universal metric.
+Business Master must not collapse attention, retention, clicks, checkouts, orders, revenue, contribution and cash into one fake universal metric.
 
-## 1. Persist raw observations first
+The **final objective is expected economic value**. Which observations receive decision weight depends on evidence maturity and business semantics.
 
-Every platform/business adapter stores its raw telemetry unchanged enough to reprocess later.
+---
 
-Examples:
+## 1. Persist observations before interpretation
 
-### Content
-- impressions;
+Adapters should preserve raw external telemetry/events with enough source identity and timing to reprocess later.
+
+### Distribution/content examples
+
+- impressions/reach;
 - views by age window;
-- watch time;
-- average view percentage;
-- likes;
-- comments;
-- shares;
+- watch time/retention;
+- likes/comments/shares;
 - follows/subscribers;
-- outbound clicks.
+- profile/link/outbound actions.
 
-### Commerce/product
-- landing visits;
-- checkout starts;
+### Commerce/offer examples
+
+- attributed clicks;
+- landing/product-page visits;
+- checkout starts/abandonment where observable;
 - orders;
-- revenue;
-- refunds;
-- gross margin;
-- repeat purchase;
-- AOV/LTV where observable.
+- approved payments;
+- gross order value/AOV;
+- order-bump/upsell/downsell events where observable;
+- refunds/chargebacks;
+- commissions/fees;
+- settlement/payout events;
+- repeat purchase/subscription events where applicable.
 
-### B2B
-- contacts attempted;
-- delivered;
-- replies;
-- positive replies;
+### B2B examples
+
+- contacts attempted/delivered;
+- replies and reply class;
 - booked calls;
 - proposals;
-- purchases;
-- recurring revenue.
+- signed/paid outcomes;
+- recurring revenue/retention.
 
-## 2. Normalize only against relevant cohorts
+Do not infer an unavailable funnel step merely because a provider does not expose it.
 
-A 1,000-view result is not intrinsically good or bad.
+---
+
+## 2. Observation semantics
+
+Preserve these distinctions:
+
+```text
+raw event / snapshot
+!= derived metric
+!= inference
+!= immutable Evidence
+!= ledger transaction
+```
+
+Repeated polling of one slowly updated snapshot does not create independent evidence.
+
+Economic provider dashboards are observations/sources; the deterministic Economic Ledger is financial authority after supported events are normalized and posted.
+
+---
+
+## 3. Normalize only against relevant cohorts
+
+A raw result is not intrinsically good or bad.
 
 Prefer baselines such as:
 
 ```text
-same platform
-+ same channel/account
-+ similar account age
-+ same content format
+same surface
++ same account/channel
++ comparable format
 + comparable observation age
++ comparable market/audience when known
 ```
 
-Then relax the cohort only when sample size is too small.
+Relax the cohort only when sample size is insufficient.
 
-Example fallback hierarchy:
+Example fallback:
 
 ```text
-channel + format + age bucket
--> channel + format
--> business family + platform + format
--> platform + format
--> global bootstrap prior
+account + format + age bucket
+→ account + format
+→ family + surface + format
+→ surface + format
+→ bootstrap prior
 ```
 
-Store the baseline key/sample size used to compute every normalized score.
+Persist the baseline identity/sample size behind normalized scores.
 
-## 3. SignalVector
+---
 
-Cross-business policies receive a normalized projection:
+## 4. Cross-business signal projection
+
+A cross-business policy may receive normalized dimensions such as:
 
 ```text
 attention
@@ -77,77 +104,119 @@ retention
 engagement
 intent
 conversion
-revenue
-gross_profit
+economic_value
 confidence
 ```
 
-The normalized non-financial dimensions are relative evidence, generally in [0,1]. Raw metrics remain available.
+This is a projection for decision support, not a replacement for raw facts, family-specific semantics, or ledger values.
 
-## 4. Objective hierarchy
+Do not hide economically meaningful funnel structure inside a single generic conversion score when downstream data exists.
 
-Long-run target is sustainable profit/revenue, but a cold-start system cannot optimize a metric it has not observed.
+---
 
-Therefore objective weighting is evidence-dependent.
+## 5. Evidence-dependent objective weighting
 
-### Stage A — Discovery
-Primary objective:
+The objective does **not** change from learning to money. Economic value remains the objective throughout.
+
+When direct economics are unavailable, intermediate observations can be rational proxies/components because they reduce uncertainty and create option value.
+
+### Discovery / sparse economics
+
+Useful decision components include:
+
+- genuine external reach/response;
 - information gain;
-- external reach/response;
-- speed of feedback;
+- feedback speed;
+- falsification speed;
 - downstream reuse;
-- low human/cash/compute cost.
+- low cash/compute/human cost;
+- option/asset/capability value.
 
-### Stage B — Intent
-Once traffic exists, weight:
-- clicks;
+### Intent
+
+As traffic exists, stronger signals include:
+
+- outbound clicks;
 - replies;
-- checkout starts;
 - qualified leads;
-- product interest.
+- checkout starts;
+- attributable product/offer interest.
 
-### Stage C — Conversion
-Once transactions occur, weight:
+### Conversion
+
+Once transactions occur, weight stronger observations:
+
 - orders;
-- revenue;
+- approved payments;
 - conversion rate;
-- AOV;
-- refund/chargeback evidence.
+- AOV/order composition;
+- refund/chargeback behavior.
 
-### Stage D — Economics
-Once cost accounting is credible, weight:
-- gross profit;
-- contribution margin;
-- CAC;
-- LTV;
+### Economics
+
+When cost/settlement data is credible, prefer:
+
+- recognized revenue where relevant;
+- contribution;
+- CAC/acquisition cost;
+- settled cash;
+- payback;
 - repeatability;
-- compute/human cost.
+- retention/LTV where the model warrants it;
+- compute/human/operational cost.
 
-The system should not discard a useful high-information experiment because it has not yet generated revenue, but should progressively prefer real economics once available.
+Proxies should progressively lose authority as stronger downstream economic evidence becomes available.
 
-## 5. External reality rule
+---
+
+## 6. Canonical attention → economics chain
+
+For acquisition-driven commerce, preserve the causal funnel when observable:
+
+```text
+ExternalExposure
+→ engagement/retention
+→ attributed click / intent
+→ checkout
+→ order
+→ approved payment
+→ refund/chargeback adjustments
+→ fees/commission/direct costs
+→ contribution
+→ settlement
+→ repeat economics
+```
+
+This permits Business Master to distinguish:
+
+```text
+creative generated views
+creative generated intent
+creative generated orders
+creative generated contribution
+```
+
+Attribution can be uncertain. Persist the uncertainty rather than manufacturing certainty.
+
+---
+
+## 7. External reality rule
 
 Internal model scores are not traction.
 
-Valid external evidence includes real platform/user behavior such as:
-- non-operator views;
-- engagements;
-- external clicks;
-- leads;
-- replies;
-- orders;
-- payments.
+External evidence can include real user/platform behavior such as non-operator views, retention, engagements, clicks, leads, checkout actions, orders and payments.
 
-Synthetic QA, operator self-views and internal agent ratings are factory evidence, not market evidence.
+Synthetic QA, evaluator ratings, generated confidence, operator self-views and test transactions belong to factory/test evidence unless they represent a deliberately modeled real economic event.
 
-## 6. Evaluation windows
+---
 
-Metrics must include observation age. Never compare a 10-minute video snapshot to a 72-hour snapshot as if equivalent.
+## 8. Evaluation windows
 
-Candidate content schedule for early experiments:
+Observation age is part of the metric context. Never compare an early snapshot with a mature snapshot as if equivalent.
+
+Any schedule such as:
 
 ```text
-10m
 30m
 2h
 6h
@@ -155,58 +224,68 @@ Candidate content schedule for early experiments:
 72h
 ```
 
-Adapters may tune this based on platform behavior and quotas.
+is policy/provider specific, not constitutional. Adapters/policies should account for platform update cadence, quota, and experiment needs.
 
-## 7. No-signal semantics
+---
 
-`NO_SIGNAL` means the experiment successfully reached its measurement window but produced insufficient external response according to its cohort/policy.
+## 9. No-signal semantics
 
-It is different from:
+`NO_SIGNAL` means a validly executed/measured experiment reached its policy window but produced insufficient external response.
+
+It is not:
+
 - render failure;
 - publish failure;
 - API failure;
 - account restriction;
-- missing telemetry.
+- missing telemetry;
+- checkout integration failure;
+- settlement delay.
 
-Those are operational states and must not poison the economic hypothesis.
+Operational failures must not poison the economic hypothesis.
 
-## 8. Winner semantics
+---
 
-A winner is not merely "the largest number so far".
+## 10. Winner semantics
 
-Candidate winner evidence should include some combination of:
-- high cohort percentile;
-- repeatability across mutations;
-- strong retention/intent/conversion quality;
-- positive economics where available;
+A winner is not simply the largest observed number.
+
+Candidate winner evidence can combine:
+
+- strong relevant-cohort performance;
+- repeatability across controlled mutations;
+- retention/intent/conversion quality;
+- positive downstream economics when available;
 - data-integrity checks;
-- enough sample size for the tier being considered.
+- sufficient sample/evidence for the requested tier.
 
-A single outlier can trigger more probes. It should not trigger unbounded scale.
+One outlier can justify another probe. It does not justify unbounded SCALE.
 
-## 9. Surprising positive drift
+---
 
-Unexpectedly excellent results can indicate:
-- tracking bugs;
-- duplicated conversions;
-- bot/spam traffic;
-- unusual one-off distribution;
-- real breakthrough.
+## 11. Surprising drift
 
-Treat large positive drift as evidence to validate, not permission to skip validation. This mirrors the useful Master-Trader lesson that unrecognized live behavior can be risky even when the direction is favorable.
+Unexpectedly large positive or negative results can reflect tracking bugs, duplicate events, bot/spam traffic, unusual one-off distribution, provider reporting artifacts, or a real breakthrough/failure.
 
-## 10. Factory metrics
+Validate material drift before escalating resource/capital authority.
 
-Measure the organism itself:
-- jobs/hour;
+---
+
+## 12. Factory metrics
+
+Measure the organism as well as the business:
+
 - successful tasks/hour;
-- GPU seconds/task;
-- model tokens/task;
-- retries;
-- render rejection rate;
-- human minutes/validated experiment;
-- cost/validated experiment;
-- time-to-first-external-signal;
-- time-to-first-revenue.
+- wall/compute time;
+- GPU seconds / peak VRAM;
+- model/API usage;
+- retry/failure rate;
+- production QC rejection/repair rate;
+- human minutes per validated experiment;
+- cost per validated experiment;
+- time to first external signal;
+- time to first intent;
+- time to first purchase;
+- time to settled cash.
 
-Business and factory metrics must be queryable together so the system can choose both the best business hypothesis and the best implementation technology.
+Business and factory metrics should be queryable together so the system can choose both better economic hypotheses and better implementation technologies.

@@ -1,443 +1,416 @@
-# Commerce Engine — Affiliate, TikTok Shop, Ecommerce, POD and Marketplace Resale
+# Commerce and Monetization — Offers, Digital Products, Affiliate and Marketplaces
 
-The Commerce Engine is responsible for turning demand signals into economically underwritten product/offer experiments.
+Commerce work turns demand/intent into economically attributable exchanges. It is not synonymous with inventory, storefronts, or marketplace resale.
 
-Its governing rule is:
+Current bootstrap priority favors **low-human-touch, low-working-capital paths** such as owned digital products/low-ticket, affiliate offers, and marketplaces/content commerce when the relevant account/offer exists.
 
-> A store is not a business hypothesis. A product/offer with demand, viable acquisition, reliable fulfillment and positive contribution economics is.
+The governing rule is:
+
+> A Product is not an Offer, an Offer is not a sale, and a sale is not settled economic value.
 
 ---
 
 ## 1. Canonical commerce loop
 
+A generic loop is:
+
 ```text
-demand signal
-→ product / offer identity
-→ supply / affiliate availability
-→ unit economics underwriting
-→ eligibility/account-health gate
-→ creative hypothesis
-→ listing/storefront/landing
-→ traffic/exposure
-→ click/cart/order
-→ fulfillment
+market / intent signal
+→ Product/ProductConcept or existing product
+→ Offer hypothesis / observed Offer
+→ economic underwriting
+→ eligibility/account gate
+→ Creative + Production as needed
+→ Distribution / attribution
+→ checkout / commerce events
+→ payment / refund / chargeback
+→ fees / commission / direct costs
 → settlement
-→ contribution + working-capital evidence
+→ deterministic Economic Ledger
+→ economic Evidence
 → kill / mutate / replicate / scale
 ```
 
-The loop can skip steps depending on business type. Affiliate does not own fulfillment; marketplace resale does.
+Different business types skip or add steps. Affiliate does not own fulfillment; owned low-ticket may; marketplace resale adds supply/logistics/working capital.
 
 ---
 
-## 2. Commerce modes
+## 2. Core commercial ontology
 
-### Affiliate commerce
-
-No product inventory or fulfillment ownership.
+Keep explicit distinctions:
 
 ```text
-offer catalog
-→ commission/terms
-→ content or paid traffic
-→ click
-→ attributed sale
-→ commission
+Signal
+!= Product / ProductConcept
+!= Offer
+!= Opportunity
+!= Checkout
+!= Order
+!= Payment
+!= Settlement
+```
+
+### Product / ProductConcept
+
+Represents what is delivered and the problem/desire/mechanism/format. A Product does not belong intrinsically to one venue.
+
+### Offer
+
+Represents the monetizable exchange at a venue/time, potentially varying by:
+
+```text
+Product
+× CommerceVenue
+× Market
+× Seller / commercial role
+× Price
+× fees / commission
+× attribution terms
+× settlement terms
+× availability/time
+```
+
+### Opportunity
+
+A decision candidate combining signals, Product/Offer context, distribution route, expected economics, uncertainty, horizon, constraints and current capacity.
+
+---
+
+## 3. Current Layer 1 commerce modes
+
+### Owned digital / low-ticket
+
+```text
+ProductOpportunity
+→ ProductSpec
+→ digital deliverable
+→ Offer
+→ checkout
+→ primary purchase
+→ optional bump/upsell/downsell
+→ refund/chargeback state
+→ settlement
 ```
 
 Advantages:
-- low capital;
-- fast market discovery;
-- no fulfillment stack.
+- low inventory/working-capital exposure;
+- high production automation ceiling;
+- can attach directly to content/search/distribution evidence;
+- clear path from click → checkout → purchase economics.
 
-Weaknesses:
-- commission can change;
-- offer can disappear;
-- attribution rules/platform ownership;
-- low control of customer/LTV.
+Important variables:
+- price hypothesis;
+- checkout conversion;
+- order composition/AOV;
+- refund/chargeback rate;
+- platform/payment fees;
+- production/acquisition cost;
+- contribution;
+- settlement delay;
+- repeat/backend/LTV when applicable.
 
-### TikTok Shop affiliate
-
-Affiliate economics plus direct content-commerce attribution.
-
-Strong for testing:
-- product × hook;
-- product × creator format;
-- localization of winning creatives;
-- short feedback cycles.
-
-Account/identity/geography eligibility is a first-class gate.
-
-### Owned ecommerce / dropshipping
-
-The merchant owns customer acquisition and storefront; supplier may fulfill.
-
-Critical extra variables:
-- supplier cost;
-- stock confidence;
-- fulfillment SLA;
-- returns/refunds;
-- payment settlement;
-- tax;
-- customer support;
-- account reputation.
-
-### Print on demand
-
-Supplier manufactures a customized item after purchase.
-
-POD is useful when differentiation comes from:
-- design/IP;
-- personalization;
-- audience;
-- customer-generated inputs.
-
-The supplied agent-run ecommerce material reinforces that the storefront is often the easy layer; the differentiated AI/design pipeline, privacy/IP boundaries and reliable end-to-end fulfillment are the real work.
-
-### Marketplace resale / virtual stock
-
-The system finds existing demand, sources products, underwrites fees/logistics and lists on a marketplace.
-
-This is closer to a retail market-maker:
+### Affiliate
 
 ```text
-market demand
-↔ product identity
-↔ supplier offer
-↔ listing economics
+offer discovery
+→ terms/commission/availability
+→ attributed distribution
+→ click
+→ attributed order/payment
+→ commission state
+→ settlement
 ```
+
+Advantages:
+- low product/fulfillment build cost;
+- useful for fast offer/market discovery;
+- can monetize distribution before an owned product is justified.
+
+Weaknesses:
+- attribution and offer-owner dependence;
+- commission/availability changes;
+- less customer/product control;
+- provider settlement semantics.
+
+An affiliate link is **not** a distribution strategy by itself.
+
+### Content commerce / marketplaces
+
+A provider may expose demand signals, offers/listings, distribution, orders, fees, account health and settlement in one venue. Treat these as capabilities, not as proof that one provider is the business architecture.
 
 ---
 
-## 3. Domain model
+## 4. Commerce provider capabilities
 
-Commerce should eventually add explicit first-class entities.
+Do not require every provider to implement one giant adapter.
 
-### ProductConcept
+Useful capability contracts may include:
 
-A demand concept such as `bolsa térmica`, not yet a precise SKU.
+```text
+OfferSource
+OfferManager
+AttributionSource
+CommerceEventSource
+SettlementSource
+ListingPublisher
+OrderSource
+FulfillmentSource
+```
 
-### ProductIdentity
+Hotmart/Kiwify/Eduzz-like digital venues may cover offer/checkout/events/settlement-related capabilities.
 
-Resolution class:
-- `EXACT` — same SKU/GTIN/model;
-- `VARIANT` — same family but meaningful variant differences;
-- `DIFFERENT` — different product;
-- `UNKNOWN`.
+Marketplaces may cover offer/listing/order/fulfillment/settlement capabilities plus demand observations.
 
-High-risk automated resale should require `EXACT` or an explicitly modeled compatible variant.
+Provider dashboards/events are source observations; authoritative financial state ends in the PR6 ledger.
 
-### Supplier
+---
 
-Provider-level data:
-- identity;
-- model (wholesale, dropship, POD, distributor);
-- terms;
-- region;
-- reliability history;
-- integration adapter.
+## 5. Direct-response funnel semantics
+
+For owned/affiliate digital funnels, measure the full observable path rather than one top-line conversion number.
+
+```text
+creative/exposure
+→ attributed click
+→ landing/product page
+→ checkout
+→ front-end purchase
+→ bump
+→ upsell/downsell
+→ refund/chargeback
+→ later offer/repeat purchase
+```
+
+Possible metrics:
+
+- CTR / attributed intent;
+- checkout-start and completion;
+- front-end conversion;
+- order-bump attach rate;
+- upsell acceptance;
+- gross/blended AOV;
+- refund/chargeback rate;
+- commission/fees;
+- contribution;
+- payback/LTV when valid.
+
+Do not invent steps a venue cannot actually observe.
+
+---
+
+## 6. Physical ecommerce / marketplace resale
+
+Physical commerce is valid but introduces more constraints:
+
+```text
+product identity
+supplier/source offer
+stock/reliability
+COGS
+shipping/fulfillment
+returns/refunds
+tax/fees
+working-capital lock
+account reputation
+settlement latency
+```
+
+Demand and unit economics should be tested before material inventory or sourcing commitments whenever possible.
+
+### Product identity
+
+For resale, distinguish at least conceptually:
+
+```text
+EXACT
+VARIANT
+GENERIC_EQUIVALENT / SUBSTITUTE where explicitly modeled
+DIFFERENT
+UNKNOWN
+```
+
+Do not pretend a trend keyword is an exact SKU.
 
 ### SupplierOffer
 
-SKU-specific facts:
-- supplier SKU;
-- product identity;
-- unit cost;
-- MOQ;
-- stock;
-- stock confidence;
-- timestamp;
-- dispatch SLA;
-- shipping origin;
-- tax invoice status;
-- return policy.
+Where relevant preserve supplier SKU/product identity, cost, MOQ, stock/confidence, timestamp, dispatch SLA, shipping origin, invoice/return terms and reliability history.
 
-### MarketplaceOffer / Listing
+### Listing/marketplace offer
 
-- marketplace;
-- category;
-- listing type;
-- price;
-- marketplace fees;
-- shipping model;
-- competition/price-to-win where available;
-- account eligibility.
-
-### CommerceUnderwriting
-
-Stores assumptions and calculated economics.
-
-### Order / Fulfillment / Settlement
-
-Separate lifecycle objects. An order accepted is not a settlement received.
+Preserve venue/category/listing type, sale price, fees, shipping model, competition and account eligibility.
 
 ---
 
-## 4. Unit economics gate
+## 7. Unit economics gate
 
-At minimum calculate:
+At minimum model relevant variable economics:
 
 ```text
-revenue
-- supplier / COGS
-- marketplace/payment fees
+revenue / commission
+- COGS where owned/resale
+- provider/payment/marketplace fees
 - seller-paid shipping/logistics
 - variable fulfillment
-- ad/acquisition cost
-- return/refund/failure reserve
-- other variable cost
+- acquisition cost
+- refund/return/failure reserve
+- other variable costs
 = contribution
 ```
 
-Also estimate:
-- cash required before payout;
-- cash-lock duration;
-- maximum loss from one failed order;
-- expected margin sensitivity to uncertain costs.
+Also consider capital required before payout, settlement/cash-lock duration and maximum bounded loss.
 
-### Sensitivity before execution
-
-Do not represent one guessed freight/tax/fee number as truth.
-
-Store:
-- observed facts;
-- calculated values;
-- assumptions;
-- unknowns;
-- best/base/worst scenarios where useful.
-
-A candidate whose contribution turns negative under small plausible changes is fragile even if the base case is positive.
+Do not represent one guessed freight/tax/fee number as truth. Preserve observed facts, calculations, assumptions, unknowns and scenario sensitivity where useful.
 
 ---
 
-## 5. Honey Hammer lessons integrated into Business Master
+## 8. Honey Hammer / marketplace lessons
 
-The Honey Hammer zero-inventory research provides a concrete clean-room precedent for this engine.
+Existing marketplace research provides reusable architectural lessons:
 
-### Demand signal is not a SKU
+### Signal is not Product or Offer
+A marketplace trend/ranking/search observation is evidence, not a sale and not automatically a resolved product identity.
 
-A marketplace trend keyword is only a concept. The experiment found trend candidates but zero `EXACT` product identities under the available evidence.
+### Polling is not demand frequency
+Repeated identical snapshots do not create independent demand observations.
 
-Business Master must therefore implement identity resolution before listing automation.
+### Observed retail price != procurement cost
+Separate market offers, supplier offers and calculated economics.
 
-### Polling is not velocity
+### Account health can dominate feasibility
+An attractive product is non-executable if the seller/listing/shipping/account state cannot support it.
 
-The Mercado Livre trends endpoint produced identical weekly snapshots across repeated collections. Re-polling it does not create new demand information.
-
-Collectors need source-frequency metadata.
-
-### Supplier price and retail reference price are different facts
-
-A market-intelligence card that estimates retail/margin must never be stored as procurement cost.
-
-### Account health can dominate opportunity score
-
-A theoretically viable item is non-executable if the seller account cannot list or does not have shipping/registration state ready.
-
-Account health belongs in the World Model and gates execution before publishing.
-
-### Gross spread is not profit
-
-The Honey Hammer example showed how a large-looking supplier-to-sale-price spread can disappear after platform fees and logistics.
+### Gross spread != contribution
+Fees/logistics/returns/working capital can erase apparent spread.
 
 ### Supplier reliability is economic
+Cancellation/reputation/stock/SLA risk can dominate expected contribution.
 
-Stock/SLA/NF/returns are not operational footnotes. One cancellation on a new marketplace account can impose reputation cost larger than the profit of the experiment.
-
-### Working capital matters
-
-A positive contribution item can still be unattractive if capital remains locked too long relative to available portfolio cash.
+These lessons apply without making Mercado Livre/Honey Hammer Business Master's identity.
 
 ---
 
-## 6. Product discovery
+## 9. Product discovery / signals
 
-Potential signal sources:
-- marketplace trends/highlights/search;
-- TikTok Shop product/creative data where authorized;
-- social content velocity;
-- Google Trends/search intent;
+Potential signal sources include:
+
+- internal content/intent data;
+- commerce-venue offer catalogs;
+- marketplace search/rankings/highlights;
+- public search trends;
+- social/content velocity;
 - ad libraries as weak creative/demand evidence;
-- competitor storefronts/pricing;
+- competitor pricing/offers;
 - supplier feeds;
-- internal content performance;
-- internal B2B/customer requests.
+- internal B2B/customer pain.
 
-### Evidence strength
+Prefer behavioral/economic evidence over creator claims.
 
-The engine should label signal provenance.
-
-Example hierarchy:
+A useful rough hierarchy is:
 
 ```text
-actual own sales/contribution
-> actual own checkout/click data
-> marketplace transaction/ranking data
+own settled economics / contribution
+> own orders/payments
+> own checkout/click behavior
+> authoritative marketplace/provider behavior
 > stable public demand indicators
 > competitor/ad persistence
-> creator claim / anecdote
+> creator anecdote
 ```
-
-An ad existing in an ad library is not proof it is profitable.
 
 ---
 
-## 7. Creative intelligence
+## 10. Creative / distribution connection
 
-Commerce shares the Content Engine's creative system.
-
-Model:
+Commerce composes the shared Creative, Production and Distribution capabilities.
 
 ```text
-product
+Product / Offer
 × audience
-× angle
-× hook
-× proof type
-× format
+× angle/hook/proof
+× platform/format
 × CTA
-× platform
 ```
 
-Winning structure can be localized while avoiding simple duplication.
+Winning structures can inform cross-surface variants, but they remain new experiments with lineage rather than mechanical clones.
 
-TikTok Shop material suggests the reusable process:
-
-```text
-find winning creative/product pattern in market A
-→ decompose angle/script/visual structure
-→ localize to market B
-→ test with own evidence
-```
-
-Eligibility is separate from creative intelligence.
+Eligibility/account gates remain separate from creative intelligence.
 
 ---
 
-## 8. Owned direct-response funnel
+## 11. Product Factory connection
 
-For owned products, model the full funnel rather than front-end ROAS alone.
+A digital product begins as ProductOpportunity → ProductSpec. It is not defined by a file extension.
 
-```text
-creative/ad
-→ product/landing page
-→ checkout
-→ order bump
-→ upsell/downsell
-→ fulfillment
-→ follow-up
-→ repeat purchase/backend
-```
+Guide, checklist, template, pack, worksheet, PDF, carousel-derived asset, or interactive deliverable can be different render profiles/capabilities of the same product semantics.
 
-Store:
-- CAC;
-- front-end AOV;
-- blended AOV;
-- refund rate;
-- gross/contribution margin;
-- backend revenue;
-- LTV;
-- payback period.
-
-This directly incorporates the durable Bia Feldman + low-ticket lesson: acquisition economics are often determined by the whole customer path, not a single campaign screenshot.
+The aesthetic production system may create covers, page visual systems, diagrams, mockups and marketing assets; deterministic serializers may emit the final file. See `MEDIA_AND_AGENT_STACK.md`.
 
 ---
 
-## 9. POD/personalization architecture
+## 12. Order / payment / settlement
 
-The supplied agent-run Shopify/POD project adds reusable patterns.
+Keep operational/economic lifecycle separate.
 
-### Separate reusable design from physical product
+An order accepted is not necessarily payment approved. Payment approved is not necessarily irreversible revenue. Revenue/commission is not necessarily settled cash.
+
+Provider events must be normalized idempotently and reconciled into the deterministic ledger according to supported facts.
+
+Refunds/chargebacks/fees/commissions/settlement belong to the economic causal chain where applicable.
+
+---
+
+## 13. Physical fulfillment / POD
+
+For personalized/POD physical products, separate reusable design/product state from order-specific fulfillment state:
 
 ```text
 source input
-→ extraction/reconstruction master
-→ approved reusable design
+→ reusable design/master
 → product proof/mockup
-→ order-specific fulfillment asset
+→ Offer/listing
+→ order-specific production asset
+→ fulfillment
+→ settlement/return evidence
 ```
 
-This avoids re-running expensive generation for every product variant.
-
-### Identity
-
-Prefer the commerce platform customer identity when possible instead of creating a second application identity without need.
-
-### Compute abuse controls
-
-If free generation is part of acquisition, explicitly model:
-- anonymous allowance;
-- authenticated allowance;
-- reset window;
-- concurrency;
-- generation cost ceiling;
-- what consumes quota.
-
-### Privacy / retention
-
-Raw personal images should have the shortest retention compatible with the product. Derived reusable designs can have separate lifecycle rules.
-
-### Provider adapters
-
-Shopify and POD provider are adapters. The domain should not become Printful-specific or Shopify-specific.
+Personal raw inputs require explicit privacy/retention handling. Providers remain replaceable adapters.
 
 ---
 
-## 10. China/import sourcing
+## 14. Kill switches
 
-Sources such as Taobao, 1688 and second-hand/local Chinese marketplaces can expose lower source prices, but source price alone does not define landed economics.
+Examples of deterministic feasibility/policy stops:
 
-Model:
+- account/venue cannot execute the Offer;
+- KYC/identity gate incomplete;
+- attribution/terms unavailable for the claimed economics;
+- supply/stock confidence below policy;
+- identity unresolved for exact-resale requirement;
+- fees/logistics/refunds make expected contribution unacceptable;
+- settlement/working-capital exposure exceeds authority;
+- account reputation/violation state crosses policy;
+- provider capability required by the experiment is unavailable.
+
+A technical/provider failure is not automatically market-negative evidence.
+
+---
+
+## 15. Current implementation order
+
+The current bootstrap should **not** start by building a universal physical-commerce/supplier stack.
+
+Preferred economic attachment order:
 
 ```text
-product cost
-+ agent fee
-+ domestic China freight
-+ QC/consolidation
-+ international freight
-+ duties/tax
-+ loss/return risk
-+ working-capital lock
-= landed acquisition cost
+1. generic Product / Offer / CommerceVenue semantics
+2. one low-human-touch real commerce adapter
+3. attribution / commerce-event ingestion
+4. deterministic ledger reconciliation
+5. refund/chargeback/settlement semantics required by the chosen provider
+6. validate one attributable economic loop
+7. only then add the next provider/capability demanded by observed opportunity
 ```
 
-For resale, exact product identity and authenticity/IP risk are required before comparing source price with a Brazilian retail listing.
+A digital/affiliate venue such as Hotmart/Kiwify is a plausible first adapter if current provider capabilities fit the acceptance scenario. Marketplace/supplier/fulfillment architecture should be added when the selected opportunity actually requires it.
 
-Import agents/forwarders are provider adapters, not an assumption that customs declarations can be manipulated.
-
----
-
-## 11. Account and fulfillment kill switches
-
-Examples:
-- account cannot list;
-- identity/KYC incomplete;
-- shipping method unavailable;
-- stock stale or confidence low;
-- supplier SLA below required level;
-- actual fee/freight makes contribution non-positive;
-- exact identity unresolved;
-- first sale occurs on a one-unit probe → immediately pause listing until fulfillment succeeds;
-- unexpected cancellation/return rate;
-- reputation warning.
-
-Kill switches should be deterministic.
-
----
-
-## 12. First implementation order
-
-Recommended Commerce Engine order:
-
-1. `Supplier` and `SupplierOffer` entities;
-2. product identity resolver (`EXACT/VARIANT/DIFFERENT/UNKNOWN`);
-3. provider-neutral underwriter;
-4. account-health observation;
-5. demand collectors with source-frequency metadata;
-6. listing/storefront adapter;
-7. order + fulfillment state machine;
-8. settlement ledger;
-9. creative acquisition loop;
-10. pricing/repricing only after basic order economics work.
-
-Do not start by building a universal store builder.
+Do not start by building a universal store, supplier network, or marketplace framework.
