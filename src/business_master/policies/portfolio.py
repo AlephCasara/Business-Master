@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import ceil
+from math import ceil, floor
 from uuid import UUID
 
 from business_master.domain.enums import EvidenceTier, RiskLevel
@@ -51,7 +51,9 @@ class PortfolioPolicy:
             if by_id[candidate.id].eligible
         ]
 
-        group_cap = max(1, ceil(request.max_candidates * request.max_group_fraction))
+        # Never round a concentration ceiling upward: doing so can exceed the
+        # configured portfolio share (for example 2/3 under a 50% cap).
+        group_cap = max(1, floor(request.max_candidates * request.max_group_fraction))
         exploration_target = ceil(request.max_candidates * request.exploration_fraction)
         exploration_pool = [candidate for candidate in eligible if self._is_exploration(candidate)]
         exploration_target = min(exploration_target, len(exploration_pool))
@@ -151,6 +153,7 @@ class PortfolioPolicy:
                 "max_risk": request.max_risk.value,
                 "allow_human_gate": request.allow_human_gate,
             },
+            base_currency=request.base_currency,
             available_resources=request.availability.available,
             evaluations=final_evaluations,
             allocations=allocations,
