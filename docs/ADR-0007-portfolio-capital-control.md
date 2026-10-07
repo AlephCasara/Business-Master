@@ -75,6 +75,23 @@ Actual spend enters the ledger only when the external economic event occurs.
 
 Authorizations must support durable lifecycle states sufficient for active, consumed, released, and expired capacity.
 
+### Trusted time
+
+`requested_at` is request/audit data and is not trusted control time. Authorization, operator-period checks, release, and expiry use a timezone-aware clock owned by the capital store. The resulting `authorized_at` is persisted separately from the caller-supplied request timestamp.
+
+This prevents a future- or stale-dated request from expiring another authorization, crossing an operator control period, or otherwise manufacturing capacity.
+
+### Spend confirmation lineage
+
+Consumption of an authorization requires a separate authoritative ledger transaction. That transaction must:
+
+- explicitly cite the authorization through `metadata.capital_authorization_id`;
+- occur no earlier than `authorized_at` and strictly before `expires_at` when an expiry exists;
+- not be future-dated relative to reconciliation time;
+- contain net cash outflow in the authorization currency exactly equal to the authorized amount.
+
+PR9 models full authorization consumption only; partial consumption is not inferred.
+
 ## Concurrency and idempotency
 
 Capital authorization must use transactional locking/idempotency semantics comparable to resource reservations:
@@ -89,6 +106,8 @@ Capital authorization must use transactional locking/idempotency semantics compa
 PR9 must not perform implicit FX conversion.
 
 A portfolio/capital run operates in an explicit base currency. A financially material candidate in another currency is deferred/rejected unless an explicit valuation input exists with its own provenance and timestamp.
+
+Until such a valuation path exists, capital authorization currency must match the persisted portfolio base currency.
 
 ## Exploration and concentration
 
@@ -113,6 +132,7 @@ PR9 does not implement:
 - external platform dispatch;
 - real paid spend;
 - implicit FX services;
+- partial capital consumption;
 - contextual bandits or reinforcement learning;
 - self-modifying live capital policy.
 
