@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -256,3 +257,54 @@ def test_unbound_evidence_cannot_change_belief(postgres_dsn: str) -> None:
         )
 
     assert PostgresBeliefStore(postgres_dsn).get_belief_state(hypothesis.id) is None
+
+
+def test_concurrent_evidence_updates_allocate_distinct_versions(postgres_dsn: str) -> None:
+    now = datetime(2026, 1, 1, tzinfo=UTC)
+    belief_store = PostgresBeliefStore(postgres_dsn)
+    evidence_store = PostgresEvidenceStore(postgres_dsn)
+    hypothesis = EconomicHypothesis(
+        hypothesis_type=HypothesisType.CHANNEL,
+        subject="channel response",
+        proposition="The channel produces qualified market response",
+    )
+    belief_store.save_economic_hypothesis(hypothesis)
+
+    first_evidence = _record(
+        evidence_class=EvidenceClass.MARKET,
+        observed_at=now,
+        kind="concurrent_reply_a",
+    )
+    second_evidence = _record(
+        evidence_class=EvidenceClass.MARKET,
+        observed_at=now + timedelta(milliseconds=1),
+        kind="concurrent_reply_b",
+    )
+    _persist_and_bind(evidence_store, hypothesis, first_evidence)
+    _persist_and_bind(evidence_store, hypothesis, second_evidence)
+
+    requests = [
+        BeliefUpdateRequest(
+            hypothesis_id=hypothesis.id,
+            evidence_id=first_evidence.id,
+            interpretation=EvidenceInterpretation.SUPPORTING,
+            rationale="Concurrent observation A",
+            evaluated_at=now + timedelta(seconds=1),
+        ),
+        BeliefUpdateRequest(
+            hypothesis_id=hypothesis.id,
+            evidence_id=second_evidence.id,
+            interpretation=EvidenceInterpretation.SUPPORTING,
+            rationale="Concurrent observation B",
+            evaluated_at=now + timedelta(seconds=1),
+        ),
+    ]
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(PostgresBeliefUpdateEngine(postgres_dsn).apply, requests))
+
+    assert {result.update.resulting_state_version for result in results} == {2, 3}
+    history = PostgresBeliefUpdateEngine(postgres_dsn).list_state_history(hypothesis.id)
+    assert [state.state_version for state in history] == [1, 2, 3]
+    assert belief_store.get_belief_state(hypothesis.id) == history[-1]
+    assert history[-1].evidence_count == 2
