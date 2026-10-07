@@ -119,11 +119,8 @@ class CapitalEnvelope(BaseModel):
             and self.period_end <= self.period_start
         ):
             raise ValueError("capital period_end must be after period_start")
-        if self.operator_hard_ceiling is not None:
-            if self.period_start is None:
-                raise ValueError("operator_hard_ceiling requires an explicit control period")
-            if self.category is None:
-                raise ValueError("operator_hard_ceiling requires an explicit spend category")
+        if self.operator_hard_ceiling is not None and self.period_start is None:
+            raise ValueError("operator_hard_ceiling requires an explicit control period")
         return self
 
 
