@@ -67,6 +67,14 @@ from business_master.storage.portfolio_postgres import PostgresPortfolioStore
 NOW = datetime(2026, 10, 7, tzinfo=UTC)
 
 
+class MutableClock:
+    def __init__(self, value: datetime) -> None:
+        self.value = value
+
+    def __call__(self) -> datetime:
+        return self.value
+
+
 @pytest.fixture()
 def postgres_dsn() -> str:
     dsn = os.environ.get("BM_TEST_DATABASE_URL")
@@ -86,6 +94,11 @@ def postgres_dsn() -> str:
             for statement in statements:
                 conn.execute(statement)
     return dsn
+
+
+def _store(dsn: str, clock: MutableClock | None = None) -> PostgresCapitalAuthorizationStore:
+    effective_clock = clock or MutableClock(NOW)
+    return PostgresCapitalAuthorizationStore(dsn, clock=effective_clock)
 
 
 def _fund_cash(dsn: str, amount: Decimal, currency: str) -> None:
@@ -212,7 +225,14 @@ def _seed_allocations(
     return hypothesis, evaluation, plan.allocations
 
 
-def _request(allocation, *, key: str, risk: RiskLevel = RiskLevel.LOW):
+def _request(
+    allocation,
+    *,
+    key: str,
+    risk: RiskLevel = RiskLevel.LOW,
+    requested_at: datetime = NOW,
+    expires_at: datetime | None = None,
+):
     capital = allocation.capital_requirement
     assert capital is not None
     return CapitalAuthorizationRequest(
@@ -225,8 +245,8 @@ def _request(allocation, *, key: str, risk: RiskLevel = RiskLevel.LOW):
         category=capital.category,
         stage=CapitalStage.PROBE,
         risk=risk,
-        requested_at=NOW,
-        expires_at=NOW + timedelta(hours=1),
+        requested_at=requested_at,
+        expires_at=expires_at or requested_at + timedelta(hours=1),
     )
 
 
@@ -249,6 +269,75 @@ def _envelope(
     )
 
 
+def _record_spend(
+    dsn: str,
+    authorization_id,
+    *,
+    amount: Decimal,
+    occurred_at: datetime,
+    link_authorization: bool = True,
+):
+    metadata = (
+        {"capital_authorization_id": str(authorization_id)}
+        if link_authorization
+        else {}
+    )
+    return PostgresEconomicLedgerStore(dsn).record(
+        LedgerTransactionRequest(
+            idempotency_key=f"spend:{uuid4()}",
+            occurred_at=occurred_at,
+            description="Consume bounded paid acquisition authorization",
+            postings=(
+                LedgerPosting(
+                    account=LedgerAccount.ACQUISITION_SPEND,
+                    side=LedgerSide.DEBIT,
+                    amount=amount,
+                    currency="USD",
+                ),
+                LedgerPosting(
+                    account=LedgerAccount.CASH,
+                    side=LedgerSide.CREDIT,
+                    amount=amount,
+                    currency="USD",
+                ),
+            ),
+            metadata=metadata,
+        )
+    )
+
+
+def test_portfolio_allocation_does_not_authorize_or_spend_capital(postgres_dsn: str) -> None:
+    _seed_allocations(postgres_dsn, (Decimal("10"),))
+
+    with psycopg.connect(postgres_dsn) as conn:
+        authorization_count = conn.execute(
+            "SELECT COUNT(*) FROM capital_authorization"
+        ).fetchone()
+        ledger_count = conn.execute(
+            "SELECT COUNT(*) FROM economic_ledger_transaction"
+        ).fetchone()
+
+    assert authorization_count == (0,)
+    assert ledger_count == (0,)
+
+
+def test_authorization_itself_does_not_create_ledger_spend(postgres_dsn: str) -> None:
+    _fund_cash(postgres_dsn, Decimal("100"), "USD")
+    _, _, allocations = _seed_allocations(postgres_dsn, (Decimal("25"),))
+    with psycopg.connect(postgres_dsn) as conn:
+        before = conn.execute("SELECT COUNT(*) FROM economic_ledger_transaction").fetchone()
+
+    authorization = _store(postgres_dsn).authorize(
+        _request(allocations[0], key="authorize-no-spend"),
+        _envelope(),
+    )
+
+    with psycopg.connect(postgres_dsn) as conn:
+        after = conn.execute("SELECT COUNT(*) FROM economic_ledger_transaction").fetchone()
+    assert authorization.status is CapitalAuthorizationStatus.ACTIVE
+    assert before == after
+
+
 def test_concurrent_authorizations_cannot_claim_same_cash(postgres_dsn: str) -> None:
     _fund_cash(postgres_dsn, Decimal("100"), "USD")
     _, _, allocations = _seed_allocations(
@@ -258,7 +347,7 @@ def test_concurrent_authorizations_cannot_claim_same_cash(postgres_dsn: str) -> 
     barrier = Barrier(2)
 
     def attempt(index: int) -> bool:
-        store = PostgresCapitalAuthorizationStore(postgres_dsn)
+        store = _store(postgres_dsn)
         request = _request(allocations[index], key=f"concurrent-capital-{index}")
         barrier.wait()
         try:
@@ -285,15 +374,43 @@ def test_capital_authorization_is_retry_idempotent_and_conflict_safe(
     _fund_cash(postgres_dsn, Decimal("100"), "USD")
     _, _, allocations = _seed_allocations(postgres_dsn, (Decimal("40"),))
     request = _request(allocations[0], key="capital-idempotent")
-    store = PostgresCapitalAuthorizationStore(postgres_dsn)
+    clock = MutableClock(NOW)
+    store = _store(postgres_dsn, clock)
 
     first = store.authorize(request, _envelope())
+    clock.value = NOW + timedelta(minutes=10)
     retry = store.authorize(request, _envelope())
     assert retry == first
+    assert first.requested_at == NOW
+    assert first.authorized_at == NOW
 
     conflicting = request.model_copy(update={"risk": RiskLevel.MEDIUM})
     with pytest.raises(CapitalAuthorizationConflictError, match="different semantics"):
         store.authorize(conflicting, _envelope())
+
+
+def test_request_timestamp_cannot_expire_existing_authorization(postgres_dsn: str) -> None:
+    _fund_cash(postgres_dsn, Decimal("100"), "USD")
+    _, _, allocations = _seed_allocations(
+        postgres_dsn,
+        (Decimal("60"), Decimal("60")),
+    )
+    store = _store(postgres_dsn, MutableClock(NOW))
+    first = store.authorize(
+        _request(allocations[0], key="trusted-clock-first"),
+        _envelope(),
+    )
+    future_request = _request(
+        allocations[1],
+        key="untrusted-future-request",
+        requested_at=NOW + timedelta(hours=2),
+        expires_at=NOW + timedelta(hours=3),
+    )
+
+    with pytest.raises(CapitalAuthorizationDeniedError, match="ledger cash"):
+        store.authorize(future_request, _envelope())
+
+    assert store.get(first.id).status is CapitalAuthorizationStatus.ACTIVE  # type: ignore[union-attr]
 
 
 def test_operator_zero_ceiling_blocks_ledger_funded_spend(postgres_dsn: str) -> None:
@@ -301,7 +418,7 @@ def test_operator_zero_ceiling_blocks_ledger_funded_spend(postgres_dsn: str) -> 
     _, _, allocations = _seed_allocations(postgres_dsn, (Decimal("10"),))
 
     with pytest.raises(CapitalAuthorizationDeniedError, match="operator hard ceiling"):
-        PostgresCapitalAuthorizationStore(postgres_dsn).authorize(
+        _store(postgres_dsn).authorize(
             _request(allocations[0], key="zero-ceiling"),
             _envelope(hard_ceiling=Decimal(0)),
         )
@@ -313,7 +430,8 @@ def test_release_and_expiry_restore_authorization_capacity(postgres_dsn: str) ->
         postgres_dsn,
         (Decimal("60"), Decimal("60")),
     )
-    store = PostgresCapitalAuthorizationStore(postgres_dsn)
+    clock = MutableClock(NOW)
+    store = _store(postgres_dsn, clock)
 
     first = store.authorize(
         _request(allocations[0], key="release-first"),
@@ -324,10 +442,13 @@ def test_release_and_expiry_restore_authorization_capacity(postgres_dsn: str) ->
     assert released.status is CapitalAuthorizationStatus.RELEASED
     assert released_again == released
 
-    second_request = _request(allocations[1], key="expire-second")
-    second = store.authorize(second_request, _envelope())
-    expired = store.expire(second.id, as_of=NOW + timedelta(hours=2))
-    expired_again = store.expire(second.id, as_of=NOW + timedelta(hours=2))
+    second = store.authorize(
+        _request(allocations[1], key="expire-second"),
+        _envelope(),
+    )
+    clock.value = NOW + timedelta(hours=2)
+    expired = store.expire(second.id)
+    expired_again = store.expire(second.id)
     assert expired.status is CapitalAuthorizationStatus.EXPIRED
     assert expired_again == expired
 
@@ -338,48 +459,114 @@ def test_currency_isolation_prevents_using_other_currency_cash(postgres_dsn: str
     _, _, allocations = _seed_allocations(postgres_dsn, (Decimal("120"),), currency="USD")
 
     with pytest.raises(CapitalAuthorizationDeniedError, match="ledger cash"):
-        PostgresCapitalAuthorizationStore(postgres_dsn).authorize(
+        _store(postgres_dsn).authorize(
             _request(allocations[0], key="currency-isolation"),
             _envelope(max_per=Decimal("200"), max_outstanding=Decimal("200")),
         )
 
 
+def test_capital_store_rejects_tampered_portfolio_base_currency(postgres_dsn: str) -> None:
+    _fund_cash(postgres_dsn, Decimal("100"), "USD")
+    _, _, allocations = _seed_allocations(postgres_dsn, (Decimal("25"),), currency="USD")
+    with psycopg.connect(postgres_dsn) as conn:
+        conn.execute("UPDATE portfolio_plan SET base_currency = 'EUR'")
+
+    with pytest.raises(ValueError, match="portfolio base currency"):
+        _store(postgres_dsn).authorize(
+            _request(allocations[0], key="tampered-base-currency"),
+            _envelope(),
+        )
+
+
+def test_consumption_requires_explicit_ledger_authorization_lineage(
+    postgres_dsn: str,
+) -> None:
+    _fund_cash(postgres_dsn, Decimal("100"), "USD")
+    _, _, allocations = _seed_allocations(postgres_dsn, (Decimal("40"),))
+    clock = MutableClock(NOW)
+    store = _store(postgres_dsn, clock)
+    authorization = store.authorize(
+        _request(allocations[0], key="missing-ledger-lineage"),
+        _envelope(),
+    )
+    transaction = _record_spend(
+        postgres_dsn,
+        authorization.id,
+        amount=Decimal("40"),
+        occurred_at=NOW + timedelta(minutes=5),
+        link_authorization=False,
+    )
+    clock.value = NOW + timedelta(minutes=5)
+
+    with pytest.raises(ValueError, match="not linked"):
+        store.consume(authorization.id, transaction.id)
+
+    assert store.get(authorization.id).status is CapitalAuthorizationStatus.ACTIVE  # type: ignore[union-attr]
+
+
+def test_consumption_requires_exact_authorized_cash_outflow(postgres_dsn: str) -> None:
+    _fund_cash(postgres_dsn, Decimal("100"), "USD")
+    _, _, allocations = _seed_allocations(postgres_dsn, (Decimal("40"),))
+    clock = MutableClock(NOW)
+    store = _store(postgres_dsn, clock)
+    authorization = store.authorize(
+        _request(allocations[0], key="wrong-cash-outflow"),
+        _envelope(),
+    )
+    transaction = _record_spend(
+        postgres_dsn,
+        authorization.id,
+        amount=Decimal("39"),
+        occurred_at=NOW + timedelta(minutes=5),
+    )
+    clock.value = NOW + timedelta(minutes=5)
+
+    with pytest.raises(ValueError, match="cash outflow does not match"):
+        store.consume(authorization.id, transaction.id)
+
+
+def test_consumption_rejects_spend_event_after_expiry(postgres_dsn: str) -> None:
+    _fund_cash(postgres_dsn, Decimal("100"), "USD")
+    _, _, allocations = _seed_allocations(postgres_dsn, (Decimal("40"),))
+    clock = MutableClock(NOW)
+    store = _store(postgres_dsn, clock)
+    authorization = store.authorize(
+        _request(allocations[0], key="late-spend"),
+        _envelope(),
+    )
+    transaction = _record_spend(
+        postgres_dsn,
+        authorization.id,
+        amount=Decimal("40"),
+        occurred_at=NOW + timedelta(hours=1),
+    )
+    clock.value = NOW + timedelta(hours=1, minutes=1)
+
+    with pytest.raises(ValueError, match="after authorization expiry"):
+        store.consume(authorization.id, transaction.id)
+
+
 def test_consumption_requires_ledger_lineage_and_preserves_history(postgres_dsn: str) -> None:
     _fund_cash(postgres_dsn, Decimal("100"), "USD")
     _, _, allocations = _seed_allocations(postgres_dsn, (Decimal("40"),))
-    store = PostgresCapitalAuthorizationStore(postgres_dsn)
+    clock = MutableClock(NOW)
+    store = _store(postgres_dsn, clock)
     authorization = store.authorize(
         _request(allocations[0], key="consume-capital"),
         _envelope(),
     )
-
-    transaction = PostgresEconomicLedgerStore(postgres_dsn).record(
-        LedgerTransactionRequest(
-            idempotency_key="consume-capital-ledger",
-            occurred_at=NOW + timedelta(minutes=5),
-            description="Consume bounded paid acquisition authorization",
-            postings=(
-                LedgerPosting(
-                    account=LedgerAccount.ACQUISITION_SPEND,
-                    side=LedgerSide.DEBIT,
-                    amount=Decimal("40"),
-                    currency="USD",
-                ),
-                LedgerPosting(
-                    account=LedgerAccount.CASH,
-                    side=LedgerSide.CREDIT,
-                    amount=Decimal("40"),
-                    currency="USD",
-                ),
-            ),
-        )
-    )
-    consumed = store.consume(
+    transaction = _record_spend(
+        postgres_dsn,
         authorization.id,
-        transaction.id,
-        as_of=NOW + timedelta(minutes=5),
+        amount=Decimal("40"),
+        occurred_at=NOW + timedelta(minutes=5),
     )
+    clock.value = NOW + timedelta(minutes=5)
+
+    consumed = store.consume(authorization.id, transaction.id)
 
     assert consumed.status is CapitalAuthorizationStatus.CONSUMED
     assert consumed.ledger_transaction_id == transaction.id
+    assert consumed.requested_at == NOW
+    assert consumed.authorized_at == NOW
     assert store.get(authorization.id) == consumed
