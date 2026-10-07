@@ -15,6 +15,7 @@ ALTER TABLE decision
     ADD COLUMN IF NOT EXISTS blast_radius double precision,
     ADD COLUMN IF NOT EXISTS reversible boolean,
     ADD COLUMN IF NOT EXISTS human_gate_required boolean,
+    ADD COLUMN IF NOT EXISTS reservation_expires_at timestamptz,
     ADD COLUMN IF NOT EXISTS child_experiment_id uuid REFERENCES experiment(id) ON DELETE RESTRICT,
     ADD COLUMN IF NOT EXISTS child_contract_id uuid REFERENCES experiment_contract(id) ON DELETE RESTRICT,
     ADD COLUMN IF NOT EXISTS resource_reservation_id uuid REFERENCES resource_reservation(id) ON DELETE RESTRICT,
