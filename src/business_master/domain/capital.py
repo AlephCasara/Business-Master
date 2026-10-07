@@ -112,9 +112,12 @@ class CapitalEnvelope(BaseModel):
     def validate_period(self) -> Self:
         if (self.period_start is None) != (self.period_end is None):
             raise ValueError("capital period_start and period_end must be provided together")
-        if self.period_start is not None and self.period_end is not None:
-            if self.period_end <= self.period_start:
-                raise ValueError("capital period_end must be after period_start")
+        if (
+            self.period_start is not None
+            and self.period_end is not None
+            and self.period_end <= self.period_start
+        ):
+            raise ValueError("capital period_end must be after period_start")
         if self.operator_hard_ceiling is not None and self.period_start is None:
             raise ValueError("operator_hard_ceiling requires an explicit control period")
         return self
