@@ -14,7 +14,7 @@ from business_master.domain.portfolio import (
     PortfolioPlanRequest,
     PortfolioRole,
 )
-from business_master.domain.resources import ResourceVector
+from business_master.domain.resources import ResourceAvailability, ResourceVector
 
 _RISK_ORDER: dict[RiskLevel, int] = {
     RiskLevel.ZERO: 0,
@@ -30,7 +30,7 @@ class PortfolioPolicy:
     """Pure V2 constrained portfolio policy over bounded candidate actions."""
 
     name: str = "portfolio_control"
-    version: str = "1"
+    version: str = "2"
     economic_weight: float = 0.30
     information_weight: float = 0.25
     option_weight: float = 0.10
@@ -144,6 +144,7 @@ class PortfolioPolicy:
                 "feedback_weight": self.feedback_weight,
                 "uncertainty_weight": self.uncertainty_weight,
                 "scarcity_penalty_weight": self.scarcity_penalty_weight,
+                "base_currency": request.base_currency,
                 "max_candidates": request.max_candidates,
                 "exploration_fraction": request.exploration_fraction,
                 "max_group_fraction": request.max_group_fraction,
@@ -163,7 +164,7 @@ class PortfolioPolicy:
     ) -> PortfolioCandidateEvaluation:
         scarcity = self._scarcity_pressure(
             candidate.resource_demand,
-            request.availability.available,
+            request.availability,
         )
 
         if candidate.recommendation in {
@@ -217,6 +218,34 @@ class PortfolioPolicy:
                 rationale="Candidate resource demand does not fit current availability.",
             )
 
+        if candidate.capital_requirement is not None:
+            if candidate.capital_requirement.currency != request.base_currency:
+                return PortfolioCandidateEvaluation(
+                    candidate_id=candidate.id,
+                    eligible=False,
+                    utility=0.0,
+                    scarcity_pressure=scarcity,
+                    rationale=(
+                        "Capital requirement currency differs from portfolio base currency; "
+                        "explicit valuation/FX evidence is required."
+                    ),
+                )
+
+        if (
+            candidate.value.expected_value_currency is not None
+            and candidate.value.expected_value_currency != request.base_currency
+        ):
+            return PortfolioCandidateEvaluation(
+                candidate_id=candidate.id,
+                eligible=False,
+                utility=0.0,
+                scarcity_pressure=scarcity,
+                rationale=(
+                    "Expected monetary value currency differs from portfolio base currency; "
+                    "implicit FX is forbidden."
+                ),
+            )
+
         value = candidate.value
         uncertainty_effect = (
             self.uncertainty_weight * value.uncertainty
@@ -237,19 +266,35 @@ class PortfolioPolicy:
             eligible=True,
             utility=utility,
             scarcity_pressure=scarcity,
-            rationale="Candidate clears family, risk, human-gate, and resource feasibility gates.",
+            rationale=(
+                "Candidate clears family, currency, risk, human-gate, "
+                "and resource feasibility gates."
+            ),
         )
 
     @staticmethod
-    def _scarcity_pressure(demand: ResourceVector, available: ResourceVector) -> float:
+    def _scarcity_pressure(
+        demand: ResourceVector,
+        availability: ResourceAvailability,
+    ) -> float:
+        """Return non-monetary pressure for resources the candidate would consume.
+
+        Existing reservation pressure and the candidate's marginal claim both matter.
+        Hard feasibility is enforced separately and can never be bypassed by scoring.
+        """
+
         if not demand.quantities:
             return 0.0
         pressures: list[float] = []
         for name, amount in demand.quantities.items():
-            capacity = available.amount(name)
-            if capacity <= 0:
+            capacity = availability.capacity.amount(name)
+            free = availability.available.amount(name)
+            reserved = availability.reserved.amount(name)
+            if capacity <= 0 or free <= 0:
                 return 1.0
-            pressures.append(float(amount / capacity))
+            reservation_pressure = min(float(reserved / capacity), 1.0)
+            marginal_pressure = min(float(amount / free), 1.0)
+            pressures.append(max(reservation_pressure, marginal_pressure))
         return max(pressures, default=0.0)
 
     @staticmethod
