@@ -25,6 +25,14 @@ class BusinessOutcome(BaseModel):
 
 
 class OpportunityScore(BaseModel):
+    """Legacy V0 scalar score retained for compatibility.
+
+    ``compute_cost``, ``cash_cost``, and ``human_time_cost`` are intentionally not a
+    canonical V2 cost model: their units are non-fungible. PR9 portfolio/capital
+    control must use ResourceVector feasibility plus authoritative ledger state and
+    explicit policy utility rather than summing these fields as economic truth.
+    """
+
     entity_id: UUID
     expected_value: float
     uncertainty: float = Field(ge=0.0)
