@@ -11,6 +11,7 @@ from business_master.domain.experiment_contracts import (
     ExperimentContract,
     ExperimentContractBinding,
 )
+from business_master.domain.resources import ResourceVector
 
 
 class PostgresExperimentContractStore:
@@ -138,7 +139,9 @@ class PostgresExperimentContractStore:
             expected_observation=row["expected_observation"],
             falsification_condition=row["falsification_condition"],
             measurement=row["measurement"],
-            resource_requirements={"quantities": row["resource_requirements"]},
+            resource_requirements=ResourceVector(
+                quantities=row["resource_requirements"]
+            ),
             budget=row["budget"],
             parent_contract_id=row["parent_contract_id"],
             supersedes_contract_id=row["supersedes_contract_id"],
