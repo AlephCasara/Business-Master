@@ -21,6 +21,8 @@ PR9 introduces deterministic portfolio selection and capital authorization on to
 - caller-supplied request timestamps are audit inputs, not control-plane clock authority;
 - authorization, control-period checks, release, and expiry use a timezone-aware trusted store clock and persist `authorized_at` separately from `requested_at`;
 - bootstrap settings may remain hard operator ceilings but cannot become accounting truth;
+- operator hard ceilings are category-local: an explicit envelope category locks the category, while an unset category uses the request category as the effective ceiling scope;
+- committed ceiling usage is counted within the same currency, category, and explicit control period;
 - capital authorization currency must match the persisted portfolio base currency until an explicit valuation path exists;
 - consuming an authorization requires a separate authoritative ledger transaction explicitly linked to that authorization;
 - a consuming ledger event must have an exact authorized cash outflow, occur within the authorization window, and not be future-dated relative to reconciliation time;
@@ -52,13 +54,15 @@ The suite must prove at least:
 17. A `graduate` family recommendation does not automatically authorize cash spend.
 18. Caller-controlled future/stale `requested_at` values cannot expire other authorizations or manufacture spendable capacity.
 19. Operator control periods and stale-expiry checks use trusted assessment time rather than request time.
-20. Capital authorization rejects tampered lineage where authorization currency differs from the persisted portfolio base currency.
-21. Consumption rejects a ledger transaction that does not explicitly cite the capital authorization.
-22. Consumption rejects a ledger transaction whose cash outflow differs from the authorized amount.
-23. Consumption rejects spend events outside the authorization window or future-dated relative to reconciliation time.
-24. Valid consumption preserves authorization → ledger transaction lineage while keeping authorization and spend as separate artifacts.
-25. No portfolio allocation or capital authorization creates a child experiment or closes the autonomous-loop milestone.
-26. PR0–PR8 compatibility remains green.
+20. An explicitly category-scoped capital envelope rejects a request from another spend category.
+21. An unscoped category-local ceiling consistently uses the request category as its effective scope.
+22. Capital authorization rejects tampered lineage where authorization currency differs from the persisted portfolio base currency.
+23. Consumption rejects a ledger transaction that does not explicitly cite the capital authorization.
+24. Consumption rejects a ledger transaction whose cash outflow differs from the authorized amount.
+25. Consumption rejects spend events outside the authorization window or future-dated relative to reconciliation time.
+26. Valid consumption preserves authorization → ledger transaction lineage while keeping authorization and spend as separate artifacts.
+27. No portfolio allocation or capital authorization creates a child experiment or closes the autonomous-loop milestone.
+28. PR0–PR8 compatibility remains green.
 
 ## Explicit boundary
 
@@ -71,6 +75,7 @@ PR9 must not:
 - treat portfolio selection as an acquired resource lease;
 - record synthetic spend merely because capital was authorized;
 - infer FX rates;
+- reinterpret category-local operator ceilings as a global accounting budget;
 - infer partial capital consumption from unrelated ledger activity;
 - introduce contextual bandits/RL before comparable observations exist;
 - let an LLM authorize capital or rewrite live capital policy;
