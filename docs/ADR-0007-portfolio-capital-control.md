@@ -69,6 +69,16 @@ The following are not authoritative cash balances:
 
 Bootstrap settings remain optional hard operator ceilings. Effective spend permission is bounded by both capital policy and those ceilings, but accounting truth still comes from the ledger.
 
+### Operator ceiling scope
+
+The bootstrap `operator_hard_ceiling` is category-local, matching the existing capital accounting/query semantics. It is never a replacement for ledger cash.
+
+- when `CapitalEnvelope.category` is set, the envelope applies only to that spend category and requests in another category are rejected;
+- when `CapitalEnvelope.category` is unset, the request's own category becomes the effective category for the ceiling calculation;
+- committed amounts are counted only within the same currency, category, and explicit control period.
+
+A future global or cross-category budget requires a separate explicit policy; PR9 does not silently reinterpret this ceiling as one.
+
 ## Authorization is not spend
 
 A capital authorization reserves permission/capacity to spend. It does not record a financial transaction.
