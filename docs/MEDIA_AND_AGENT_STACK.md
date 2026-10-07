@@ -2,379 +2,181 @@
 
 Business Master is **not one large agent**. It is a deterministic economic control system that invokes cognition and execution capabilities selectively.
 
-The architecture separates four planes:
-
 ```text
-┌──────────────────────────────────────────────────────────────┐
-│ ECONOMIC CONTROL PLANE                                       │
-│ Evidence → Beliefs → Evaluation → Portfolio → Decisions      │
-│ authoritative / deterministic where authority matters        │
-└─────────────────────────────┬────────────────────────────────┘
-                              │ bounded capability request
-                              ▼
-┌──────────────────────────────────────────────────────────────┐
-│ COGNITIVE PLANE                                              │
-│ Context Builder · Skills · Model Router · Tool Router         │
-│ planner/worker/evaluator only where useful                    │
-│ working cognition / compaction                               │
-└─────────────────────────────┬────────────────────────────────┘
-                              │ typed action / brief
-                              ▼
-┌──────────────────────────────────────────────────────────────┐
-│ EXECUTION PLANE                                              │
-│ browser · research · platform · commerce · production        │
-│ ComfyUI aesthetic runtime · deterministic executors          │
-│ adapters → receipts → artifacts → telemetry                  │
-└─────────────────────────────┬────────────────────────────────┘
-                              │ process/resource boundary
-                              ▼
-┌──────────────────────────────────────────────────────────────┐
-│ HOST PLANE                                                   │
-│ NixOS/Linux · processes · filesystem · credentials · cgroups │
-│ drivers · model weights · network/security boundaries         │
-└──────────────────────────────────────────────────────────────┘
+ECONOMIC CONTROL PLANE
+Evidence → Beliefs → Evaluation → Portfolio → Decisions
+        │ bounded capability request
+        ▼
+COGNITIVE PLANE
+Context Builder · Skills · Model Router · Tool Router
+        │ typed request / brief
+        ▼
+EXECUTION PLANE
+research · browser · platform · commerce · production
+ComfyUI aesthetic runtime · deterministic executors
+        │ process/resource boundary
+        ▼
+HOST PLANE
+NixOS/Linux · processes · filesystem · credentials · cgroups
 ```
 
-The LLM is a cognitive capability consumed by Business Master. It is not Business Master itself.
+The LLM is a capability consumed by Business Master. It is not Business Master itself.
 
 ---
 
-# 1. Five kinds of truth
+## 1. Authority, truth and memory
 
-Do not mix these layers.
+Keep five kinds of truth separate:
 
-## Economic truth
+| Kind | Authority |
+|---|---|
+| **Economic** | PostgreSQL/domain state: Evidence, beliefs, contracts, resources, ledger, portfolio, capital, decisions |
+| **Procedural** | Skills and approved/versioned workflows |
+| **Architectural** | code, tests, accepted ADRs, current living docs |
+| **Working cognition** | task-local context, plans, scratch, temporary summaries |
+| **Host** | processes, hardware, paths, available executors/models, credentials, network boundaries |
 
-Authoritative durable facts/state such as:
+Working cognition is compressible. Economic truth is not.
 
-```text
-Evidence
-Belief versions
-Experiment contracts
-Portfolio allocations
-Capital authority
-Resource reservations/usage
-Economic Ledger
-Decisions
-```
-
-Primarily PostgreSQL + implemented PR0–PR10 semantics.
-
-Economic truth is not reconstructed from chat summaries.
-
-## Procedural truth
-
-Reusable procedures such as:
+Use three memory layers:
 
 ```text
-Skills
-approved workflows
-workflow schemas
-executor procedures
+authoritative persistent state
+→ working memory / task state
+→ active model context
 ```
 
-Procedures explain **how to perform a class of task**. They do not override economic authority.
+Compaction may lose transient reasoning nuance; it must never replace or discard authoritative Evidence, ledger events, contracts, resource/capital authority, decisions or causal lineage.
 
-## Architectural truth
-
-```text
-code
-tests
-accepted ADRs
-current living architecture docs
-```
-
-Historical RFC/research content may describe older assumptions without remaining current authority.
-
-## Working cognition
-
-Ephemeral or compressible state used while reasoning:
-
-```text
-active plan
-scratch notes
-retrieved context
-intermediate hypotheses
-temporary summaries
-subagent results
-```
-
-It can be compacted or discarded.
-
-## Host truth
-
-Observed machine/deployment facts:
-
-```text
-processes
-GPU/VRAM/RAM
-filesystem paths
-available executors/models
-credentials
-network boundaries
-systemd/container state
-```
-
-Host truth is not economic policy.
+Long-running work should persist structured progress/references instead of depending on an indefinitely growing conversation transcript.
 
 ---
 
-# 2. Context engineering
+## 2. Context engineering, Skills and tools
 
-Context is a scarce resource. Do not maximize how much the model sees; maximize **relevant information per context token**.
+Context is scarce. Optimize **relevant information per token**, not total information exposed.
 
-Default pattern:
+Preferred pattern:
 
 ```text
-Task / Decision
+Task
 → Context Builder
-→ small authoritative references
+→ small authoritative refs/summary
 → retrieve details just-in-time
-→ execute / reason
+→ reason/execute
 ```
 
-Prefer references such as IDs, artifact refs, entity refs, query handles and document paths over copying entire World Model histories into prompts.
+Prefer IDs, ArtifactRefs, entity refs and document paths over dumping entire histories into prompts.
 
-A cognitive task should receive only what it needs, for example:
+A **Skill** is a reusable procedure loaded when relevant. It may know how to research, write, evaluate, author a workflow or perform another specialized task. It does not override the ledger, Capital Control, portfolio policy, Evidence semantics, permissions or risk gates.
 
-```text
-Experiment #347
-current Contract #52
-Evidence refs [221, 224, 229]
-current Belief version #17
-current CreativeConcept #42
-current Offer #8
-Task: propose materially distinct hooks
-Skill: short-form creative
-Surface: TikTok
-```
-
-Then retrieve details when required.
-
-Do not use prompt context as the durable database.
-
----
-
-# 3. Memory model
-
-Use three distinct memory layers.
-
-## Authoritative persistent state
-
-Economic/domain truth. Never silently compressed away.
-
-## Working memory
-
-Task-local notes, intermediate reasoning state, temporary research summaries, progress markers and references. May be compacted.
-
-## Active model context
-
-The tokens currently supplied to the model. Ephemeral and deliberately minimal.
-
-Rule:
-
-> compaction may lose transient reasoning nuance; it must never lose an Evidence record, ledger event, authoritative Decision, ExperimentContract, resource/capital authority, or causal lineage.
-
-When long work needs continuity, persist structured task/progress state or ArtifactRefs rather than depending on an indefinitely growing conversation transcript.
-
----
-
-# 4. Skills
-
-A Skill is a **procedural cognitive capability loaded when relevant**, not an economic authority.
-
-Possible future examples:
-
-```text
-market-research
-short-form-script
-creative-analysis
-product-spec-authoring
-low-ticket-copy
-retention-analysis
-competitor-analysis
-comfy-workflow-authoring
-```
-
-A Skill may know how to perform a procedure. It may not autonomously override:
-
-```text
-Capital Control
-Economic Ledger
-portfolio allocation
-risk gates
-Evidence semantics
-permission/account policy
-```
-
-Keep skill descriptions discoverable and concise. Load full procedural detail only when the current task requires it.
-
-Do not put every procedural instruction in root `AGENTS.md`.
-
----
-
-# 5. Capability and tool routing
-
-Avoid giving every model every tool/integration at startup.
-
-Preferred model:
+Do not expose every integration/tool to every model call.
 
 ```text
 Task
 → required capability classes
-→ CapabilityCatalog / Tool Router
+→ Capability/Tool Router
 → small relevant tool subset
 → model/executor
 ```
 
-This becomes important as Business Master accumulates browsers, social surfaces, commerce venues, research sources, ComfyUI workflows, model servers and host tools.
+Provider APIs/MCP servers are catalog entries/adapters, not the cognitive architecture.
 
-Tool names/contracts should be semantically distinct enough that the model does not choose between many overlapping near-duplicates.
-
-Provider-specific APIs/MCP servers are catalog entries/adapters, not the cognitive architecture.
+Root `AGENTS.md` should remain global and small; procedural detail belongs in contextual docs/Skills/scoped instructions only when justified by a real subtree.
 
 ---
 
-# 6. Model routing
+## 3. Model, planner and multi-agent policy
 
-Model choice is policy over task class and economics.
-
-Examples:
+Route by task economics and semantics:
 
 ```text
 known calculation/state transition → deterministic code
 structured extraction             → parser / small model
-semantic synthesis                → capable language model
+semantic synthesis                → suitable language model
 creative reasoning                → suitable language/multimodal model
 ambiguous visual evaluation       → VLM
 unfamiliar GUI recovery           → computer-use model
 ```
 
-Measure successful-task quality, latency, model/API cost, compute/RAM/VRAM pressure, invalid actions, retries, and downstream economic effect when attributable.
+Measure successful-task quality, latency, cash/model cost, CPU/RAM/GPU/VRAM pressure, invalid actions, retries and human recovery.
 
-Paid APIs are allowed when expected value and Capital Control/operator policy justify them.
-
----
-
-# 7. Planner / worker / evaluator policy
-
-Do not force every task through a heavyweight agent hierarchy.
+Do not force every task through planner/worker/evaluator scaffolding:
 
 ```text
-simple deterministic task
-→ direct execution
-
-simple semantic task
-→ one bounded model call
-
-complex decomposable task
-→ planner + worker(s) when useful
-
-high-value / frontier-quality output
-→ evaluator or independent verification when useful
-
-irreversible / high-blast action
-→ deterministic gate regardless of model confidence
+simple deterministic task → direct execution
+simple semantic task      → bounded model call
+complex decomposable task → planner/workers when useful
+high-value uncertain work → evaluator/independent verification when useful
+irreversible action       → deterministic gate regardless of model confidence
 ```
-
-Evaluator effort itself consumes resources. Use it where expected risk/quality benefit warrants the cost.
-
----
-
-# 8. Multi-agent policy
 
 `Factory != Agent`.
 
-Use subagents/multiple agents only when the workload materially benefits from:
-
-```text
-parallelism
-isolated context
-specialized tool surface
-independent verification
-```
-
-Do not create a permanent corporate org chart of `CEO Agent`, `CMO Agent`, `CFO Agent`, etc. merely because a company has departments.
-
-A factory may be deterministic code + one model call + a Skill + an evaluator, with no resident agent at all.
+Use multiple agents only when they materially improve parallelism, context isolation, specialized tool access or independent verification. Do not create a permanent CEO/CMO/CFO-style agent hierarchy by analogy with a company org chart.
 
 ---
 
-# 9. Artifact-first coordination
+## 4. Artifacts and execution coordination
 
-Large intermediate outputs should travel by reference, not through repeated conversational copying.
+Large intermediate outputs travel by reference:
 
 ```text
-Producer / Agent / Executor
-→ writes Artifact
-→ returns ArtifactRef + ExecutionReceipt
-
-Evaluator
-→ reads ArtifactRef
-
-Publisher / Commerce adapter
-→ consumes ArtifactRef
+producer/agent/executor
+→ ArtifactStore
+→ ArtifactRef + ExecutionReceipt
+→ next consumer/evaluator/publisher
 ```
 
-`ArtifactStore` is authoritative for artifact identity/lifecycle. PostgreSQL stores metadata/references rather than heavy binary payloads.
+PostgreSQL stores authoritative metadata/lineage; heavy binary artifacts belong in `ArtifactStore`.
 
-This reduces context pressure and preserves provenance across process/model boundaries.
-
----
-
-# 10. Execution plane hierarchy
-
-For known external workflows prefer:
+For external execution prefer:
 
 ```text
 official API / SDK
-→ direct structured HTTP
+→ structured HTTP
 → deterministic browser/mobile execution
-→ semantic recovery/computer use
+→ semantic computer-use recovery
 → legitimate human gate
 ```
 
-This is a routing prior, not an ideological rule. A replaceable aggregator may be economically superior when it reduces implementation/maintenance cost without becoming domain authority.
+This is a routing prior, not an ideological ban on replaceable aggregators when they materially reduce time/cost and remain behind domain contracts.
 
-Do not route a stable structured operation through visual computer use merely because an agent can click it.
-
----
-
-# 11. Browser and computer-use execution
-
-Use Playwright or equivalent deterministic browser execution for stable DOM/accessibility workflows.
-
-Use semantic browser/computer-use only when deterministic interfaces are unavailable/unstable or the task genuinely requires visual/semantic judgment.
-
-Persist enough execution state/receipts to reconcile retries.
-
-Never use browser/computer-use as a way to bypass CAPTCHA, KYC, 2FA, access controls, account review, or anti-abuse systems.
-
-Untrusted web/browser workloads should have a smaller credential/network/file blast radius than authoritative control/financial processes.
+Never use browser/computer-use to bypass CAPTCHA, KYC, 2FA, account review, access controls or anti-abuse systems.
 
 ---
 
-# 12. Mobile/device execution
+## 5. Host and credential boundary
 
-Treat a phone/device as a schedulable actuator/peripheral.
+Business Master owns **economic/resource admission**. NixOS/systemd/cgroups or equivalent host mechanisms own physical enforcement, process supervision and isolation.
 
 ```text
-platform API
-→ deterministic ADB/accessibility
-→ semantic mobile execution
-→ general computer-use
-→ human gate
+Business Master:
+should this work reserve/consume these resources?
+
+Host:
+can this process physically consume/reach these resources?
 ```
 
-Device-dependent work waits durably when the device/capability is unavailable.
+Raw credentials should not enter ordinary model context.
 
-Identity/liveness remains a human boundary.
+Preferred flow:
+
+```text
+model/domain produces typed request + CredentialRef
+→ deterministic adapter/process resolves secret
+→ secret remains inside the smallest required authority boundary
+```
+
+Separate processes/sandboxes by real blast radius or resource/failure domain, for example untrusted web research, browser execution, GPU/aesthetic production, platform writes or financially consequential execution. Do not create one daemon per conceptual agent/persona.
+
+Business Master does not install/configure its own workstation.
 
 ---
 
-# 13. Production Factory contract
+## 6. Production Factory contract
 
-Business Master should request **semantic production capabilities**, not model/checkpoint/node details.
+Business Master requests **semantic production capabilities**, not model/checkpoint/node details.
 
 Representative capabilities:
 
@@ -385,180 +187,91 @@ generate_carousel
 generate_storyboard
 animate_shot
 synthesize_voice
-compose_short
-compose_longform
+compose_short / compose_longform
 render_document
 edit_visual
 create_product_mockup
 ```
 
-A production result should be able to return:
+A production result should provide, where applicable:
 
 ```text
 ArtifactRef
 ExecutionReceipt
 technical QC
-aesthetic/perceptual QC where applicable
+aesthetic/perceptual QC
 resource usage
 provenance
 ```
 
-Executor implementations may include ComfyUI, FFmpeg, deterministic document renderers, model servers/APIs, TTS systems and future tools.
+Executors may include ComfyUI, FFmpeg, deterministic document renderers, TTS/model servers/APIs and future tools. Their implementation details do not become economic-domain concepts.
 
 ---
 
-# 14. Aesthetic authority boundary
+# 7. ComfyUI — canonical aesthetic workflow runtime
 
-The operator's architectural decision is:
+Operator architecture decision:
 
-> **ComfyUI is the canonical runtime for everything that materially involves aesthetic realization.**
+> **ComfyUI is the canonical runtime for work that materially involves aesthetic realization.**
 
-This does **not** mean ComfyUI chooses markets, products, prices, economic allocation or evidence interpretation.
+ComfyUI is best understood here as a programmable **node-graph generative inference/workflow runtime**, not merely an image generator or GUI.
 
-Business Master / Creative / Product layers decide semantics such as:
+Its workflows can compose model loading, prompts/conditioning, references, masks/control, generation, image/video/audio processing, editing/inpainting, compositing, enhancement, local/remote model nodes, QC and outputs.
+
+The visual UI is for workflow authoring, R&D, inspection and debugging. Automated production should be headless/API-driven.
+
+ComfyUI is **not** an economic authority. It does not choose markets, Products, Offers, prices, capital allocation, evidence interpretation or whether a hypothesis should SCALE.
+
+---
+
+## 8. Business Master ↔ ComfyUI boundary
+
+Business Master / Product / Creative layers own semantic intent such as:
 
 ```text
-audience
-problem/desire
+audience and problem/desire
 message / angle
 claim / proof
 script / information structure
 CTA objective
 ProductSpec / Offer relationship
-platform/format constraints
-resource/quality tier
+platform / format constraints
 brand/reference identity
+quality/resource tier
 ```
 
-They should **not resolve the full visual/auditory solution** before ComfyUI.
-
-Business Master sends a `CreativeBrief`, `ProductBrief`, production constraints and references. The ComfyUI aesthetic subsystem materializes how that intent should look/sound/present.
-
----
-
-# 15. What ComfyUI is in this architecture
-
-ComfyUI is a programmable **node-graph generative inference/workflow runtime**.
-
-A workflow can compose nodes for model loading, prompts/conditioning, references, masks/control, sampling/generation, image/video/audio processing, editing/inpainting, compositing, enhancement, API/partner model calls, QC and output.
-
-Therefore the architectural abstraction is not:
-
-```text
-ComfyUI = Stable Diffusion GUI
-```
-
-It is closer to:
-
-```text
-ComfyUI = programmable aesthetic/generative DAG runtime
-```
-
-The visual interface is primarily for workflow authoring, experimentation, inspection and debugging. Production invocation should be headless/API-driven.
-
----
-
-# 16. Aesthetic subsystem responsibilities
-
-When aesthetics are material, the ComfyUI subsystem may own/implement decisions such as:
-
-```text
-visual representation
-composition/layout treatment
-image/video style
-lighting/camera treatment where relevant
-reference/identity conditioning
-image/video generation
-inpainting/editing/replacement
-B-roll/shot realization
-motion graphics treatment
-cover/thumbnail aesthetic
-carousel visual system
-product mockups
-PDF/document visual system
-typography/style treatment
-color treatment
-visual consistency
-voice/audio aesthetic treatment where applicable
-enhancement/upscale/repair
-aesthetic QC and repair loop
-```
-
-The exact decision may be implemented by workflow logic, a model/VLM within the workflow, reusable subgraphs/profiles, or deterministic nodes.
-
-ComfyUI does not receive authority to decide whether the underlying economic action should happen.
-
----
-
-# 17. ComfyUI request boundary
+They should not resolve the full aesthetic solution before dispatch.
 
 Preferred boundary:
 
 ```text
 Economic / Product / Creative semantics
-              │
-              ▼
+              ↓
 CreativeBrief / ProductBrief
 + format/platform constraints
 + references/brand identity
 + quality/resource profile
-              │
-              ▼
-       ComfyUI Aesthetic Runtime
-              │
-     workflow/profile selection
-     parameter/reference binding
-     model/node execution
-     generation/edit/composition
-     aesthetic QC/repair
-              │
-              ▼
- ArtifactRef + ComfyExecution receipt
+              ↓
+ComfyUI Aesthetic Runtime
+              ↓
+workflow/profile selection
+reference/parameter binding
+model/node execution
+generation/edit/composition
+aesthetic QC/repair
+              ↓
+ArtifactRef + execution receipt
 ```
 
-Avoid sending a fully resolved `AestheticSpec` that already dictates every aesthetic decision; that would move aesthetic authority out of ComfyUI and contradict this boundary.
+Do not require Business Master to specify gradients, lens choices, exact checkpoints/LoRAs/samplers or node graphs. Those belong to aesthetic workflow implementation.
+
+Within approved constraints, the aesthetic subsystem may resolve composition/layout treatment, image/video style, reference consistency, generated/editable imagery, B-roll/shot realization, motion treatment, covers/thumbnails, carousel visual systems, product mockups, document visual systems, typography/style/color treatment, enhancement and aesthetic QC/repair.
 
 ---
 
-# 18. ComfyUI workflow architecture
+## 9. Workflow lifecycle and production discipline
 
-Treat production workflows as versioned executable assets.
-
-Conceptually maintain reusable building blocks/profiles such as:
-
-```text
-aesthetic primitives / subgraphs
-  brand/reference consistency
-  composition/layout
-  typography
-  product isolation/mockup
-  color/finishing
-  aesthetic QC/repair
-
-production workflows
-  social carousel
-  short video
-  thumbnail/cover
-  product ad
-  product mockup
-  document visual system
-  long-form visual package
-
-quality/resource profiles
-  PROBE
-  PILOT
-  SCALE
-```
-
-Do not create this exact directory tree until actual implementation structure warrants it.
-
-Subgraphs/reusable workflow components should reduce duplicated graph logic while retaining explicit version/provenance.
-
----
-
-# 19. Workflow lifecycle
-
-Use three conceptual lifecycle states:
+Treat Comfy workflows as versioned executable assets with a simple lifecycle:
 
 ```text
 AUTHORING
@@ -566,115 +279,83 @@ AUTHORING
 → PRODUCTION
 ```
 
-## AUTHORING
+### AUTHORING
 
-Visual ComfyUI usage is allowed/expected for workflow engineering:
+Use the visual ComfyUI environment to experiment with graphs, nodes, models, references and techniques.
 
-- experiment with graph structure/models/nodes;
-- inspect references/conditioning;
-- debug output;
-- benchmark alternative techniques.
-
-## VALIDATED
+### VALIDATED
 
 Before promotion, verify:
 
-```text
-headless/API execution works
-input schema is known
-outputs are identifiable
-required custom nodes/models are known
-no accidental UI-only dependency
-resource profile measured enough for scheduling
-technical/aesthetic QC acceptable
-license/production restrictions understood
-provenance fields available
-```
+- headless/API execution works;
+- input schema and output identity are known;
+- required custom nodes/models are known;
+- no accidental UI-only dependency exists;
+- resource profile is measured enough for scheduling;
+- technical/aesthetic QC is acceptable;
+- license/production restrictions are understood;
+- required provenance can be captured.
 
-## PRODUCTION
+### PRODUCTION
 
-Automation invokes a pinned/versioned workflow through the adapter. Dependency/workflow changes require deliberate revalidation rather than arbitrary runtime node installation.
+Business Master invokes a pinned/versioned workflow through the adapter. Dependency/workflow changes require deliberate revalidation. Do not install arbitrary custom nodes during autonomous production execution.
+
+Reusable subgraphs/workflow components are encouraged when they reduce duplicated graph logic without hiding version/provenance.
 
 ---
 
-# 20. Headless ComfyUI execution
+## 10. Headless execution, durability and reconciliation
 
-Production should not automate the ComfyUI browser UI.
-
-The local ComfyUI server accepts workflow submissions through its API/queue model. The adapter should retain Business Master's durable job identity separately from ComfyUI's execution identity (for example the returned prompt/job identifier), observe progress/result state, and retrieve outputs through supported server interfaces.
-
-Conceptually:
+ComfyUI's queue/execution identity is an executor surface, not Business Master's source of truth.
 
 ```text
 BusinessMaster ProductionJob
         │ authoritative durable identity
         ▼
 ComfyAdapter
-        │ submit versioned workflow + bound inputs
+        │ submit workflow + bound refs/inputs
         ▼
-ComfyUI queue / prompt execution
-        │
-        ├─ progress/events
-        └─ history/result/output lookup
+ComfyUI queue/execution
+        │ progress/result/history
         ▼
 ArtifactStore
 ```
 
-ComfyUI's queue/history is an executor surface, **not** Business Master's durable source of truth.
-
----
-
-# 21. ComfyUI retry/reconciliation
-
-Never assume a client timeout/crash means the Comfy workflow did not execute.
-
-Persist before dispatch:
+Persist Business Master intent before dispatch:
 
 ```text
 ProductionJob ID
 workflow ID/version/hash
-bound input/artifact refs
+bound input/ArtifactRefs
 idempotency identity
 resource reservation
 ```
 
-After successful submission persist the external Comfy execution reference.
+After successful submission, persist the Comfy execution/prompt reference.
 
-On Business Master restart:
+On restart/client timeout:
 
 ```text
-has Comfy execution ref?
-→ reconcile queued/running/completed state
-→ recover outputs/history if available
-→ verify ArtifactStore/QC receipt
+existing Comfy ref?
+→ reconcile queued/running/completed result
+→ recover output/history when available
+→ verify Artifact/QC state
 → retry only when policy proves a new execution is required
 ```
 
-Do not blindly resubmit an expensive generation after a polling/client failure.
+Never blindly resubmit expensive generation because polling or the caller crashed.
 
-PR11 owns durable Job/Attempt/lease/retry semantics. ComfyUI owns execution of the aesthetic graph.
+PR11 owns durable Job/Attempt/lease/retry/idempotency semantics. ComfyUI owns execution of the aesthetic graph.
 
----
-
-# 22. Headless compatibility and custom nodes
-
-Not every experimental node/workflow is automatically production-safe.
-
-A production workflow must be tested in the same headless/API execution mode that Business Master will use.
-
-Avoid production dependency on custom-node behavior that exists only through frontend/UI interactions or undocumented mutable local state.
-
-Custom nodes/dependencies must be known, pinned/controlled as appropriate, and reviewed before promotion. Do not install arbitrary custom nodes during an autonomous production execution.
+Production workflows must be tested in the same headless mode used by automation; experimental custom-node behavior that depends on frontend-only interactions is not automatically production-safe.
 
 ---
 
-# 23. ComfyUI models and API nodes
+## 11. Models, dependencies and provenance
 
-Business Master's domain should not know that an aesthetic job used a specific checkpoint, LoRA, sampler, video model, image model, or remote API.
+Business Master's domain should not depend on a specific checkpoint, LoRA, sampler, video model, image model or remote aesthetic API.
 
-Those are workflow/executor dependencies.
-
-ComfyUI may compose:
+Comfy workflows may combine:
 
 ```text
 local models
@@ -685,295 +366,116 @@ post-processing
 QC/evaluation
 ```
 
-inside the same aesthetic workflow boundary.
-
-This allows the aesthetic system to change implementations without proliferating model-specific adapters through the economic domain.
-
 Business Master may know measured capability properties such as expected cost, latency, resource demand, quality tier and supported artifact class.
 
----
-
-# 24. Aesthetic provenance
-
-For each material aesthetic artifact, preserve enough provenance to reproduce/audit production where practical:
+For material aesthetic artifacts preserve enough provenance to reproduce/audit execution where practical:
 
 ```text
 Experiment / CreativeConcept / Product / Offer refs as applicable
 PlatformVariant ref
-CreativeBrief/ProductBrief version
-workflow ID + version/hash
+brief version
+workflow ID/version/hash
 model/node dependency versions
 seed/settings where meaningful
-reference ArtifactRefs
-input bindings
+reference ArtifactRefs / bound inputs
 runtime/executor version
 resource usage
 QC results
 license/provenance class
-output ArtifactRef(s)
+output ArtifactRefs
 ```
 
-This supports later questions such as:
-
-```text
-which aesthetic treatment improved retention?
-which workflow improved click-through?
-which visual system improved checkout behavior?
-which quality tier justified its GPU/cash cost?
-```
+This allows later economic analysis of aesthetic treatment, workflow quality and compute cost without moving those implementation details into portfolio policy.
 
 ---
 
-# 25. PROBE / PILOT / SCALE aesthetic profiles
+## 12. PROBE / PILOT / SCALE quality profiles
 
-The economic stage controls **how much resource/quality budget is justified**, while ComfyUI controls the aesthetic realization inside that budget.
+Economic stage controls how much resource/quality budget is justified; ComfyUI controls aesthetic realization inside that budget.
 
-## PROBE
+### PROBE
 
-Favor feedback speed and fair low-cost representation:
+Favor feedback speed and a fair low-cost representation: fewer candidates, cheaper/faster path, limited enhancement and simple composition.
 
-```text
-fewer candidates
-cheaper/faster model path
-shorter/lower-resource generation
-simple composition
-limited enhancement
-```
+A low-quality probe must not unfairly falsify a hypothesis whose causal variable is premium aesthetics.
 
-A probe must still be aesthetically fair when aesthetics are causal to the hypothesis.
+### PILOT
 
-## PILOT
+Use stronger reference consistency, better models/candidates, additional QC/repair or more expensive composition when evidence justifies it.
 
-Use stronger consistency/reference workflows, better models/candidates, more QC/repair, or more expensive composition when evidence justifies it.
+### SCALE
 
-## SCALE
-
-Premium multi-stage workflows, high consistency, inpainting/repair, higher-quality local/remote models and additional QC are justified only when downstream economics clear their opportunity cost.
+Premium multi-stage workflows, stronger consistency, inpainting/repair, higher-quality local/remote models and additional QC are justified only when downstream economics clear their opportunity cost.
 
 ---
 
-# 26. Documents and PDFs
+## 13. Documents, video and deterministic finishing
 
-A PDF/digital product is not outside the aesthetic boundary.
-
-Representative path:
+A PDF/digital product remains inside the aesthetic boundary when visual presentation matters:
 
 ```text
-Product Factory
-→ ProductSpec
-
-Creative Factory
-→ content/message/information structure
-
-ComfyUI aesthetic subsystem
-→ visual identity
-→ cover
-→ illustration/diagram aesthetic
-→ page visual system
-→ typography/style hierarchy
-→ product mockups
-→ aesthetic QC
-
-Deterministic document serializer
-→ final PDF/HTML/file bytes
+Product Factory → ProductSpec
+Creative Factory → content/message/information structure
+ComfyUI → visual identity/cover/illustrations/page visual system/mockups/aesthetic QC
+Deterministic serializer → final PDF/HTML/file bytes
 ```
 
-A deterministic renderer may serialize an already resolved layout/visual system without becoming the aesthetic authority.
+Likewise, social/video briefs define semantic intent while ComfyUI resolves aesthetic realization.
+
+Not every transform is aesthetic. Use deterministic executors such as FFmpeg/document serializers for known mechanical operations including file validation, encoding/muxing, exact export, already-specified crop/scale, packaging and final serialization.
+
+A deterministic serializer may execute an already resolved visual decision without becoming the aesthetic authority.
 
 ---
 
-# 27. Video / social example
+## 14. Three QC layers
 
-Business Master can provide:
+### Technical QC
 
-```text
-Audience: beginner entrepreneurs
-Message: one idea can become many content assets
-Proof: workflow demonstration
-CTA: download guide
-Surface: Instagram
-Format: 8-slide carousel
-BrandRef: brand_003
-Quality: PILOT
-```
+File opens/decodes, required streams/pages exist, format/dimensions/duration are valid, output is not corrupt/empty, lineage metadata exists.
 
-ComfyUI may then resolve/execute the visual language, composition, generated imagery, graphics, typography treatment, slide consistency and aesthetic repair.
+### Aesthetic/perceptual QC
 
-Business Master should not need to specify the gradient, lens, exact model, LoRA, sampler, or node graph.
+Within the aesthetic boundary: composition/readability, reference/product consistency, artifacts, visual/text correctness, brand/style coherence, brief alignment and repair/regeneration.
+
+### Economic evaluation
+
+Outside ComfyUI: retention, clicks/intent, checkout/orders, contribution, settlement and other external/economic outcomes.
+
+A beautiful artifact can lose economically. A rendering failure cannot falsify a market hypothesis.
 
 ---
 
-# 28. Deterministic production outside ComfyUI
+## 15. Benchmarking and scoped instructions
 
-Not every transform is aesthetic.
-
-Use deterministic executors such as FFmpeg/document serializers for known mechanical tasks:
-
-- file validation/probing;
-- encoding/muxing;
-- exact transcode/export;
-- deterministic crop/scale when already specified;
-- subtitle/file packaging when aesthetics are already resolved;
-- final PDF/HTML serialization from a resolved document representation.
-
-If a transform requires an aesthetic judgment, route that judgment through the ComfyUI aesthetic subsystem or its approved aesthetic evaluation workflow rather than silently embedding aesthetic policy in arbitrary Python.
-
----
-
-# 29. QC layers
-
-Keep at least three different concepts:
-
-## Technical QC
-
-```text
-file opens/decodes
-required streams/pages exist
-dimensions/duration/format valid
-no corruption/empty result
-metadata/lineage present
-```
-
-## Aesthetic/perceptual QC
-
-Within the ComfyUI/aesthetic boundary where material:
-
-```text
-composition/readability
-subject/product/reference consistency
-artifacts
-text/visual correctness
-brand/style coherence
-prompt/brief alignment
-repair/regeneration decision
-```
-
-## Economic evaluation
-
-Outside ComfyUI:
-
-```text
-views/retention
-clicks/intent
-checkout/orders
-contribution/settlement
-```
-
-A beautiful artifact can still lose economically. A renderer failure cannot falsify the market hypothesis.
-
----
-
-# 30. Security and credential boundaries
-
-Credentials should not be inserted into LLM prompt/context merely because a tool needs them.
-
-Preferred pattern:
-
-```text
-model/agent produces typed request with account/CredentialRef
-→ deterministic adapter resolves credential at execution boundary
-→ secret remains inside the smallest required host/process authority
-```
-
-Separate process/sandbox boundaries by real blast radius, such as:
-
-```text
-control/authoritative work
-untrusted research/web
-browser execution
-ComfyUI/GPU production
-platform-write execution
-financially consequential execution
-```
-
-Do not separate processes merely to mirror agent personas.
-
----
-
-# 31. NixOS/Linux host relationship
-
-Business Master decides economic/resource admission. NixOS/systemd/cgroups or equivalent host mechanisms enforce physical process/resource/security boundaries.
-
-```text
-Business Master:
-should this job reserve/consume these resources?
-
-Host:
-can this process physically consume/reach these resources?
-```
-
-The repository may provide reproducible deployment definitions, but Business Master is not responsible for installing/configuring its own workstation.
-
----
-
-# 32. Benchmark protocol
-
-Every interchangeable model/runtime/workflow/adapter should be evaluated on actual Business Master task classes.
-
-Record as applicable:
+Evaluate interchangeable models/runtimes/workflows/adapters on real Business Master task classes. Record as applicable:
 
 ```text
 executor/model/workflow/version
 hardware/resource profile
-input/task class
-success/failure
-quality/QC
-wall time
-CPU/GPU time
+success/failure + QC
+wall/compute time
 peak RAM/VRAM
 API/model usage
 retry/recovery
 human intervention
 cash cost
-license/production restrictions
-downstream economic result when attributable
+license restrictions
+downstream economic effect when attributable
 ```
 
-Public benchmarks and creator reports generate candidates. Internal measured workloads decide production routing.
+Public benchmarks and creator reports generate candidates; Business Master's own workloads decide production routing.
+
+Do **not** put Comfy-specific rules in root `AGENTS.md`.
+
+Only create a scoped `AGENTS.md` after a stable production/workflow subtree exists and genuinely requires different engineering rules. Such instructions should remain short: ComfyUI is aesthetic execution, production workflows are validated/versioned/headless, execution refs are reconciled before retry, dependency changes are controlled, provenance is captured, and technical failure is not market rejection.
 
 ---
 
-# 33. Scoped agent instructions
+## Final boundary
 
-Do **not** create Comfy-specific instructions in root `AGENTS.md`.
+Business Master decides **why** an artifact/action should exist, **what semantic/economic hypothesis it tests**, which constraints/resources are authorized, and what external outcomes mean.
 
-Only create a scoped `AGENTS.md` when an actual stable subtree exists and has materially different engineering rules, for example a future production/workflow subtree.
+ComfyUI decides and executes **how approved semantic intent is aesthetically realized**.
 
-Do not create arbitrary directories merely to host instructions.
-
-A future scoped production/Comfy instruction file should remain short and reinforce:
-
-```text
-ComfyUI = aesthetic execution substrate, not economic authority
-use validated/versioned workflows in production
-headless execution must be tested
-persist execution refs before relying on polling
-retry via reconciliation, not blind resubmit
-pin/review dependency changes
-capture provenance/receipts
-technical failure != market rejection
-```
-
----
-
-# 34. Final boundary
-
-Business Master decides:
-
-```text
-why an artifact/action should exist
-for whom
-what economic/creative/product hypothesis it tests
-what message/claim/proof/CTA it carries
-which surface/format constraints apply
-what resource/capital/risk authority exists
-what external result means economically
-```
-
-ComfyUI decides/executes, within approved workflows and resource constraints:
-
-```text
-how aesthetic intent is materially realized
-```
-
-PR11 makes that execution durable. PR12 externalizes it. PR13 measures reality. PR14 closes the first commerce/economic path.
+PR11 makes execution durable. PR12 externalizes it. PR13 measures reality. PR14 closes the first commerce/economic path.
