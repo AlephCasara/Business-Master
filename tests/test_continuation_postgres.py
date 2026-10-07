@@ -612,7 +612,8 @@ def test_capital_gate_requires_active_matching_authorization_and_does_not_consum
     assert result.decision.capital_authorization_id == authorization_id
     with psycopg.connect(postgres_dsn) as conn:
         row = conn.execute(
-            "SELECT status, consumed_at, ledger_transaction_id FROM capital_authorization WHERE id = %s",
+            "SELECT status, consumed_at, ledger_transaction_id "
+            "FROM capital_authorization WHERE id = %s",
             (authorization_id,),
         ).fetchone()
     assert row == ("active", None, None)
@@ -636,7 +637,9 @@ def test_conflicting_idempotency_and_second_decision_from_same_allocation_are_re
         store.continue_from(second_key)
 
 
-def test_resource_capacity_failure_rolls_back_decision_contract_and_child(postgres_dsn: str) -> None:
+def test_resource_capacity_failure_rolls_back_decision_contract_and_child(
+    postgres_dsn: str,
+) -> None:
     case = _seed_case(
         postgres_dsn,
         demand=Decimal("2"),
