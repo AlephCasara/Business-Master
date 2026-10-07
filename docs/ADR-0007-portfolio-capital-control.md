@@ -1,6 +1,6 @@
 # ADR-0007 — Portfolio and Capital Control
 
-Status: **Proposed for PR9**
+Status: **Accepted by PR9**
 
 ## Context
 
@@ -12,7 +12,7 @@ The legacy V0 allocator uses scalar `total_units` and `OpportunityScore` costs. 
 
 ## Decision
 
-PR9 will introduce two distinct layers:
+PR9 introduces two distinct layers:
 
 ```text
 FamilyEvaluation + Belief + Contract + ResourceAvailability
@@ -37,7 +37,7 @@ Portfolio roles are first-class:
 - `asset` — build durable economic value;
 - `capability` — reduce future execution cost or increase quality/reliability.
 
-A candidate must cite the family evaluation that makes it eligible. Portfolio policy may rank only candidates that pass family, risk, and resource-feasibility gates.
+A candidate must cite the family evaluation that makes it eligible. Portfolio policy may rank only candidates that pass family, risk, currency, and resource-feasibility gates.
 
 ## Resource semantics
 
@@ -91,13 +91,17 @@ ledger cash
 
 Actual spend enters the ledger only when the external economic event occurs.
 
-Authorizations must support durable lifecycle states sufficient for active, consumed, released, and expired capacity.
+Authorizations support durable lifecycle states for active, consumed, released, and expired capacity.
+
+A persisted `PortfolioAllocation` is one-shot with respect to capital authority. Exact retries are idempotent, but after its authorization reaches any terminal state a new authorization requires a new/replanned allocation rather than reusing stale portfolio evidence.
 
 ### Trusted time
 
 `requested_at` is request/audit data and is not trusted control time. Authorization, operator-period checks, release, and expiry use a timezone-aware clock owned by the capital store. The resulting `authorized_at` is persisted separately from the caller-supplied request timestamp.
 
 This prevents a future- or stale-dated request from expiring another authorization, crossing an operator control period, or otherwise manufacturing capacity.
+
+If a manual release is attempted after `expires_at`, the durable terminal state is `expired`, preserving the historical meaning of the lifecycle.
 
 ### Spend confirmation lineage
 
@@ -112,16 +116,17 @@ PR9 models full authorization consumption only; partial consumption is not infer
 
 ## Concurrency and idempotency
 
-Capital authorization must use transactional locking/idempotency semantics comparable to resource reservations:
+Capital authorization uses transactional locking/idempotency semantics comparable to resource reservations:
 
 - concurrent requests cannot over-authorize spendable cash;
 - exact retries return the same semantic authorization;
 - reusing an idempotency key with different semantics fails;
-- release/expiry restores authorization capacity without fabricating ledger activity.
+- one portfolio allocation cannot mint multiple independent capital authorizations;
+- release/expiry restores aggregate authorization capacity without fabricating ledger activity.
 
 ## Currency
 
-PR9 must not perform implicit FX conversion.
+PR9 performs no implicit FX conversion.
 
 A portfolio/capital run operates in an explicit base currency. A financially material candidate in another currency is deferred/rejected unless an explicit valuation input exists with its own provenance and timestamp.
 
@@ -133,13 +138,26 @@ Portfolio policy preserves a configurable exploration floor and concentration ca
 
 Exploration applies only to candidates that already pass hard family/risk/resource/capital eligibility. It cannot be used to bypass a pause, rejection, resource shortage, or capital guardrail.
 
-## Risk
+Concentration is a strict ceiling. Slot arithmetic rounds down; if the configured share is below one admissible slot, policy selects zero from that group rather than silently exceeding the configured fraction.
 
-Risk/blast-radius inputs are explicit. PR9 may introduce a bounded risk assessment/envelope needed for authorization, but it must not infer irreversible authority from a family `graduate` recommendation alone.
+## Risk and authority progression
+
+Risk facts are part of the durable portfolio lineage:
+
+- categorical risk level;
+- normalized blast radius;
+- reversibility;
+- human-gate requirement.
+
+Capital requests must match the persisted allocation risk facts. Callers cannot lower declared risk, blast radius, irreversibility, or human-gate requirements to pass a looser envelope.
+
+Capital envelopes independently bound maximum risk and blast radius and explicitly decide whether irreversible or human-gated actions are admissible.
+
+Capital stage cannot be escalated above the evidence tier represented by the persisted allocation. A `graduate` family recommendation does not itself grant `scale` authority. Higher authority requires a later allocation whose persisted tier supports it.
 
 ## Compatibility
 
-The V0 `AllocationPolicy`, `ScoringPolicy`, scalar experiment costs, scalar decision costs, and reconcile slot counters remain compatibility surfaces until the V2 path is proven. They must not become dependencies of the new portfolio/capital authority.
+The V0 `AllocationPolicy`, `ScoringPolicy`, scalar experiment costs, scalar decision costs, and reconcile slot counters remain compatibility surfaces until the V2 path is proven. They are not dependencies of the new portfolio/capital authority.
 
 ## Non-goals
 
