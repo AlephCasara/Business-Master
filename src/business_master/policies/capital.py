@@ -26,7 +26,7 @@ class CapitalPolicy:
     """Pure bounded capital-admission policy; it never moves money."""
 
     name: str = "capital_control"
-    version: str = "2"
+    version: str = "3"
 
     def assess(
         self,
@@ -57,6 +57,8 @@ class CapitalPolicy:
             return denied("Capital request currency does not match the envelope currency.")
         if request.stage is not envelope.stage:
             return denied("Capital request stage does not match the active envelope stage.")
+        if envelope.category is not None and request.category is not envelope.category:
+            return denied("Capital request category does not match the envelope category.")
         if envelope.stage is CapitalStage.LOCKED:
             return denied("Capital envelope is locked; paid authorization is disabled.")
         if _RISK_ORDER[request.risk] > _RISK_ORDER[envelope.max_risk]:
@@ -90,6 +92,6 @@ class CapitalPolicy:
             authorizable_cash=authorizable_cash,
             rationale=(
                 "Request fits ledger cash, active commitments, envelope limits, "
-                "operator ceiling, expiry, and risk policy."
+                "operator ceiling, expiry, category, and risk policy."
             ),
         )
