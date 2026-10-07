@@ -174,13 +174,15 @@ class PostgresBeliefUpdateEngine:
             ).fetchall()
         return [self._state_from_version_row(row) for row in rows]
 
-    @staticmethod
     def _assert_retry_matches(
+        self,
         existing: BeliefUpdateRecord,
         request: BeliefUpdateRequest,
     ) -> None:
         if (
-            existing.interpretation != request.interpretation
+            existing.policy_name != self._policy.name
+            or existing.policy_version != self._policy.version
+            or existing.interpretation != request.interpretation
             or existing.strength != request.strength
             or existing.interpretation_rationale != request.rationale
         ):
