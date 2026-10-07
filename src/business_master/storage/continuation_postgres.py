@@ -18,6 +18,7 @@ from business_master.domain.decisions import (
     AutonomousDecision,
     ContinuationKind,
 )
+from business_master.domain.enums import ExperimentStatus
 from business_master.domain.experiment_contracts import ExperimentContract
 from business_master.domain.experiments import Experiment
 from business_master.domain.family_evaluation import FamilyEvaluation
@@ -212,7 +213,7 @@ class PostgresContinuationStore:
                 id=decision.child_experiment_id,
                 hypothesis_id=parent_row["hypothesis_id"],
                 parent_id=request.parent_experiment_id,
-                status="planned",
+                status=ExperimentStatus.PLANNED,
                 tier=decision.target_tier,
                 business_family=source_contract.business_family,
                 channel_id=parent_row["channel_id"],
