@@ -196,6 +196,7 @@ class CapitalAuthorization(BaseModel):
     period_committed_before: Decimal
     status: CapitalAuthorizationStatus = CapitalAuthorizationStatus.ACTIVE
     rationale: str
+    requested_at: datetime
     authorized_at: datetime
     expires_at: datetime | None = None
     consumed_at: datetime | None = None
@@ -204,6 +205,7 @@ class CapitalAuthorization(BaseModel):
     ledger_transaction_id: UUID | None = None
 
     @field_validator(
+        "requested_at",
         "authorized_at",
         "expires_at",
         "consumed_at",
@@ -216,6 +218,9 @@ class CapitalAuthorization(BaseModel):
 
     @model_validator(mode="after")
     def validate_lifecycle(self) -> Self:
+        if self.expires_at is not None and self.expires_at <= self.authorized_at:
+            raise ValueError("capital authorization must expire after authorization time")
+
         if self.status is CapitalAuthorizationStatus.ACTIVE:
             if any(
                 value is not None
@@ -230,14 +235,23 @@ class CapitalAuthorization(BaseModel):
         elif self.status is CapitalAuthorizationStatus.CONSUMED:
             if self.consumed_at is None or self.ledger_transaction_id is None:
                 raise ValueError("consumed authorization requires consumption and ledger lineage")
+            if self.released_at is not None or self.expired_at is not None:
+                raise ValueError("consumed authorization cannot also be released or expired")
         elif self.status is CapitalAuthorizationStatus.RELEASED:
-            if self.released_at is None or self.expired_at is not None:
-                raise ValueError("released authorization requires released_at only")
+            if self.released_at is None:
+                raise ValueError("released authorization requires released_at")
+            if any(
+                value is not None
+                for value in (self.consumed_at, self.expired_at, self.ledger_transaction_id)
+            ):
+                raise ValueError("released authorization cannot also be consumed or expired")
         elif self.status is CapitalAuthorizationStatus.EXPIRED:
             if self.released_at is None or self.expired_at is None:
                 raise ValueError("expired authorization requires released_at and expired_at")
             if self.released_at != self.expired_at:
                 raise ValueError("expired authorization must release at expired_at")
+            if self.consumed_at is not None or self.ledger_transaction_id is not None:
+                raise ValueError("expired authorization cannot also be consumed")
         return self
 
     @classmethod
