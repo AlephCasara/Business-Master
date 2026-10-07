@@ -54,12 +54,18 @@ def _contract(hypothesis: EconomicHypothesis) -> ExperimentContract:
     )
 
 
-def _reply(*, source: str, company_id: UUID) -> EvidenceRecord:
+def _reply(
+    *,
+    source: str,
+    company_id: UUID,
+    independence_key: str | None = None,
+) -> EvidenceRecord:
     return EvidenceRecord(
         evidence_class=EvidenceClass.MARKET,
         provenance=EvidenceProvenance.OBSERVED_OWN,
         kind="qualified_reply",
         source=source,
+        independence_key=independence_key,
         subject_type="company",
         subject_id=company_id,
         observed_at=NOW,
@@ -83,8 +89,8 @@ def _request(
     )
 
 
-def test_b2b_independence_prefers_company_subject_over_transport_source() -> None:
-    hypothesis = EconomicHypothesis(
+def _hypothesis() -> EconomicHypothesis:
+    return EconomicHypothesis(
         hypothesis_type=HypothesisType.OFFER,
         subject="productized B2B offer",
         proposition="Independent companies respond to the same offer",
@@ -93,6 +99,10 @@ def test_b2b_independence_prefers_company_subject_over_transport_source() -> Non
             minimum_independent_sources=2,
         ),
     )
+
+
+def test_b2b_independence_prefers_company_subject_over_transport_source() -> None:
+    hypothesis = _hypothesis()
     company_a = uuid4()
     company_b = uuid4()
     evidence = (
@@ -103,8 +113,31 @@ def test_b2b_independence_prefers_company_subject_over_transport_source() -> Non
 
     evaluation = policy_for_family("b2b").evaluate(_request(hypothesis, evidence))
 
-    assert evaluation.policy_version == "2"
+    assert evaluation.policy_version == "3"
     assert evaluation.external_observations == 3
+    assert evaluation.independent_sources == 2
+    assert evaluation.evidence_sufficient is True
+    assert evaluation.recommendation is EvaluationRecommendation.GRADUATE
+
+
+def test_b2b_explicit_independence_key_overrides_subject_identity() -> None:
+    hypothesis = _hypothesis()
+    duplicated_subject = uuid4()
+    evidence = (
+        _reply(
+            source="crm",
+            company_id=duplicated_subject,
+            independence_key="company-a",
+        ),
+        _reply(
+            source="crm",
+            company_id=duplicated_subject,
+            independence_key="company-b",
+        ),
+    )
+
+    evaluation = policy_for_family("b2b").evaluate(_request(hypothesis, evidence))
+
     assert evaluation.independent_sources == 2
     assert evaluation.evidence_sufficient is True
     assert evaluation.recommendation is EvaluationRecommendation.GRADUATE
