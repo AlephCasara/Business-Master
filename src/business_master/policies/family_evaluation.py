@@ -8,6 +8,7 @@ from business_master.domain.belief_updates import EvidenceInterpretation
 from business_master.domain.enums import (
     ComparisonOperator,
     EvidenceClass,
+    EvidenceProvenance,
     EvidenceTier,
     MetricAggregation,
 )
@@ -25,6 +26,12 @@ from business_master.domain.family_evaluation import (
 )
 from business_master.domain.ledger import EconomicLedgerSnapshot
 
+_DECISION_GRADE_OBSERVED_PROVENANCE = {
+    EvidenceProvenance.OBSERVED_OWN,
+    EvidenceProvenance.OBSERVED_OFFICIAL_EXTERNAL,
+    EvidenceProvenance.OBSERVED_PUBLIC,
+}
+
 
 @dataclass(frozen=True, slots=True)
 class FamilyGateProfile:
@@ -39,18 +46,26 @@ class FamilyGateProfile:
 
 class FamilyEvaluationPolicy:
     name = "family_evaluation"
-    version = "1"
+    version = "2"
     family: BusinessFamily
     profile: FamilyGateProfile
 
     def evaluate(self, request: FamilyEvaluationRequest) -> FamilyEvaluation:
         self._validate_family(request)
-        criteria = self._evaluate_criteria(request)
-        interpretations = self._interpret_evidence(request.evidence, criteria)
+        decision_grade_ids = self._decision_grade_evidence_ids(request.evidence)
+        decision_grade_evidence = tuple(
+            record for record in request.evidence if record.id in decision_grade_ids
+        )
+        criteria = self._evaluate_criteria(request, decision_grade_evidence)
+        interpretations = self._interpret_evidence(
+            request.evidence,
+            criteria,
+            decision_grade_ids,
+        )
 
         external_records = [
             record
-            for record in request.evidence
+            for record in decision_grade_evidence
             if record.evidence_class in {EvidenceClass.MARKET, EvidenceClass.ECONOMIC}
         ]
         independent_sources = len(
@@ -58,7 +73,7 @@ class FamilyEvaluationPolicy:
         )
         external_observations = len(external_records)
         required = request.hypothesis.evidence_requirements
-        required_kinds_present = {record.kind for record in request.evidence}
+        required_kinds_present = {record.kind for record in decision_grade_evidence}
 
         evidence_sufficient = (
             external_observations >= request.contract.measurement.minimum_external_observations
@@ -125,13 +140,69 @@ class FamilyEvaluationPolicy:
             )
 
     def _independence_key(self, record: EvidenceRecord) -> str:
-        """Return the family-specific identity used for independence requirements."""
+        """Return the identity used for independent-source requirements.
 
+        New adapters should provide ``independence_key`` when collection source and
+        economically independent entity are different concepts. ``source`` remains a
+        compatibility fallback for existing evidence.
+        """
+
+        if record.independence_key is not None:
+            return f"independence:{record.independence_key}"
         return f"source:{record.source}"
+
+    @staticmethod
+    def _decision_grade_evidence_ids(
+        evidence: tuple[EvidenceRecord, ...],
+    ) -> set[UUID]:
+        """Return evidence safe to use for economic/market policy decisions.
+
+        Direct observations are admissible when their provenance is observed own,
+        official external, or public. Calculated evidence is admissible only when all
+        of its declared inputs are present in this evaluation and are themselves
+        decision-grade. Inferred, creator-claim, unknown, and calculated evidence
+        with incomplete/weak lineage cannot be laundered into progression evidence.
+        """
+
+        by_id = {record.id: record for record in evidence}
+        cache: dict[UUID, bool] = {}
+
+        def admissible(record: EvidenceRecord, visiting: set[UUID]) -> bool:
+            cached = cache.get(record.id)
+            if cached is not None:
+                return cached
+            if record.id in visiting:
+                cache[record.id] = False
+                return False
+            if record.provenance in _DECISION_GRADE_OBSERVED_PROVENANCE:
+                cache[record.id] = True
+                return True
+            if record.provenance is not EvidenceProvenance.CALCULATED:
+                cache[record.id] = False
+                return False
+
+            parents = [by_id.get(input_id) for input_id in record.input_evidence_ids]
+            if not parents or any(parent is None for parent in parents):
+                cache[record.id] = False
+                return False
+            next_visiting = {*visiting, record.id}
+            result = all(
+                parent is not None and admissible(parent, next_visiting)
+                for parent in parents
+            )
+            cache[record.id] = result
+            return result
+
+        return {
+            record.id
+            for record in evidence
+            if admissible(record, set())
+        }
 
     def _evaluate_criteria(
         self,
         request: FamilyEvaluationRequest,
+        evidence: tuple[EvidenceRecord, ...],
     ) -> list[CriterionEvaluation]:
         result: list[CriterionEvaluation] = []
         for role, criteria in (
@@ -139,7 +210,7 @@ class FamilyEvaluationPolicy:
             (CriterionRole.FALSIFYING, request.contract.measurement.falsifying_criteria),
         ):
             for criterion in criteria:
-                result.append(self._evaluate_criterion(role, criterion, request.evidence))
+                result.append(self._evaluate_criterion(role, criterion, evidence))
         return result
 
     @staticmethod
@@ -210,6 +281,7 @@ class FamilyEvaluationPolicy:
     def _interpret_evidence(
         evidence: tuple[EvidenceRecord, ...],
         criteria: list[CriterionEvaluation],
+        decision_grade_ids: set[UUID],
     ) -> list[EvidenceInterpretationDecision]:
         supporting_weights: dict[UUID, float] = {}
         falsifying_weights: dict[UUID, float] = {}
@@ -235,6 +307,20 @@ class FamilyEvaluationPolicy:
                         interpretation=EvidenceInterpretation.TECHNICAL,
                         strength=1.0,
                         rationale="Technical evidence is operational, not economic falsification.",
+                    )
+                )
+                continue
+
+            if record.id not in decision_grade_ids:
+                result.append(
+                    EvidenceInterpretationDecision(
+                        evidence_id=record.id,
+                        interpretation=EvidenceInterpretation.NEUTRAL,
+                        strength=1.0,
+                        rationale=(
+                            "Evidence provenance/lineage is not decision-grade for "
+                            "market or economic progression."
+                        ),
                     )
                 )
                 continue
@@ -419,7 +505,7 @@ class ContentEvaluationPolicy(FamilyEvaluationPolicy):
 
 
 class B2BEvaluationPolicy(FamilyEvaluationPolicy):
-    version = "2"
+    version = "3"
     family = BusinessFamily.B2B
     profile = FamilyGateProfile(
         probe_replications=1,
@@ -429,14 +515,6 @@ class B2BEvaluationPolicy(FamilyEvaluationPolicy):
         scale_requires_operational_ready=True,
         scale_requires_economic_ready=True,
     )
-
-    def _independence_key(self, record: EvidenceRecord) -> str:
-        # For B2B the economically independent unit is normally the company/account,
-        # not the transport or discovery surface. New adapters should therefore set
-        # subject_type/subject_id. Source remains the explicit legacy fallback.
-        if record.subject_type is not None and record.subject_id is not None:
-            return f"subject:{record.subject_type}:{record.subject_id}"
-        return super()._independence_key(record)
 
 
 class CommerceEvaluationPolicy(FamilyEvaluationPolicy):
