@@ -30,7 +30,7 @@ class PortfolioPolicy:
     """Pure V2 constrained portfolio policy over bounded candidate actions."""
 
     name: str = "portfolio_control"
-    version: str = "2"
+    version: str = "3"
     economic_weight: float = 0.30
     information_weight: float = 0.25
     option_weight: float = 0.10
@@ -51,9 +51,10 @@ class PortfolioPolicy:
             if by_id[candidate.id].eligible
         ]
 
-        # Never round a concentration ceiling upward: doing so can exceed the
-        # configured portfolio share (for example 2/3 under a 50% cap).
-        group_cap = max(1, floor(request.max_candidates * request.max_group_fraction))
+        # Concentration is a hard ceiling. Never round upward: if the configured
+        # share is too small to admit even one candidate, the cap is zero and the
+        # caller must relax/replan explicitly rather than silently exceed policy.
+        group_cap = floor(request.max_candidates * request.max_group_fraction)
         exploration_target = ceil(request.max_candidates * request.exploration_fraction)
         exploration_pool = [candidate for candidate in eligible if self._is_exploration(candidate)]
         exploration_target = min(exploration_target, len(exploration_pool))
