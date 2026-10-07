@@ -123,7 +123,8 @@ class PostgresContinuationStore:
             ).fetchone()
             if prior is not None:
                 raise ContinuationConflictError(
-                    "portfolio allocation already produced an autonomous decision; replan is required"
+                    "portfolio allocation already produced an autonomous decision; "
+                    "replan is required"
                 )
 
             evaluation_row = conn.execute(
