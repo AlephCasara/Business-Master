@@ -5,6 +5,12 @@ from pathlib import Path
 
 import psycopg
 import pytest
+from business_master.domain.experiment_contracts import (
+    ExperimentContract,
+    ExperimentContractBinding,
+    MeasurementContract,
+    MetricCriterion,
+)
 
 from business_master.controllers.experiments import ExperimentController
 from business_master.domain.enums import (
@@ -12,12 +18,6 @@ from business_master.domain.enums import (
     EvidenceClass,
     HypothesisType,
     MetricAggregation,
-)
-from business_master.domain.experiment_contracts import (
-    ExperimentContract,
-    ExperimentContractBinding,
-    MeasurementContract,
-    MetricCriterion,
 )
 from business_master.domain.hypotheses import EconomicHypothesis, Hypothesis
 from business_master.storage.beliefs_postgres import PostgresBeliefStore
