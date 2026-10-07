@@ -7,7 +7,12 @@ from business_master.domain.models import OpportunityScore
 
 @dataclass(frozen=True, slots=True)
 class ScoringPolicy:
-    """Pure scoring policy; no model calls and no side effects."""
+    """Legacy V0 scalar scoring compatibility surface.
+
+    This policy predates ResourceVector scarcity and authoritative capital control.
+    New V2 portfolio policy must keep non-fungible resource feasibility, capital,
+    risk, and portfolio utility explicit instead of extending this score.
+    """
 
     bootstrap_expected_value_weight: float = 0.15
     mature_expected_value_weight: float = 0.70

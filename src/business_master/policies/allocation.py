@@ -8,6 +8,8 @@ from business_master.domain.enums import EvidenceTier
 
 @dataclass(frozen=True, slots=True)
 class AllocationCandidate:
+    """Legacy V0 scalar-allocation candidate kept for compatibility tests/callers."""
+
     entity_id: UUID
     tier: EvidenceTier
     priority: float
@@ -15,6 +17,8 @@ class AllocationCandidate:
 
 @dataclass(frozen=True, slots=True)
 class Allocation:
+    """Legacy V0 scalar allocation result; not a V2 resource/capital authorization."""
+
     entity_id: UUID
     units: float
     reason: str
@@ -22,10 +26,11 @@ class Allocation:
 
 @dataclass(frozen=True, slots=True)
 class AllocationPolicy:
-    """Deterministic bounded exploration/exploitation allocator.
+    """Legacy V0 bounded exploration/exploitation allocator.
 
-    This is intentionally simple for bootstrap. Replace/augment with contextual
-    bandits only after we have comparable real observations.
+    ``total_units`` is intentionally a scalar compatibility abstraction. New V2
+    portfolio/capital control must reason over ResourceVector availability and
+    authoritative ledger state instead of extending this policy.
     """
 
     exploration_fraction: float = 0.20
