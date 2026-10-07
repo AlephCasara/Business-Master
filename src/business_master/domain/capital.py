@@ -86,6 +86,7 @@ class CapitalRequirement(BaseModel):
 class CapitalEnvelope(BaseModel):
     currency: str = Field(min_length=3, max_length=3)
     stage: CapitalStage
+    category: SpendCategory | None = None
     max_per_authorization: Decimal = Decimal(0)
     max_outstanding: Decimal = Decimal(0)
     max_risk: RiskLevel = RiskLevel.LOW
@@ -118,8 +119,11 @@ class CapitalEnvelope(BaseModel):
             and self.period_end <= self.period_start
         ):
             raise ValueError("capital period_end must be after period_start")
-        if self.operator_hard_ceiling is not None and self.period_start is None:
-            raise ValueError("operator_hard_ceiling requires an explicit control period")
+        if self.operator_hard_ceiling is not None:
+            if self.period_start is None:
+                raise ValueError("operator_hard_ceiling requires an explicit control period")
+            if self.category is None:
+                raise ValueError("operator_hard_ceiling requires an explicit spend category")
         return self
 
 
