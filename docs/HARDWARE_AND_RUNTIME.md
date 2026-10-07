@@ -1,355 +1,268 @@
-# Hardware and Runtime — Local Workstation as the First Factory
+# Hardware and Runtime — Target Host and Resource Boundaries
 
-Business Master is local-first for bootstrap. The workstation is the first control plane and execution host; VPS/cloud/GPU infrastructure is an optional scale-out layer, not a prerequisite.
+Business Master is designed to run locally on the initial NixOS workstation, while keeping host/deployment details outside the economic domain.
 
-## Declared workstation profile
-
-Current operator-declared baseline:
-
-- OS: NixOS;
-- CPU: AMD Ryzen 9 7900;
-- RAM installed: 32 GB DDR5-6000;
-- RAM typically usable by applications: ~30 GB;
-- base system usage with minimal desktop/apps: ~5 GB;
-- typical free RAM while normal browser workloads are open: ~15–20 GB;
-- browser/interactive apps can be closed for compute-heavy runs;
-- browser automation can use headless mode where visual interaction is not needed.
-
-GPU details are deliberately **not** frozen in repository documentation until the local agent/`bm doctor` inspects the machine. Hardware discovery at runtime is authoritative.
-
----
-
-## 1. Runtime principle
-
-Do not design around one permanent machine configuration.
-
-Every worker should declare a resource profile such as:
+This document distinguishes:
 
 ```text
-cpu_cores
-ram_mb
-vram_mb
-needs_gpu
-needs_browser
-needs_display
-needs_phone_usb
-network_class
-storage_mb
-platform_quota_class
+operator-declared target profile
+!= runtime-observed host state
+!= Business Master domain invariants
 ```
 
-The scheduler maps work to available resources.
+---
+
+## 1. Declared initial target
+
+Current operator-declared workstation profile:
+
+- OS: NixOS/Linux;
+- CPU: AMD Ryzen 9 7900 (12C/24T);
+- RAM: 32 GB DDR5-6000, roughly 30 GB usable;
+- typical base-system use: roughly 5 GB;
+- typical free RAM during normal browser work: roughly 15–20 GB;
+- heavy runs can close interactive applications to free capacity;
+- GPU: NVIDIA RTX 5060 Ti, 16 GB VRAM.
+
+This is a **target/reference profile**, not a permanent requirement or proof of currently observed runtime capacity. The repository currently lives in Git; host truth is established only when deployed/observed on the target machine.
 
 ---
 
-## 2. Initial resource classes
+## 2. Domain boundary
 
-### `control`
+Business Master should reason about abstractions such as:
 
-For:
-- reconciler;
-- DB projections;
-- scoring;
-- small API calls;
-- event processing.
+```text
+ResourceCapacity
+ResourceVector / ResourceReservation
+ExecutorCapability
+ArtifactStore
+CredentialRef
+WorkDispatcher / durable execution contract
+```
 
-Characteristics:
-- low CPU;
-- low RAM;
-- always-on priority;
-- must not be starved by media generation.
+It should not encode economic decisions in terms of:
 
-### `research_cpu`
+```text
+/etc/nixos
+systemd unit names
+container names
+CUDA install commands
+absolute model paths
+specific ports
+```
 
-For:
-- scraping/HTTP;
-- browserless extraction;
-- indexing;
-- local data processing.
+Those are deployment/adapter facts.
 
-Characteristics:
-- moderate CPU/RAM;
-- burstable.
-
-### `browser`
-
-For:
-- Playwright;
-- Stagehand;
-- browser-based authenticated operations.
-
-Characteristics:
-- 0.5–2+ GB RAM per browser/context depending workload;
-- prefer headless for deterministic workflows;
-- reuse profiles/sessions only where platform/security model permits.
-
-### `llm_local`
-
-For:
-- local text/multimodal inference.
-
-Characteristics:
-- GPU/CPU dependent;
-- model-specific RAM/VRAM;
-- batch/prefix caching can change economics materially.
-
-### `media_probe`
-
-For:
-- lightweight image/video generation;
-- FFmpeg composition;
-- cheap content probes.
-
-### `media_heavy`
-
-For:
-- H3/Wan/large image/video workflows;
-- high-resolution or multi-reference generation.
-
-Characteristics:
-- low scheduling priority unless attached to validated/revenue work;
-- may reserve most available RAM/VRAM;
-- interactive browser/apps can be closed before dispatch.
-
-### `phone_usb`
-
-For:
-- ADB/uiautomator/semantic mobile workflows while the phone is connected.
-
-This resource is intermittent. Work requiring it should wait durably rather than assuming the device is permanently connected.
+No economic policy should depend on how the host was installed.
 
 ---
 
-## 3. Memory policy on the declared workstation
+## 3. Resource discovery
 
-With ~25 GB available after a minimal system boot, RAM is useful but finite.
+Runtime/discovery tooling may observe:
+
+```text
+cpu topology
+available RAM
+gpu vendor/model
+VRAM
+driver/runtime capability
+disk/free space
+browser/device availability
+executor/model availability
+```
+
+`bm doctor`, if retained/extended, is a diagnostic/capability-discovery primitive rather than a constitutional authority or workstation bootstrap assistant.
+
+Persisted/advertised executor capabilities should drive scheduling; declared documentation values are only priors/reference.
+
+---
+
+## 4. Resource classes
+
+Conceptual workload classes can include:
+
+### control
+
+Reconciliation, DB projections, policy/evaluation, event handling and other low-footprint authoritative work. Control/measurement must not be starved by speculative production.
+
+### research/browser
+
+HTTP/scraping, structured extraction, browser contexts and authenticated web operations.
+
+### cognitive/model
+
+Local or remote language/multimodal inference with model-specific compute/RAM/VRAM and token/cash profiles.
+
+### aesthetic/production
+
+ComfyUI workflows, media generation, rendering/composition, aesthetic QC and related GPU/CPU-heavy work.
+
+### device/mobile
+
+Intermittent device-dependent work such as legitimate ADB/mobile flows.
+
+These are scheduling concepts, not mandatory process names.
+
+---
+
+## 5. Memory and VRAM policy
+
+The initial machine has substantial but finite RAM/VRAM.
 
 Rules:
 
-1. Control-plane services receive a protected reserve.
-2. PostgreSQL/queue/control workers remain alive during heavy generation.
-3. Heavy model jobs declare peak host-RAM estimates.
-4. Browser processes are closed/paused before jobs that need most RAM.
-5. Avoid uncontrolled parallel loading of multiple large model stacks.
-6. Prefer serialized heavy jobs over swap thrashing.
-7. Measure actual RSS/VRAM and update resource profiles from telemetry.
+1. protect control/measurement/financial correctness from heavy production starvation;
+2. declare peak resource demand before admission where practical;
+3. serialize mutually incompatible heavy model loads rather than induce swap/VRAM thrash;
+4. account for model residency/load/unload cost;
+5. prefer batching jobs that benefit from the same resident model/workflow when economics permit;
+6. observe actual usage separately from reserved demand using the existing PR5 model;
+7. update executor resource profiles from telemetry rather than documentation guesses.
 
-A workflow that technically fits only by pushing the machine into constant swapping is not production-viable.
-
----
-
-## 4. CPU role — Ryzen 9 7900
-
-The 12-core/24-thread CPU is valuable for:
-- orchestration;
-- FFmpeg encoding/composition;
-- browser workers;
-- scraping/parsing;
-- image preprocessing;
-- CPU-offloaded/GGUF inference;
-- concurrent lightweight services.
-
-Do not assume every task benefits from using all cores. Worker concurrency should be benchmarked because FFmpeg, browsers and model runtimes can compete for memory bandwidth and cache.
+A workflow that fits only through continuous host swapping is not production-viable.
 
 ---
 
-## 5. GPU policy
+## 6. CPU/GPU role
 
-GPU architecture/VRAM is runtime-discovered.
+The Ryzen 9 7900 is useful for orchestration, database/client work, browser execution, preprocessing, encoding, deterministic transforms and concurrent light services.
 
-Once measured, register resource capabilities such as:
+The RTX 5060 Ti 16 GB is a primary scarce aesthetic/model resource, not a reason to route every task through GPU generation.
+
+Business Master should compare successful-task economics, latency and opportunity cost. A cheap deterministic executor may beat a generative workflow for a PROBE; a higher-quality aesthetic workflow may be justified for PILOT/SCALE or a hypothesis where aesthetics are itself causal.
+
+---
+
+## 7. Model/workflow residency
+
+Scheduling should be able to reason about:
 
 ```text
-gpu.vendor
-gpu.model
-gpu.vram_mb
-gpu.compute_capability
-gpu.driver
-gpu.cuda_or_rocm_version
+capability needed
+model/workflow already resident?
+expected load/unload cost
+RAM/VRAM pressure
+expected batch size
+urgency / evidence tier
+competing waiting work
 ```
 
-Then benchmark candidate runtimes/models on **actual Business Master tasks**.
-
-General routing heuristic:
-
-- small/no GPU → CPU/GGUF orchestration, media via deterministic FFmpeg, cloud only after validated economics;
-- limited VRAM → aggressive quantization/offload, serialized generation;
-- larger VRAM → resident LLM/image models and higher-throughput media;
-- cloud GPU → burst only when local opportunity cost or throughput justifies cash spend.
+Exact model families/checkpoints remain executor configuration, not domain architecture.
 
 ---
 
-## 6. Model residency
+## 8. Backpressure
 
-Loading models can dominate latency and RAM/VRAM churn.
+No factory may create unbounded work because generation is cheap.
 
-The scheduler should eventually model:
-- model already resident?;
-- warm cache?;
-- load/unload cost;
-- expected batch size;
-- urgency;
-- another queued job needing same model.
+Backpressure can include:
 
-This enables batching compatible jobs instead of repeatedly loading 10–40+ GB of weights.
+- waiting Evidence/measurement;
+- durable job depth;
+- CPU/RAM/VRAM capacity;
+- disk capacity;
+- platform quotas/account eligibility;
+- commerce/provider quotas;
+- human-gate queues;
+- cash/capital authority.
 
----
-
-## 7. Backpressure
-
-No engine may create unbounded jobs simply because generation is cheap.
-
-Backpressure sources:
-- database queue depth;
-- CPU load;
-- available RAM;
-- GPU slots;
-- disk free space;
-- platform quota;
-- pending metric/evaluation work;
-- human-action queue.
-
-Measurement/evaluation normally outranks producing additional speculative media.
+Consuming waiting external/economic evidence usually has higher control-plane priority than producing additional speculative assets.
 
 ---
 
-## 8. Local storage
+## 9. Artifact/runtime state
 
-Recommended logical layout outside Git:
+Heavy runtime artifacts, models, browser profiles, caches, generated media, secrets and logs live outside Git.
+
+Business Master should interact through configured paths/stores/adapters rather than assuming a permanent filesystem layout.
+
+`ArtifactStore` should own artifact identity/lifecycle; a local filesystem adapter is a reasonable first implementation without making local absolute paths domain state.
+
+---
+
+## 10. NixOS and systemd boundary
+
+NixOS provides reproducible host/deployment configuration. systemd/cgroups or equivalent host mechanisms can provide process supervision, isolation and physical resource enforcement.
+
+Business Master remains responsible for **economic/resource admission semantics**; the host enforces what a process can physically consume/reach.
+
+Conceptually:
 
 ```text
-$BUSINESS_MASTER_HOME/
-  postgres/
-  hatchet/
-  models/
-  cache/
-  browser-profiles/
-  media/
-    raw/
-    generated/
-    canonical/
-  artifacts/
-  benchmarks/
-  logs/
-  secrets/      # permissions-restricted or external secret manager
+Business Master
+→ should this work consume/reserve these resources?
+
+NixOS/systemd/cgroups
+→ can this process physically consume these resources / access this boundary?
 ```
 
-Git contains source/config/schema, not runtime state.
+These are complementary defenses, not competing schedulers.
+
+The repository may eventually contain a reproducible Nix package/module/deployment surface, but Business Master does not need to install/configure its own workstation.
 
 ---
 
-## 9. NixOS role
+## 11. Process isolation by blast radius
 
-Nix should provide reproducible developer/runtime dependencies where practical:
-- Python;
-- FFmpeg;
-- Postgres clients/tools;
-- Node where Stagehand/Remotion require it;
-- ADB;
-- build tooling.
-
-GPU/model stacks may require dedicated environments or containers where driver/runtime compatibility is cleaner than forcing everything into one Nix closure.
-
-Technology purity is not a goal. Reproducibility and operational reliability are.
-
----
-
-## 10. Containers
-
-Containers are useful for:
-- durable services;
-- isolating conflicting dependencies;
-- eventual VPS migration;
-- reproducible workers.
-
-They are not mandatory for every local task.
-
-A local Python process or Nix shell is valid if it is simpler and reliable.
-
----
-
-## 11. Local browser policy
-
-When stable browser automation is needed:
+Separate process/sandbox boundaries when they reduce a real failure/security/resource domain, for example:
 
 ```text
-HTTP/API first
-→ Playwright headless
-→ Playwright headed when required
-→ Stagehand semantic recovery
-→ generalist visual agent
+control/authoritative work
+untrusted web research
+browser execution
+GPU/aesthetic production
+platform-write execution
+financially consequential execution
 ```
 
-Do not leave full browsers running only because automation might need them later. Start on demand and release RAM after completion.
+Do not create one daemon per conceptual factory/persona merely for architectural symmetry.
 
 ---
 
-## 12. Phone integration
+## 12. Credentials
 
-The phone is a schedulable peripheral, not a central server.
+Raw credentials should remain in host secret boundaries and be resolved only by the adapter/process that requires them.
 
-When USB-connected:
-- detect device with ADB;
-- inventory app/package/UI capabilities;
-- execute permitted deterministic actions first;
-- use semantic/visual intelligence only for ambiguous interfaces;
-- persist state before disconnect;
-- queue future phone-required work until next availability window.
+The model/economic context should ordinarily receive `CredentialRef`, scope/health/expiry metadata, or a capability result — not raw secret values.
 
-If phone-dependent work proves profitable and frequent, buying a dedicated connected device becomes a SCALE investment justified by measured return.
+On NixOS/systemd, secret-delivery mechanisms can be used at deployment time when appropriate; exact host integration remains outside the economic domain.
 
 ---
 
-## 13. VPS/cloud migration
+## 13. Browser/mobile policy
 
-Move workloads off the workstation when one of these becomes true:
-- uptime is economically valuable;
-- network ingress/webhooks need stable public endpoints;
-- local resource contention harms profitable jobs;
-- physical location/reliability becomes a risk;
-- cloud GPU time is cheaper than delaying validated work;
-- scaling workers across machines improves expected profit more than its cost.
+Prefer structured APIs/HTTP for known workflows, then deterministic browser/mobile execution, then semantic recovery/computer use where judgment is necessary.
 
-Architecture should already allow this because workers depend on ports/adapters and durable state rather than local absolute paths.
+Browser/device processes should start when required and release scarce resources when complete rather than remaining resident without economic reason.
+
+Legitimate KYC/2FA/CAPTCHA/owner-consent boundaries remain human gates.
 
 ---
 
-## 14. Runtime telemetry
+## 14. Scale-out
 
-Record per execution:
+Move work to VPS/cloud/other machines when observed economics justify it, e.g. uptime/public ingress is valuable, local contention delays validated work, reliability/location matters, or cloud compute has lower opportunity cost than local delay.
+
+Ports/adapters/durable state should allow scale-out without changing economic semantics.
+
+---
+
+## 15. Runtime telemetry
+
+Record enough telemetry per execution to improve resource routing:
 
 ```text
-wall_seconds
-cpu_seconds
-peak_rss_mb
-gpu_seconds
-peak_vram_mb
-network_bytes
-storage_bytes
-tokens/model calls
-cash_cost
-human_minutes
+wall time
+CPU / peak RAM
+GPU time / peak VRAM
+network/storage where relevant
+model/API use
+cash cost
+human minutes
+retry/failure class
+artifact/QC outcome
 ```
 
-Only telemetry can tell us whether a local model/tool is actually the best value per successful economic task.
-
----
-
-## 15. `bm doctor`
-
-`bm doctor` is the machine-discovery bridge between repository assumptions and reality.
-
-The local agent should extend it to report:
-- CPU topology;
-- physical/available RAM;
-- GPU/VRAM;
-- driver/CUDA/ROCm;
-- disk free space;
-- ffmpeg version;
-- Docker/Podman;
-- browser binaries;
-- Node;
-- ADB/device presence;
-- optional local model directories.
-
-No orchestration policy should assume hardware details that `bm doctor` can discover directly.
+The best runtime/executor is the one that produces the best successful economic-task outcome under current constraints, not the one with the strongest benchmark marketing.

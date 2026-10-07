@@ -1,363 +1,340 @@
-# Portfolio Architecture — Shared Engines, Many Businesses
+# Portfolio Architecture — Shared Capabilities, Many Business Compositions
 
-Business Master should scale by **reusing engines**, not by cloning entire stacks per business.
+Business Master scales by **reusing capabilities**, not by cloning an autonomous stack for every business model, channel, or provider.
 
-The core architecture is:
+The economic control plane decides which hypothesis/action deserves resources. Shared factories make the chosen intervention possible.
 
 ```text
-                         BUSINESS MASTER
-                 Autonomous Economic Control Plane
+                     BUSINESS MASTER
+              Autonomous Economic Control Plane
 
-         ┌──────────────────────────────────────────┐
-         │ World Model / Evidence / Portfolio State │
-         └──────────────────────────────────────────┘
-                    │        │        │
-                    ▼        ▼        ▼
-              Scoring    Allocation   Gates
-                    │        │        │
-                    └──────┬─┴────────┘
-                           ▼
-                    Global Reconciler
-                           │
-          ┌────────────────┼────────────────┐
-          ▼                ▼                ▼
-   CONTENT ENGINE     COMMERCE ENGINE     B2B ENGINE
-          │                │                │
-    YouTube/TikTok     Affiliate/Shop   Lead/Service
-    IG/Faceless        POD/Resale       Outreach/Demo
-          │                │                │
-          └────────────────┼────────────────┘
-                           ▼
-                      ASSET ENGINE
-              SaaS / data / product / IP
-                           │
-                           ▼
-                    EXTERNAL EVIDENCE
-                           │
-                           └──────→ World Model
+       Evidence / Beliefs / Evaluation / Portfolio
+                         │
+                         ▼
+                 bounded Decision
+                         │
+       ┌─────────────────┼──────────────────┐
+       ▼                 ▼                  ▼
+ Intelligence        Creative            Product
+       │                 │                  │
+       └──────────┬──────┴──────┬───────────┘
+                  ▼             ▼
+             Production    Monetization
+                  │             │
+                  └──────┬──────┘
+                         ▼
+                    Distribution
+                         │
+                         ▼
+                    REAL WORLD
+                         │
+                         ▼
+                     Telemetry
+                         │
+                         └────────→ Evidence / Ledger
 ```
 
----
-
-## 1. Shared Core
-
-Shared Core is infrastructure that should exist once and serve every business family.
-
-### World Model
-
-Canonical state for:
-- hypotheses;
-- experiments;
-- evidence;
-- resources;
-- platform accounts;
-- channels;
-- products;
-- offers;
-- creatives;
-- externalizations;
-- metrics;
-- orders/revenue;
-- decisions;
-- human gates.
-
-### Orchestration
-
-Durable workflows, retries, timeouts, event triggers, queues and worker/resource routing.
-
-### Intelligence
-
-- semantic research;
-- hypothesis generation;
-- structured extraction;
-- copy/script generation;
-- creative decomposition;
-- visual evaluation;
-- ambiguous browser/UI recovery.
-
-### Deterministic substrate
-
-- HTTP/API clients;
-- database operations;
-- FFmpeg;
-- browser selectors;
-- schema validation;
-- unit economics;
-- quotas;
-- scheduling;
-- deduplication;
-- idempotency;
-- rate limiting.
-
-### Observability
-
-Every material operation should produce:
-- event;
-- correlation ID;
-- input lineage;
-- result;
-- latency;
-- compute use;
-- cash use;
-- human minutes;
-- failure classification.
+Factories are responsibility/capability boundaries. They are not required to be services, agents, processes, or code modules with these exact names.
 
 ---
 
-## 2. Business-specific modules
+## 1. Shared authoritative core
 
-Business-specific logic belongs behind engine boundaries.
+PR0–PR10 already provide common authority for hypotheses/beliefs, experiment contracts, Evidence, multidimensional resources, the deterministic Economic Ledger, belief updates, family evaluation, portfolio/capital control, and bounded autonomous continuation.
 
-Examples:
+No factory may bypass those substrates.
 
-### Content
+---
+
+## 2. Intelligence Factory
+
+Purpose:
 
 ```text
-trend/topic research
-→ concept
-→ hook
-→ script
-→ assets
-→ composition
-→ QC
-→ publish
-→ analytics
-→ mutation
+observe markets/surfaces
+→ gather signals
+→ research/resolve entities
+→ generate candidate hypotheses/opportunities
 ```
 
-### Commerce
+Typical capabilities include market/competitor research, trend/demand observation, product/offer discovery, audience/problem analysis, semantic synthesis, and entity/product identity resolution.
+
+It produces observations and candidates, not economic truth or capital authority.
+
+---
+
+## 3. Creative Factory
+
+Creative owns communication semantics:
 
 ```text
-demand signal
-→ product identity
-→ supply / offer
-→ underwriting
-→ creative
-→ listing / storefront
-→ traffic
-→ order
-→ fulfillment
-→ settlement
-→ repeat / kill
+Audience
+Angle
+Hook
+Claim
+Proof
+Script / structure
+CTA
+CreativeConcept
+CreativeVariant
+CreativeLineage
 ```
 
-### B2B
+A variant records what intentionally changed so the system can learn causal differences. Creative does not need to encode raw platform/rendering mechanics.
+
+---
+
+## 4. Product Factory
+
+Product is distinct from Offer.
 
 ```text
-market/list source
-→ pain detection
-→ account research
-→ offer
-→ outreach
-→ reply classification
-→ demo/proof
-→ payment
-→ onboarding
-→ automated delivery
-→ retention
+ProductOpportunity
+→ ProductSpec
+→ Product / ProductConcept
 ```
 
-### Asset
+A ProductSpec can describe audience, problem/desire, mechanism, promise, deliverable, format, production constraints, quality profile, and a price hypothesis.
+
+Do not create separate engines for `ebook`, `planner`, `worksheet`, `template`, or similar artifacts when they are render/deliverable profiles of the same product capability.
+
+---
+
+## 5. Production Factory
+
+Production materializes semantic intent into artifacts such as text, images, video, audio/voice, carousels, documents, and product/creative assets.
+
+It may combine deterministic renderers, model inference, aesthetic workflows, and QC behind semantic capability contracts.
+
+Resource demand, artifact lineage, provenance, execution receipts, and QC matter to the control plane. Raw executor/model details do not become economic-domain concepts.
+
+Detailed aesthetic/execution architecture lives in `MEDIA_AND_AGENT_STACK.md`.
+
+---
+
+## 6. Distribution Factory
+
+Distribution externalizes artifacts/interventions onto acquisition surfaces.
+
+Initial required content surfaces:
 
 ```text
-repeated validated pain / format / customer
-→ identify reusable IP/data/software
-→ build bounded asset
-→ validate migration from service/content/commerce
-→ scale recurring economics
+TikTok
+Instagram
+YouTube
 ```
 
----
-
-## 3. Disposable Experiments
-
-A Disposable Experiment is intentionally cheap and may never become permanent infrastructure.
-
-Examples:
-- one new content hook;
-- one niche;
-- one product creative;
-- one landing-page claim;
-- one outbound subject line;
-- one supplier/product candidate;
-- one account/channel configuration;
-- one generation model or rendering style.
-
-The system should prefer disposable experiment code/config over introducing permanent architecture for unvalidated hypotheses.
-
----
-
-## 4. Cross-engine synergies
-
-The portfolio becomes more valuable when one engine creates inputs for another.
-
-### Content → Commerce
-
-A channel about a topic can sell:
-- affiliate products;
-- physical products;
-- PDFs/charts/templates;
-- software;
-- sponsors.
-
-Content data can reveal demand before a product is built.
-
-### Commerce → Content
-
-Products with demonstrated conversion provide:
-- topics;
-- demos;
-- reviews;
-- comparisons;
-- creator briefs;
-- UGC angles.
-
-### B2B → SaaS
-
-Repeated client pain is direct product discovery.
+Strategy:
 
 ```text
-5 clients need same outcome
-→ standardize delivery
-→ automate repeated steps
-→ expose customer-facing control surface
-→ subscription software
+one production system
+→ few mandatory surfaces
+→ measure differential performance
+→ specialize from evidence
 ```
 
-### B2B → Content
+A shared CreativeConcept may produce platform-specific variants with different hook, pacing, caption, title, cover, CTA, duration, or format.
 
-Real customer problems become useful content topics with stronger commercial intent than generic trend scraping.
-
-### Content → B2B
-
-Useful niche content can become inbound lead acquisition and proof of expertise.
-
-### Commerce → Data asset
-
-Supplier reliability, product identity, margin history, price elasticity and creative performance can become proprietary datasets.
+Publication may use official APIs, direct integrations, or replaceable aggregators. Provider brands are not domain architecture.
 
 ---
 
-## 5. Parallelizability
+## 7. Monetization Factory
 
-Business Master explicitly measures **parallelizability**: how much additional throughput can be added without linearly increasing human relationship work.
+Monetization connects attention/intent to an economic exchange.
 
-### Very high
-- faceless content;
-- affiliate creative testing;
-- KDP production;
-- marketplace radar;
-- programmatic digital products;
-- micro-SaaS after deployment.
-
-### High
-- productized B2B delivery;
-- AI video service with standardized intake;
-- ecommerce operations after fulfillment integration.
-
-### Medium/low
-- bespoke consulting;
-- coaching;
-- high-touch concierge;
-- custom strategy calls.
-
-This does not make high-touch businesses bad. It makes them less compatible with the intended autonomous portfolio unless they serve as discovery or premium exception paths.
-
----
-
-## 6. Scaling units
-
-Different engines have different natural scaling units.
-
-| Engine | Unit of experimentation | Unit of scale |
-|---|---|---|
-| Content | video/post | channel / format cluster |
-| TikTok Shop | shoppable creative | creator account / product cluster |
-| Ecommerce | creative × offer × product | store / product line |
-| Marketplace resale | SKU opportunity | supplier/category/account |
-| B2B | lead × offer | vertical / service package |
-| SaaS | user/problem workflow | tenant/market segment |
-| Digital product | offer/landing | product family/audience |
-
-Never scale the wrong unit. Ten variants of one hook are not ten independent businesses.
-
----
-
-## 7. Portfolio controller
-
-The portfolio controller allocates four distinct resources:
-
-1. **cash** — ads, SaaS, inventory, API/GPU spend;
-2. **compute** — CPU, RAM, GPU, storage and bandwidth;
-3. **platform capacity** — API quota, posting quota, account eligibility, rate limits;
-4. **human attention** — KYC, account setup, irreversible actions, exceptional judgment.
-
-A candidate that looks attractive financially can still be deprioritized because it consumes too much scarce human attention or blocks a GPU needed by a higher-information experiment.
-
----
-
-## 8. Resource queues
-
-Recommended conceptual queues:
+Keep the ontology explicit:
 
 ```text
-P0  safety / reconciliation / financial correctness
-P1  consume waiting evidence / metrics
-P2  revenue-impacting existing workflows
-P3  winner replication
-P4  new probes
-P5  speculative R&D
+Product != Offer != Opportunity
+Offer != Checkout != Order != Payment != Settlement
 ```
 
-This prevents production throughput from starving measurement.
+An Offer can vary by Product, commerce venue, market, seller/commercial role, price, fees/commission, attribution terms, settlement terms, availability, and time.
 
-The system must prefer learning from work already exposed to the world before generating unlimited new work.
+Capabilities can include offer discovery/creation, affiliate terms, pricing, checkout routes, funnel relationships, marketplace economics, attribution, commerce-event ingestion, and settlement observation.
+
+Hotmart, Kiwify, Eduzz, TikTok Shop, Mercado Livre, Shopify, and future systems are adapters/capability providers, not this factory's identity.
+
+Authoritative financial consequences reconcile into the existing Economic Ledger.
 
 ---
 
-## 9. Business lifecycle
+## 8. Telemetry Factory
+
+Telemetry spans more than social metrics:
 
 ```text
-IDEA
-  ↓
+market/search signals
+publication/exposure metrics
+retention/engagement
+clicks/intent
+checkout behavior
+orders/payments
+refunds/chargebacks
+commissions/fees
+settlements
+account health/eligibility
+runtime/resource performance
+```
+
+Preserve:
+
+```text
+raw event/snapshot != derived metric != inference != Evidence
+```
+
+Publishing and measurement are separate responsibilities:
+
+```text
+Publisher != MetricCollector
+```
+
+Prefer authoritative/native telemetry for decision-critical measurements where available even if publication uses a convenience aggregator.
+
+---
+
+## 9. External surface roles
+
+Do not flatten every external system into one generic platform semantic.
+
+A surface may provide one or more roles:
+
+```text
+DistributionSurface
+CommerceVenue
+SignalSurface
+ResearchSource
+Outcome/SettlementSource
+OwnedSurface
+```
+
+TikTok/Instagram/YouTube initially matter primarily as distribution/telemetry surfaces. Commerce venues provide different semantics. Marketplaces can combine demand signals, observed offers, listing/distribution, commerce events, and settlement state.
+
+Model capabilities, not brands.
+
+---
+
+## 10. Business models are compositions
+
+### Owned low-ticket
+
+```text
+Intelligence + Product + Creative + Production
++ Distribution + Monetization + Telemetry
+```
+
+### Affiliate
+
+```text
+Intelligence + offer discovery + Creative + Production
++ Distribution + attribution + Telemetry
+```
+
+### Content/audience
+
+```text
+Intelligence + Creative + Production + Distribution + Telemetry
+(+ monetization attachment when justified)
+```
+
+### Marketplace commerce
+
+```text
+Intelligence + product/offer resolution + underwriting
++ Creative/Production as needed + marketplace execution
++ commerce telemetry + settlement
+```
+
+### B2B/productized service
+
+```text
+Intelligence + pain/account research + Offer
++ acquisition/outreach + delivery capabilities + economic telemetry
+```
+
+B2B-specific policy remains useful, but no business family gets a separate economic brain.
+
+---
+
+## 11. Cross-capability learning
+
+Knowledge should transfer at the correct semantic level:
+
+```text
+validated audience desire
+→ social hook
+→ digital product hypothesis
+→ affiliate offer selection
+→ marketplace search
+→ B2B pain prior
+```
+
+A winning product can create new content hypotheses. A winning creative can inform an Offer. Repeated B2B pain can create product/software hypotheses.
+
+Transfer learned patterns, not necessarily identical artifacts.
+
+---
+
+## 12. Disposable experiments vs durable capabilities
+
+One hook, CTA, product price, offer path, aesthetic treatment, platform variant, marketplace/affiliate candidate, or model benchmark may never deserve permanent infrastructure.
+
+Prefer disposable configuration/data until repeated evidence demonstrates a reusable capability.
+
+---
+
+## 13. Parallelizability and human scarcity
+
+Parallelizability is an economic/resource property. Low-human-touch digital, affiliate, content, and marketplace paths are favored in the current bootstrap because they can produce evidence with less recurring relationship work.
+
+B2B/services remain valid when expected contribution, information value, or downstream asset value clears their human-time opportunity cost.
+
+---
+
+## 14. Portfolio/resource control
+
+Execution factories do not own allocation authority.
+
+A candidate can be economically attractive and still be infeasible because of cash/working capital, compute, platform/account capacity, API quota, human attention, risk, or eligibility.
+
+Measurement, financial correctness, and reconciliation should not be starved by speculative production throughput.
+
+---
+
+## 15. Business lifecycle
+
+```text
+IDEA / SIGNAL
+    ↓
 HYPOTHESIS
-  ↓
+    ↓
 PROBE
-  ├── technical failure → repair/retry
-  ├── weak evidence → mutate/kill
-  └── promising evidence → replicate
-                            ↓
-                          PILOT
-                            ├── drift/weak economics → pause/mutate
-                            └── replicated economics → SCALE
-                                                       ↓
-                                              ASSET / COMPOUND
+    ├─ technical failure → repair/retry
+    ├─ weak/negative evidence → mutate/pause/kill
+    └─ promising evidence → replicate
+                              ↓
+                            PILOT
+                              ├─ weak economics/drift → mutate/pause
+                              └─ replicated economics → SCALE
+                                                         ↓
+                                                   ASSET / COMPOUND
 ```
 
-`technical failure` must never be automatically interpreted as `market rejection`.
+Technical failure must never be interpreted automatically as market rejection.
 
 ---
 
-## 10. Autonomy boundary
+## 16. Autonomy boundary
 
-Normal operating mode:
+Normal operation:
 
 ```text
 machine observes
-→ machine decides bounded action
-→ machine executes
+→ bounded capabilities propose/execute permitted work
+→ economic control plane governs authority/resources
 → machine measures
-→ machine decides next action
+→ machine decides next bounded action
 ```
 
-Human involvement is an exception state, not the scheduler.
-
-Examples of justified human gates:
-- KYC/liveness;
-- 2FA that cannot legitimately be delegated;
-- payment/contract authorization above configured risk;
-- policy-sensitive account creation;
-- physical handling/shipping before fulfillment automation exists;
-- strategic override after anomalous evidence.
-
-The goal is not zero humans. The goal is **no unnecessary human dependency in repeatable work**.
+Human involvement is an explicit exception/resource gate, not the scheduler.

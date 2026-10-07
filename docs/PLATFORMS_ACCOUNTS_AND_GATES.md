@@ -1,113 +1,192 @@
-# Platforms, Accounts and Human Gates
+# External Surfaces, Accounts and Human Gates
 
-Business Master treats accounts, credentials, verification state, API approval and platform quota as **resources in the World Model**.
+Business Master treats external surfaces, accounts, credentials, verification state, quota, eligibility and health as **modeled capabilities/constraints**, not as hard-coded assumptions.
 
-The objective is not "create as many accounts as possible." It is:
+The objective is not to create many accounts. It is to use the minimum legitimate surface required for the next valuable experiment and expand only when evidence/capacity justifies it.
 
-> use the minimum legitimate account surface required to run the next valuable experiment, then expand only when measured capacity is insufficient.
-
-Platform/account facts change. Re-verify official documentation before SCALE decisions.
+External rules change. Re-verify official documentation before SCALE decisions or any implementation that depends materially on current limits.
 
 ---
 
-## 1. Account principles
+## 1. Surface roles
+
+Do not assume every external system has the same semantics merely because it is called a platform.
+
+A surface may provide one or more roles:
+
+```text
+DistributionSurface
+CommerceVenue
+SignalSurface
+ResearchSource
+OutcomeSource
+SettlementSource
+OwnedSurface
+```
+
+Examples of current architecture intent:
+
+```text
+TikTok / Instagram / YouTube
+→ distribution + native telemetry
+
+Hotmart / Kiwify / Eduzz
+→ commerce venue + commerce/economic events
+
+marketplaces such as Mercado Livre
+→ demand/offer signals + listing/distribution + commerce/settlement capabilities
+```
+
+Provider identity is adapter state. Domain logic should depend on capabilities and economic semantics.
+
+---
+
+## 2. Initial distribution set
+
+The current bootstrap requires a deliberately small but plural distribution surface:
+
+```text
+TikTok
+Instagram
+YouTube
+```
+
+Strategy:
+
+```text
+one production system
+→ platform-specific variants on a few mandatory surfaces
+→ measure differential performance
+→ specialize from evidence
+```
+
+Do not treat "one platform first" as the current strategy, and do not create separate autonomous content factories per platform.
+
+---
+
+## 3. Publishing != measurement
+
+Keep publication and observation separate:
+
+```text
+Publisher != MetricCollector
+```
+
+Publication may use:
+
+```text
+official API / SDK
+→ direct structured integration
+→ replaceable aggregator when advantageous
+→ deterministic browser/mobile path when legitimately required
+→ semantic computer-use recovery
+→ human gate
+```
+
+Decision-grade platform telemetry should prefer authoritative/native sources where available, even when upload uses an aggregator.
+
+A provider that combines both capabilities may implement both ports; the domain distinction remains.
+
+---
+
+## 4. Commerce capabilities
+
+Commerce venues should expose supported capabilities rather than being forced into one universal provider interface.
+
+Useful capability families include:
+
+```text
+OfferSource / OfferManager
+AttributionSource
+CommerceEventSource
+SettlementSource
+```
+
+Not every provider implements all of them.
+
+Possible observed events include, where the provider supports them:
+
+```text
+checkout started/abandoned
+order/purchase
+payment approved
+subscription/renewal
+refund
+chargeback
+commission/fee
+settlement/payout
+```
+
+These observations do not replace the deterministic Economic Ledger.
+
+Commercial ontology remains:
+
+```text
+Product != Offer != Checkout != Order != Payment != Settlement
+```
+
+---
+
+## 5. Account principles
 
 ### One account if one account is enough
 
-Creating additional accounts adds:
-- onboarding/KYC work;
-- credentials/secrets;
-- recovery risk;
-- rate-limit/account-health state;
-- support burden;
-- policy exposure.
+Additional accounts create KYC/onboarding load, credential/recovery surface, account-health state, quota complexity, support burden, and platform risk.
 
-Do not multiply accounts before capacity or segmentation requires it.
+Scale the correct platform-native unit (channel, page, store, app, creator, seller, etc.) rather than assuming one identity per experiment.
 
 ### Account != business
 
-One account may legitimately host/manage several assets depending on platform structure.
+One supported account structure may legitimately manage multiple channels/assets. Conversely, commerce seller, creator, API app, billing, and identity objects may be separate even when users informally call them one account.
 
-Example: YouTube currently documents that a single Google Account can manage up to 100 YouTube channels. Therefore the default scaling object is the **channel**, not a new Gmail account for every channel.
+Model the real platform structure.
 
-### Identity is first-class state
+### Identity and eligibility are state
 
-Store:
+Where relevant preserve:
+
 - owner/entity;
-- platform;
-- account type;
-- verification status;
-- permissions/scopes;
+- surface/provider;
+- account/role type;
 - region;
+- verification/KYC state;
+- permissions/scopes;
 - linked app/client;
-- token expiry;
+- credential reference and expiry metadata;
 - quota/capacity;
+- audit/review status;
 - health/restrictions;
-- allowed use cases.
+- allowed capabilities.
 
-Do not store raw KYC documents in the Business Master repository.
+Do not store raw KYC documents in Git or ordinary Business Master economic state.
 
 ---
 
-## 2. Human-gate classes
+## 6. Human-gate classes
+
+Human gates are legitimate durable states, not architectural failure.
 
 ### Identity / KYC / liveness
 
-Human by default.
+Human by default where a provider requires owner identity, government documents, liveness/selfie checks, tax identity, or legal-representative confirmation.
 
-Examples:
-- government ID upload;
-- selfie/video verification;
-- legal representative confirmation;
-- tax identity submission.
+### 2FA / explicit owner consent
 
-The system can prepare the workflow and detect when it is required, but must not simulate or bypass identity verification.
-
-### 2FA / explicit consent
-
-If the platform requires an owner confirmation, represent it as a durable `WAITING_HUMAN` state.
+Represent as a durable waiting state when provider/owner confirmation is required.
 
 ### CAPTCHA / anti-abuse challenge
 
-Do not design bypass infrastructure. Pause and request legitimate operator action if needed.
+Do not build bypass infrastructure. Pause or route to legitimate operator action.
 
-### High-blast action
+### High-blast/irreversible action
 
-Examples:
-- enabling paid ads above the configured threshold;
-- large inventory purchase;
-- changing tax/business identity;
-- accepting legal/financial terms;
-- deleting a production account.
-
-Policy can require explicit human approval.
+Policy may require explicit approval for large paid acquisition, material inventory/capital exposure, legal/financial terms, production-account deletion, or similar high-impact actions.
 
 ---
 
-## 3. YouTube
+## 7. YouTube
 
-### Channel/account structure
-
-As of October 2026, YouTube Help states that one Google Account can manage **up to 100 channels**.
-
-Implication:
-- do not create one Google identity per experimental channel;
-- store each channel separately in the World Model;
-- use supported channel/Brand Account management structures where appropriate.
-
-### API project
-
-YouTube Data API is attached to a Google Cloud project, distinct from the creator/channel identity.
-
-Current default granular quota documented by Google:
-- 100 `search.list` calls/day;
-- 100 `videos.insert` calls/day;
-- 10,000 units/day combined for other endpoints;
-- quotas can be extended after the relevant compliance/audit process.
-
-Current documentation also says uploads via `videos.insert` from unverified API projects created after July 28, 2020 are restricted to private viewing until the project passes audit.
-
-Model separately:
+Keep distinct where relevant:
 
 ```text
 Google identity
@@ -115,266 +194,202 @@ YouTube channel
 Google Cloud API project
 OAuth grant/channel
 quota buckets
-project audit status
+project audit/verification state
 ```
 
-### Scaling consequence
+Current official rules/quota/audit constraints should be treated as observed account/app state, not permanent constants in policy.
 
-A system capable of producing 500 videos/day does not automatically have legitimate API capacity to publish 500 videos/day.
+A system capable of generating large media volume does not thereby have legitimate publishing capacity for that volume.
 
-The Portfolio Controller must include quota as a scarce resource.
-
----
-
-## 4. TikTok ordinary content
-
-### Direct Post API
-
-Current TikTok developer guidance states:
-- app must add the Content Posting API;
-- `video.publish` scope requires approval and user authorization;
-- unaudited clients are restricted to private/`SELF_ONLY` publishing;
-- unaudited API clients can have up to 5 active posting users in a 24-hour window;
-- the API has per-creator posting caps, documented as typically around 15 posts/day, shared across API clients.
-
-Therefore the first TikTok public-content automation may require:
-1. app/client setup;
-2. OAuth authorization;
-3. successful private integration testing;
-4. platform audit;
-5. only then public direct-post automation.
-
-Before audit, manual/publication gates are legitimate bootstrap mechanisms. Do not invent anti-abuse browser tricks to avoid the audit.
+Useful telemetry varies by format and eligibility but can include impressions/CTR, views, watch time/retention, subscribers, engagement, traffic sources, and monetization/economic observations where exposed.
 
 ---
 
-## 5. TikTok Shop Brazil
+## 8. TikTok ordinary content
 
-TikTok Shop commerce state is separate from ordinary content automation.
+Keep content-publication capability separate from TikTok Shop commerce capability.
 
-### Affiliate creator pilot
+For ordinary content, official Content Posting integration can depend on application configuration, approved scopes/user authorization, audit status, and creator/account posting limits. Model those facts and re-verify before relying on them.
 
-Current Brazil policy says a new affiliate creator with fewer than 2,000 followers enters a 30-day pilot, with a daily limit of **10 shoppable videos** during that pilot.
-
-Treat the exact current pilot/cap as account state because policies change.
-
-### Creator identity
-
-Current Brazil creator-verification policy states:
-- each creator account needs identity verification for normal ecommerce-content visibility;
-- one government identity document may be used to verify **up to five creator accounts**;
-- each associated creator account still passes the verification process;
-- unverified ecommerce content may be invisible to others.
-
-Implication:
-
-```text
-1 human identity ≠ unlimited TikTok Shop creator accounts
-```
-
-Do not build the portfolio economics around hundreds of independently verified creator accounts belonging to one person.
-
-### Seller vs creator
-
-Keep distinct:
-- seller/shop account;
-- official marketing/shop-linked TikTok account;
-- affiliate creator account;
-- creator identity/tax verification;
-- API/app authorization.
-
-They have different rules and capacities.
+Legitimate manual/platform gates during onboarding are acceptable. Do not invent anti-abuse browser tricks to evade review requirements.
 
 ---
 
-## 6. Instagram / Meta
+## 9. TikTok Shop / content commerce
 
-Treat Meta surfaces as adapters with account-role prerequisites and API review/permissions where applicable.
+Seller/shop state, shop-linked marketing account, affiliate creator, creator identity/tax verification, and API/app authorization are different resources/roles.
 
-World Model objects should distinguish:
+Follower/pilot/posting/identity rules can change and must be observed/re-verified rather than frozen as constitutional constants.
+
+Content/creative intelligence can be shared with ordinary TikTok experiments while eligibility/account policy remains an execution gate.
+
+---
+
+## 10. Instagram / Meta
+
+Distinguish as required:
+
 - Meta user/business identity;
 - Page;
 - Instagram professional account;
 - app/client;
-- OAuth/permissions;
+- permissions/OAuth;
 - ad account;
-- pixel/conversion dataset;
+- conversion/tracking assets;
 - billing state.
 
-Do not make browser automation the default for operations with supported Graph/Marketing API endpoints.
+Prefer supported APIs over browser automation for deterministic supported operations.
 
-Paid acquisition is disabled by bootstrap cash policy until explicitly unlocked.
+**Paid acquisition is not constitutionally disabled.** It is governed by current operator policy, evidence, PR9 Capital Control, risk/reversibility, and available capital.
 
 ---
 
-## 7. Shopify / storefronts
+## 11. Digital commerce venues
 
-The supplied agent-run ecommerce project demonstrates a useful split:
+Digital-product/affiliate venues such as Hotmart, Kiwify, Eduzz, or future providers may be useful for early economic loops because product/offer hosting, checkout, affiliate roles, webhook/events, and settlement-related capabilities can be delegated to a commerce adapter.
+
+Do not make any one venue part of Business Master's domain architecture.
+
+Before relying on a venue, model current capability/health such as:
 
 ```text
-Shopify Partner/development environment
-→ dev store
-→ app/scopes
-→ API connectivity
-→ provider integration
-→ end-to-end test
-→ live merchant store only when launch-ready
+producer/affiliate role
+product/offer availability
+checkout route
+webhook/API access
+attribution support
+refund/chargeback semantics
+commission/fee semantics
+settlement visibility
+account/KYC status
 ```
 
-This is preferable to creating a live paid store before the product/flow has passed local/dev tests.
-
-Recommended state model:
-- development store;
-- live store;
-- app/client ID;
-- scopes;
-- webhook subscriptions;
-- checkout/payment state;
-- fulfillment provider connection.
-
-Customer identity should preferably reuse Shopify customer accounts when Shopify is the system of commerce, unless the product has a proven need for separate identity.
-
 ---
 
-## 8. Marketplace seller accounts
+## 12. Marketplaces / seller accounts
 
-For Mercado Livre, Amazon or other marketplaces, account health is part of opportunity feasibility.
+For Mercado Livre, Amazon, or other marketplaces, feasibility depends on more than demand.
 
-Record:
-- listing permission;
-- registration/address status;
-- shipping program eligibility;
-- seller reputation;
-- tax/fee configuration;
+Record relevant state such as:
+
+- listing permission/category restrictions;
+- registration/address/tax state;
+- shipping/fulfillment eligibility;
+- seller reputation/account health;
+- fees;
 - API scopes;
-- publication limits;
-- open violations/restrictions.
+- publication/order limits;
+- violations/restrictions;
+- settlement/payout state when observable.
 
-Honey Hammer demonstrated why this must precede opportunity execution: a candidate product may exist while the account cannot legitimately publish/fulfill it.
-
----
-
-## 9. Email identities
-
-Do not create many email accounts without a concrete platform need.
-
-Separate concepts:
-
-### Operator identity email
-
-Used for account ownership/recovery.
-
-### Transactional email domain/mailbox
-
-Used for product notifications/customer workflows.
-
-### Outbound sales domains/mailboxes
-
-Potential B2B acquisition infrastructure with separate deliverability/reputation constraints.
-
-Outbound email scale is a deliverability problem, not an "infinite Gmail account" problem.
-
-The B2B Engine should treat domains/mailboxes as capacity with health metrics.
+A candidate product may exist while the account cannot legitimately execute it.
 
 ---
 
-## 10. Account creation automation
+## 13. Storefronts
 
-### Safe to automate
+For Shopify or another owned storefront, distinguish development/test and production commerce state.
 
-Where permitted and technically stable:
-- form filling for owned/legitimate company information;
-- app/client creation steps that do not require identity impersonation;
-- OAuth setup assistance;
-- configuration after account exists;
+Representative concerns include:
+
+```text
+store/environment
+app/client/scopes
+webhooks
+customer identity
+checkout/payment state
+fulfillment integration
+conversion tracking
+```
+
+Do not pay/setup production storefront complexity before the current Product/Offer experiment requires it.
+
+---
+
+## 14. Email/outbound identities
+
+Do not create email identities without a concrete use.
+
+Separate owner/recovery identity, transactional customer communication, and B2B outbound domains/mailboxes. Outbound capacity is a deliverability/reputation resource rather than an "unlimited mailbox" problem.
+
+Opt-out/suppression state is authoritative and must not be bypassed.
+
+---
+
+## 15. Account creation automation
+
+### Reasonable automation where permitted
+
+- owned/company form filling;
+- app/client configuration;
+- OAuth assistance;
 - scope/permission inventory;
 - token refresh;
-- account health checks;
-- channel/store creation within documented limits.
+- account health/eligibility checks;
+- supported channel/store creation within documented limits.
 
 ### Human-gated
 
-- identity/liveness/KYC;
+- KYC/liveness;
 - CAPTCHA;
-- acceptance of material legal/financial terms when policy requires owner action;
-- 2FA owner approval where required.
+- owner 2FA/consent;
+- material legal/financial terms where policy requires owner action.
 
-### Never an architecture dependency
+### Never a foundation
 
 - fake identities;
-- purchased accounts;
-- CAPTCHA bypass;
-- device/browser fingerprint spoofing to appear as unrelated people;
+- purchased/stolen accounts;
+- CAPTCHA/KYC bypass;
+- device/fingerprint masquerading as unrelated people;
 - fake engagement;
-- bypassing platform anti-abuse controls.
-
-These are fragile business foundations and outside the intended system.
+- anti-abuse circumvention.
 
 ---
 
-## 11. Secrets
+## 16. Credentials
 
-Secrets do not belong in Git.
+Secrets do not belong in Git, model context, logs, or ordinary economic records.
 
-Recommended architecture:
+Preferred architecture:
 
 ```text
-account metadata → PostgreSQL
-secret reference → PostgreSQL
-actual token/key → local encrypted secret store / environment / future vault
+account metadata → durable state
+CredentialRef + scope/expiry metadata → durable state
+actual secret/token → host secret boundary
+adapter resolves secret only when required
 ```
 
-The World Model should know that a credential exists, its scopes and expiry, without logging the secret value.
+The economic/cognitive layers should not need raw credential values.
 
 ---
 
-## 12. Account-capacity planning
+## 17. Capacity planning
 
-Before creating another account/channel/store ask:
+Before adding another account/channel/store/app ask:
 
-1. What constraint is the current account hitting?
-2. Is that constraint per channel, per identity, per API app, per seller, per IP/network, or per business entity?
-3. Can a documented platform-native structure solve it?
-4. Will another account create new KYC/human load?
-5. Is the business hypothesis validated enough to justify the added operational surface?
+1. What real constraint is being hit?
+2. At what platform-native scope does the limit apply?
+3. Can the documented native structure solve it?
+4. What new KYC/human/credential/risk load appears?
+5. Is the hypothesis/economics strong enough to justify that surface?
 
 Only then expand.
 
 ---
 
-## 13. Account lifecycle state machine
+## 18. Generic account/capability lifecycle
 
-Suggested generic states:
+A generic state model may resemble:
 
 ```text
 PLANNED
-→ HUMAN_SETUP_REQUIRED
+→ HUMAN_SETUP_REQUIRED / AUTH_REQUIRED
 → CREATED
 → VERIFICATION_REQUIRED
-→ VERIFIED
-→ API_AUTH_REQUIRED
 → READY_PROBE
 → ACTIVE
 → LIMITED / WARNING
 → SUSPENDED / CLOSED
 ```
 
-Every platform adapter can extend these states.
-
----
-
-## 14. Phone-required workflows
-
-When a platform action genuinely requires mobile:
-
-```text
-queued work
-→ phone availability detected
-→ deterministic ADB/UI path
-→ semantic agent if needed
-→ human gate for protected identity/consent
-→ persist result
-→ disconnect-safe state
-```
-
-The user's normal phone does not need to remain permanently tethered. If measured profitable work makes a permanent phone worker useful, the Portfolio Controller can later justify a dedicated device purchase.
+Adapters may refine this. Do not force every provider into states it does not actually expose.
