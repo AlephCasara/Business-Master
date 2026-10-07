@@ -43,6 +43,11 @@ class ResourceKind(StrEnum):
     PLATFORM_SLOT = "platform_slot"
 
 
+class ResourceReservationStatus(StrEnum):
+    ACTIVE = "active"
+    RELEASED = "released"
+
+
 class RiskLevel(StrEnum):
     ZERO = "zero"
     LOW = "low"
