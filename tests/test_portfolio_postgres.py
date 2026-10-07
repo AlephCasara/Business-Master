@@ -146,6 +146,7 @@ def _seed_plan(dsn: str):
             idempotency_key="portfolio:persist:1",
             candidates=(candidate,),
             availability=availability,
+            base_currency="USD",
             created_at=NOW,
         )
     )
@@ -162,6 +163,8 @@ def test_portfolio_plan_is_durable_and_retry_idempotent(postgres_dsn: str) -> No
 
     assert retry == first
     assert loaded == plan
+    assert loaded is not None
+    assert loaded.base_currency == "USD"
     assert len(plan.allocations) == 1
 
     with psycopg.connect(postgres_dsn) as conn:
@@ -178,6 +181,16 @@ def test_portfolio_idempotency_key_rejects_semantic_reuse(postgres_dsn: str) -> 
     conflicting = plan.model_copy(update={"policy_version": "different"})
     with pytest.raises(PortfolioPlanConflictError, match="different semantics"):
         store.save(conflicting)
+
+
+def test_portfolio_store_requires_persisted_family_evaluation(postgres_dsn: str) -> None:
+    plan = _seed_plan(postgres_dsn)
+    evaluation_id = plan.allocations[0].family_evaluation_id
+    with psycopg.connect(postgres_dsn) as conn:
+        conn.execute("DELETE FROM family_evaluation WHERE id = %s", (evaluation_id,))
+
+    with pytest.raises(ValueError, match="family evaluation does not exist"):
+        PostgresPortfolioStore(postgres_dsn).save(plan)
 
 
 def test_portfolio_store_rejects_tampered_lineage(postgres_dsn: str) -> None:
