@@ -63,10 +63,14 @@ class FamilyEvaluationPolicy:
             decision_grade_ids,
         )
 
+        # Replication/sufficiency counts primary external observations only. Derived
+        # calculated metrics may satisfy criteria when their lineage is decision-grade,
+        # but they must not manufacture additional observations or independence.
         external_records = [
             record
             for record in decision_grade_evidence
             if record.evidence_class in {EvidenceClass.MARKET, EvidenceClass.ECONOMIC}
+            and record.provenance in _DECISION_GRADE_OBSERVED_PROVENANCE
         ]
         independent_sources = len(
             {self._independence_key(record) for record in external_records}
@@ -193,11 +197,7 @@ class FamilyEvaluationPolicy:
             cache[record.id] = result
             return result
 
-        return {
-            record.id
-            for record in evidence
-            if admissible(record, set())
-        }
+        return {record.id for record in evidence if admissible(record, set())}
 
     def _evaluate_criteria(
         self,
