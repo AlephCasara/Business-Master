@@ -90,6 +90,7 @@ class AutonomousDecision(BaseModel):
     capital_requirement: CapitalRequirement | None = None
     risk: RiskAssessment = Field(default_factory=RiskAssessment)
     rationale: str = Field(min_length=1)
+    reservation_expires_at: datetime | None = None
     child_experiment_id: UUID | None = None
     child_contract_id: UUID | None = None
     resource_reservation_id: UUID | None = None
