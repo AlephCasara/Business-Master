@@ -1,383 +1,272 @@
-# Content Engine — YouTube, TikTok, Instagram and Faceless Media
+# Content / Distribution Experiments — TikTok, Instagram, YouTube and Faceless Media
 
-The Content Engine exists to turn ideas into measured external exposures and to use platform feedback to generate the next experiment autonomously.
+Content is a business-family composition that turns market/creative hypotheses into measured external exposures and uses real response to cause the next experiment.
 
-It is not optimized for maximum uploads. It is optimized for **information density, repeatable distribution and monetizable audience formation**.
+It is not optimized for maximum uploads. It is optimized for **useful external evidence, distribution learning, attributable intent and monetizable audience formation**.
+
+The Content family uses shared Intelligence, Creative, Production, Distribution, Monetization and Telemetry capabilities rather than owning a separate autonomous brain.
 
 ---
 
 ## 1. Canonical loop
 
 ```text
-research signals
-→ topic / audience hypothesis
-→ format hypothesis
-→ concept
-→ hook
-→ script / structure
-→ visual plan
-→ media generation / retrieval
-→ deterministic composition
-→ QC
-→ publish
-→ metric collection
-→ normalization vs cohort baseline
+research / market signals
+→ audience/topic hypothesis
+→ CreativeConcept
+→ production brief/artifact
+→ platform-specific variants
+→ TikTok / Instagram / YouTube distribution
+→ native/authoritative telemetry
+→ normalized Evidence
 → kill / mutate / replicate / graduate
 ```
 
-Every artifact must carry lineage back to the experiment.
+When a Product/Offer is attached:
+
+```text
+ExternalExposure
+→ CTA / attributed intent
+→ Offer
+→ commerce events
+→ Ledger / economic Evidence
+```
+
+Every artifact/exposure must retain experiment/creative lineage.
 
 ---
 
-## 2. Content experiment dimensions
+## 2. Creative experiment dimensions
 
-Examples of dimensions stored independently:
+Store causal dimensions independently where meaningful.
 
 ### Market / audience
-- niche;
-- language;
-- geography;
+- market/niche;
+- language/geography;
 - problem/desire;
-- sophistication level.
+- sophistication/awareness.
 
 ### Concept
 - topic;
+- angle;
 - claim;
-- narrative structure;
-- utility type;
-- emotional frame.
+- proof;
+- narrative/utility type.
 
-### Hook
-- question;
-- contradiction;
-- curiosity gap;
-- proof/result;
-- threat/problem;
-- visual surprise.
+### Hook / structure
+- hook family;
+- script/sequence;
+- pacing/duration;
+- CTA objective.
 
-### Format
-- talking head/avatar;
-- faceless explainer;
-- charts/data;
-- list;
-- story;
-- comparison;
-- quiz;
-- product demonstration;
-- tutorial;
-- long-form essay.
+### Platform variant
+- target surface;
+- format;
+- caption/title;
+- cover/thumbnail;
+- CTA/link/offer relationship;
+- surface-specific edit/length choices.
 
-### Media
-- image model;
-- video model;
-- reference package;
-- TTS voice;
-- subtitle style;
-- music/SFX;
-- shot length;
-- resolution.
+### Aesthetic/production lineage
+Persist a reference to the production/aesthetic workflow and resulting Artifact/receipt rather than reducing the experiment to a final filename.
 
-### Packaging
-- title;
-- thumbnail;
-- caption;
-- hashtags where relevant;
-- CTA;
-- linked offer.
-
-Never store only a final video filename. Store the causal dimensions.
+Model/checkpoint/node specifics belong to the production/aesthetic execution layer, not the content-family economic policy.
 
 ---
 
-## 3. Channel lifecycle
+## 3. Multi-surface bootstrap
 
-A channel is an asset container, not the basic experiment unit.
-
-Recommended lifecycle:
+The current initial distribution set is:
 
 ```text
-candidate theme
-→ small batch of experiments
-→ enough observations to estimate format/topic fit
-→ channel identity forms from winners
-→ increase cadence
-→ add monetization layer
-→ create adjacent channel only when portfolio evidence supports it
+TikTok
+Instagram
+YouTube
 ```
 
-Do not start by creating dozens of channels merely because account limits permit it.
-
----
-
-## 4. YouTube
-
-### Account architecture
-
-YouTube currently documents that one Google Account can manage up to 100 channels. Therefore the default architecture does **not** require 100 Gmail accounts for 100 channels.
-
-Use Brand Accounts / supported channel management structures where appropriate and keep channel ownership/account metadata in the World Model.
-
-### Publishing
-
-Preferred order:
+The operating rule is:
 
 ```text
-YouTube Data API
-→ supported manual/human publication gate during onboarding/audit
-→ browser automation only for missing legitimate API workflows
+one CreativeConcept
+→ few intentional PlatformVariants
+→ compare real differential performance
+→ specialize from evidence
 ```
 
-Current API constraints must be treated as capacity data. As of the October 2026 research pass, YouTube documents separate default quotas for `videos.insert` and `search.list`, plus a 10,000-unit bucket for other methods, and unaudited/unverified upload projects can have private-upload restrictions.
+Do **not**:
 
-Do not encode historical quota math globally; collect actual project quota/configuration.
+- build three independent content factories;
+- require byte-identical blind cross-posting;
+- download a published/watermarked asset from one surface to use as the source for the others.
 
-### Measurement
-
-Useful metrics include:
-- thumbnail impressions;
-- thumbnail CTR;
-- views by age window;
-- watch time;
-- average view duration;
-- average percentage viewed when available;
-- likes/comments/shares;
-- subscribers gained/lost;
-- revenue/monetization metrics when eligible.
-
-Short-form and long-form require different cohort baselines.
+Preserve a clean master/production artifact and explicit variant lineage.
 
 ---
 
-## 5. TikTok
+## 4. Channel/account lifecycle
 
-TikTok is useful because feedback can arrive quickly, but account and API state are significant constraints.
-
-### Publishing hierarchy
+A channel/account is an asset/container and capacity constraint, not the basic experiment unit.
 
 ```text
-Content Posting API when approved/audited
-→ legitimate creator-side/manual gate while onboarding
-→ deterministic mobile/browser interaction only where platform flow requires it
+candidate audience/format
+→ bounded experiments
+→ enough external observations
+→ channel/account specialization from winners
+→ increase cadence/capacity when economics justify it
+→ create additional account/channel only when the current surface is actually constrained
 ```
 
-Current official documentation says unaudited Content Posting API clients are limited to private/self-only publishing and are subject to creator/posting caps. Treat those as account/app state, not permanent constants.
-
-### TikTok Shop
-
-Commerce content is a separate capability from ordinary TikTok posting.
-
-For Brazil, current TikTok Shop documentation states:
-- affiliate creators below 2,000 followers can enter a 30-day pilot;
-- the pilot currently limits shoppable videos to 10/day;
-- creator identity verification is required for ecommerce visibility;
-- one identity document can verify up to five creator accounts, while each account still goes through verification.
-
-Therefore:
-
-> unlimited TikTok Shop creator accounts under one identity is not a valid scaling assumption.
-
-The Content Engine should share creative intelligence with TikTok Shop, but the Account/Eligibility subsystem decides which account can execute a commerce experiment.
+Platform/account rules and gates live in `PLATFORMS_ACCOUNTS_AND_GATES.md`.
 
 ---
 
-## 6. Instagram / Reels
+## 5. YouTube
 
-Use professional account APIs where supported for publishing and insights.
+YouTube is an initial mandatory distribution/telemetry surface.
 
-The engine treats Instagram as another distribution adapter with its own:
-- eligibility;
-- rate limits;
-- metrics;
-- aspect/format rules;
-- audience baselines.
+Treat channel identity, API project/OAuth/audit state, quota and publishing capacity as external-account state rather than global constants.
 
-Do not require identical creative files across platforms. A concept can produce platform-specific variants.
+Potential observations include impressions/CTR where available, views, watch time/retention, engagement, subscribers, traffic sources, and economic/monetization observations when exposed.
+
+Short-form and long-form require different cohorts/policies.
 
 ---
 
-## 7. Faceless content quality rule
+## 6. TikTok
 
-`faceless` means the creator is not required to appear on camera. It must not mean low-value mass-produced duplication.
+TikTok is an initial mandatory distribution/telemetry surface and can provide rapid external feedback.
 
-Quality constraints:
-- coherent thesis/story;
-- accurate claims where factual;
-- visual assets that support the content;
-- useful or entertaining payoff;
+Ordinary content posting and TikTok Shop/content-commerce are different capabilities with different eligibility/account semantics.
+
+Current audit/scope/posting limits must be modeled/re-verified at execution time rather than embedded as economic constants.
+
+---
+
+## 7. Instagram
+
+Instagram is an initial mandatory distribution/telemetry surface.
+
+Professional-account/API prerequisites, permissions, rate limits, formats and insight availability belong to account/capability state.
+
+An Instagram Reel/Carousel may be an intentional variant of the same CreativeConcept used elsewhere without being the same rendered file.
+
+---
+
+## 8. Faceless quality rule
+
+`faceless` means the operator/creator does not need to appear on camera. It does not mean low-value mass duplication.
+
+Quality expectations can include:
+
+- coherent payoff/story;
+- accurate factual claims where applicable;
+- useful/entertaining content;
 - controlled repetition;
-- avoid obvious template monotony;
+- visual/aesthetic fit for the concept;
 - no deceptive identity/proof fabrication.
 
-A low production cost is valuable only if the output can compete for human attention.
+Low production cost has value only if the artifact can compete for real human attention.
 
 ---
 
-## 8. Media production modes
+## 9. Production boundary
 
-### Industrial deterministic mode
+Content-family policy decides **what semantic creative experiment is being run**.
 
-Best for:
-- charts;
-- explainers;
-- lists;
-- quizzes;
-- data stories;
-- product comparisons;
-- templated shorts.
+Production/aesthetic execution decides how the artifact is materialized.
 
-Possible chain:
+Conceptually:
 
 ```text
-structured script
-→ generated/retrieved images/video snippets
-→ TTS
-→ FFmpeg / Remotion composition
-→ subtitles
-→ QC
+CreativeConcept / PlatformVariant brief
+→ Production Factory
+→ aesthetic/deterministic execution
+→ Artifact + ExecutionReceipt + QC
 ```
 
-### Generative visual mode
+ComfyUI's canonical aesthetic-runtime role and deterministic finishing/serialization boundaries are documented in `MEDIA_AND_AGENT_STACK.md` and `TECH_STACK.md`.
 
-Best for:
-- UGC/avatar;
-- character-led content;
-- high-novelty hooks;
-- product scenes;
-- synthetic demonstrations;
-- creative transformations.
-
-Possible chain:
-
-```text
-reference package
-→ image/character generation
-→ video generation / inpainting / replacement
-→ deterministic finishing
-```
-
-Premium generative video should not be used for every cold-start probe if a cheaper representation can test the same hypothesis.
+Do not encode ComfyUI nodes/models/checkpoints as Content-family domain state.
 
 ---
 
-## 9. Media capabilities extracted from current research
+## 10. Telemetry windows
 
-### MiniMax H3 local workflows
+Observation age matters. Collect metrics at policy/provider-appropriate windows rather than continuous polling for its own sake.
 
-Observed workflow classes from supplied material:
-- low-VRAM text/image-to-video with audio;
-- subject tracking + face/outfit/object replacement;
-- reference-to-video/audio character binding;
-- first-frame/last-frame conditioning;
-- longer video chaining with segment continuity.
+Any starting windows such as 30m/2h/6h/24h/72h are policy examples, not constitutional constants.
 
-Engineering lesson:
-
-> local feasibility does not imply competitive throughput.
-
-An 8 GB workflow may be useful for occasional premium generation but too slow for high-volume probes. Scheduler decisions must use measured wall time/GPU seconds, not model marketing claims.
-
-### Qwen Image 2.1 character sheets
-
-Character sheets/reference packages can serve as reusable identity assets for:
-- avatar channels;
-- UGC;
-- product creatives;
-- narrative channels;
-- consistent B2B media.
-
-Reference assets should be versioned as assets with provenance, not regenerated ad hoc for every video.
-
----
-
-## 10. Analytics windows
-
-Metrics should be collected at meaningful age windows rather than polling continuously.
-
-Example starting schedule:
-
-```text
-10 minutes
-30 minutes
-2 hours
-6 hours
-24 hours
-72 hours
-7 days where useful
-```
-
-Adapters can vary this by platform/format.
-
-Store raw counters and deltas. Never infer growth from repeatedly polling a snapshot source that itself updates only weekly/daily.
+Store raw observations and timing/source metadata. Re-polling the same slow-updating snapshot does not manufacture independent demand evidence.
 
 ---
 
 ## 11. Cohort normalization
 
-Compare performance against the most local valid baseline available.
-
-Priority:
+Compare performance against the most local valid cohort available, for example:
 
 ```text
-same account + same format + similar age
+same account + same format + comparable age
 → same account + broader format
-→ same platform + niche/format cohort
-→ global prior only during cold start
+→ same surface + audience/format cohort
+→ bootstrap prior only when necessary
 ```
 
-A new channel with 500 views may be an outlier; an established channel with 500 views may be a failure. Raw views cannot decide this alone.
+Raw views alone cannot define success across accounts/surfaces with different baselines.
 
 ---
 
 ## 12. Mutation policy
 
-Possible mutations:
-- hook only;
-- title/thumbnail only;
-- pacing;
-- visual style;
-- script structure;
+Possible controlled mutations include:
+
+- hook;
+- angle/claim/proof;
+- structure/pacing/length;
 - CTA;
-- length;
+- title/cover/thumbnail;
+- aesthetic treatment;
+- format/platform variant;
 - topic adjacency;
 - audience/language localization;
-- monetization attachment.
+- Product/Offer attachment.
 
-Prefer mutations that preserve enough parent dimensions to learn why performance changed.
-
----
-
-## 13. Content monetization layers
-
-A successful channel/format should not depend on one revenue source.
-
-Potential layers:
-
-```text
-platform ad/reward revenue
-+ affiliate
-+ owned digital product
-+ owned physical product
-+ service
-+ SaaS/tool
-+ sponsor
-+ email/community
-```
-
-The Portfolio Controller should test monetization adjacency only after sufficient audience/intent evidence.
+Prefer mutations that preserve enough parent dimensions to learn why behavior changed.
 
 ---
 
-## 14. Initial implementation target
+## 13. Monetization attachment
 
-The first implementation should prove:
+Do not require native platform monetization before testing economics.
+
+A content/audience experiment may attach:
 
 ```text
-one hypothesis
-→ one coherent vertical asset
-→ one external publication/exposure
-→ one real metric
-→ one autonomous decision
-→ one child experiment
+affiliate Offer
+owned low-ticket Product/Offer
+marketplace/content-commerce Offer
+service/software hypothesis
+owned audience/email/community route
 ```
 
-Only after this loop works should the system multiply channels or formats.
+The attachment is an economic experiment. Keep Product, Offer, attribution, checkout/order/payment and settlement semantics separate.
+
+---
+
+## 14. Initial implementation proof
+
+The current external-edge target is not one isolated publication.
+
+It is:
+
+```text
+one bounded hypothesis
+→ one CreativeConcept / clean production nucleus
+→ intentional TikTok + Instagram + YouTube variants
+→ real external exposures
+→ platform telemetry
+→ immutable Evidence
+→ autonomous Decision
+→ Experiment B
+```
+
+The three surfaces need not receive equal treatment forever. Their current purpose is to produce comparative evidence from a small strategically required set; later specialization follows observed performance/economics.
