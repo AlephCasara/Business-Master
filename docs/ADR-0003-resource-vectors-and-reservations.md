@@ -1,8 +1,9 @@
-# ADR-0003 — Multidimensional Resource Vectors and Durable Reservations
+# ADR-0003 — Multidimensional Resource Vectors, Reservations, Usage, and Expiry
 
 - **Status:** Accepted
 - **Date:** 2026-10-07
 - **Scope:** PR5
+- **Normative source:** the resource requirements already present in `docs/ROADMAP.md` immediately before PR5 began
 
 ## Context
 
@@ -10,7 +11,17 @@ Business Master cannot safely allocate work if cash, compute, platform capacity,
 
 A candidate may be cheap in cash and impossible in GPU capacity. Another may fit compute but require unavailable human or platform capacity. A scalar allocator can hide those constraints and can also allow two concurrent workers to spend the same scarce capacity.
 
-PR0 explicitly froze scalar allocation as a compatibility surface and deferred its replacement to a later PR. PR5 introduces the substrate required for that replacement without yet changing portfolio scoring/allocation policy.
+The pre-PR5 roadmap required this substrate to provide:
+
+- deterministic vector arithmetic;
+- explicit capacity and availability;
+- durable reservations;
+- atomic over-allocation prevention;
+- idempotent release **and expiry**;
+- actual usage recorded separately from reserved usage;
+- V0 scalar allocation preserved behind compatibility boundaries until consumers migrate.
+
+PR5 implements that substrate without changing portfolio scoring/allocation policy.
 
 ## Decision
 
@@ -23,9 +34,9 @@ Examples:
 ```text
 cash.usd                  25
 gpu.local                  1
-browser.youtube            1
-human.operator_minutes     5
-platform.youtube_actions  10
+browser.youtube             1
+human.operator_minutes      5
+platform.youtube_actions   10
 ```
 
 No implicit `sum()` or universal conversion exists. A later policy may price trade-offs explicitly, but storage and admission control preserve the dimensions.
@@ -43,6 +54,7 @@ Before scarce capacity is consumed by an execution path, the control plane can c
 - owner type and owner ID;
 - semantic idempotency key;
 - exact requested resource vector;
+- optional expiry time;
 - lifecycle state;
 - itemized resource rows.
 
@@ -52,27 +64,47 @@ A retry with the same idempotency key and identical request returns the original
 
 The PostgreSQL reservation store:
 
-1. serializes the idempotency key with a transaction-scoped advisory lock;
-2. locks all requested `resource` rows in deterministic name order;
-3. calculates already-active reservations;
-4. rejects the request if any one dimension would exceed capacity;
-5. inserts the reservation and all reservation items in the same transaction.
+1. releases reservations whose expiry deadline has passed;
+2. serializes the idempotency key with a transaction-scoped advisory lock;
+3. locks all requested `resource` rows in deterministic name order;
+4. calculates already-active reservations;
+5. rejects the request if any one dimension would exceed capacity;
+6. inserts the reservation and all reservation items in the same transaction.
 
 This prevents concurrent workers from both observing stale free capacity and overbooking it.
 
-### 5. Reservation and economic accounting remain separate
+### 5. Expiry is durable and idempotent
 
-PR5 answers:
+A reservation may declare `expires_at`.
 
-> Can this bounded action claim the capacity it needs right now without conflicting with other work?
+When expiry is processed, the reservation is durably released and records `expired_at`. Repeated expiry or release calls do not reclaim capacity twice. Admission and availability calculations sweep due reservations before counting active capacity.
 
-It does **not** yet answer:
+Expiry is represented as a release with explicit expiry provenance rather than a second capacity lifecycle. This keeps the admission model simple while preserving whether capacity was released manually or because its lease expired.
 
-> What economic cost was ultimately incurred and how should cash/working capital be reconciled?
+### 6. Actual resource usage is recorded separately from reservations
 
-Actual usage, settlement, revenue, fees, refunds, and capital accounting belong to the deterministic economic ledger in a later PR.
+A reservation states **capacity claimed before execution**.
 
-For that reason PR5 implements `ACTIVE → RELEASED` capacity claims only. It does not invent a generic `CONSUMED` semantic that would incorrectly treat GPU slots and spent cash as having the same lifecycle.
+`ResourceUsage` states **resource usage observed after/during execution**.
+
+These values are intentionally independent:
+
+```text
+reserved gpu.seconds = 100
+actual   gpu.seconds = 125
+```
+
+Observed usage may exceed or use dimensions not present in the original reservation. Recording that fact does not rewrite the immutable reservation and does not silently change current capacity accounting.
+
+Usage records are durable and idempotent and remain available after the reservation is released.
+
+### 7. Resource usage is not the economic ledger
+
+PR5 records operational resource usage. It still does **not** settle money or determine economic truth.
+
+Revenue, payment settlement, fees, refunds, chargebacks, receivables/payables, contribution margin, and cash accounting belong to the deterministic economic ledger in the next architecture step.
+
+For example, a `cash.usd` capacity reservation and a recorded resource-usage observation are not authoritative proof that a payment settled or that an expense cleared a bank account.
 
 ## Invariants
 
@@ -82,10 +114,26 @@ For that reason PR5 implements `ACTIVE → RELEASED` capacity claims only. It do
 4. A reservation contains at least one positive dimension.
 5. Unknown or administratively unavailable resources cannot be reserved.
 6. Active reservations count against capacity.
-7. Released reservations do not count against capacity.
+7. Released or expired reservations do not count against capacity.
 8. Reservation retries are idempotent by semantic key.
-9. Concurrent reservations cannot exceed persisted capacity.
-10. Experiment resource demand is immutable with the experiment contract.
+9. Release and expiry are idempotent.
+10. Concurrent reservations cannot exceed persisted capacity.
+11. Experiment resource demand is immutable with the experiment contract.
+12. Actual usage is persisted separately from reservation demand.
+13. Usage retries are idempotent and do not mutate the original observation.
+14. Resource expiry timestamps are timezone-aware.
+
+## Compatibility decisions retained from the initial PR5 implementation
+
+The following choices were implementation decisions rather than new roadmap requirements, and are retained because they strengthen the required substrate without changing its architecture:
+
+- `resource.name` is the stable vector dimension key;
+- `resource.capacity` uses exact `Decimal` / PostgreSQL `numeric(24,6)` rather than floating point;
+- PostgreSQL row locks provide atomic admission;
+- advisory locks protect semantic idempotency keys;
+- legacy scalar budget fields remain available while consumers migrate.
+
+None of these choices makes resources fungible, changes portfolio policy, or introduces ledger semantics.
 
 ## Migration strategy
 
@@ -96,11 +144,13 @@ resource_requirements vector
         ↓
 resource-aware admission/reservation
         ↓
+actual resource usage + expiry
+        ↓
 move controllers to vector demand
         ↓
 replace scalar allocation policy
         ↓
-economic ledger / actual usage reconciliation
+economic ledger / financial settlement
         ↓
 remove legacy scalar budget fields when no callers depend on them
 ```
@@ -118,4 +168,4 @@ PR5 does not:
 - discover hardware automatically;
 - reserve resources automatically for every legacy experiment path.
 
-Those changes can now be implemented on top of a durable non-fungible resource substrate.
+Those changes can now be implemented on top of a complete durable non-fungible resource substrate.

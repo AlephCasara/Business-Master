@@ -326,7 +326,7 @@ actual usage
 release remainder
 ```
 
-Reservations prevent concurrent over-allocation. Actual economic usage and settlement remain separate ledger concerns.
+Reservations prevent concurrent over-allocation, support durable lease expiry, and keep observed resource usage separate from reserved demand. Authoritative financial settlement remains a ledger concern.
 
 ---
 
@@ -392,7 +392,7 @@ When that loop exists against a real external surface, this section should conta
 
 The architecture above is the project direction, not a claim that every component is already complete.
 
-`main` is now the canonical development base and includes the PR0–PR5 migration foundations: characterized V0 invariants, the decomposed domain model, economic hypotheses and persisted belief-state foundations, immutable experiment contracts, immutable evidence with provenance/lineage, and multidimensional resources with durable atomic reservations.
+`main` is now the canonical development base and includes the PR0–PR5 migration foundations: characterized V0 invariants, the decomposed domain model, economic hypotheses and persisted belief-state foundations, immutable experiment contracts, immutable evidence with provenance/lineage, and multidimensional resources with atomic reservations, durable expiry, and separately persisted observed usage.
 
 The next substrate is the **deterministic economic ledger**. Evidence-to-belief update, business-family policies, portfolio/capital control, and the real autonomous external closed loop remain future milestones.
 
@@ -513,7 +513,7 @@ The README is the front door, not the specification.
 | Document | Purpose |
 |---|---|
 | [`RFC-0001`](docs/RFC-0001-autonomous-control-plane.md) | autonomous control-plane architecture |
-| [`ADR-0003`](docs/ADR-0003-resource-vectors-and-reservations.md) | multidimensional resources and atomic reservation invariants |
+| [`ADR-0003`](docs/ADR-0003-resource-vectors-and-reservations.md) | multidimensional resources, reservations, usage, and expiry invariants |
 | [`METRICS_AND_OBJECTIVES`](docs/METRICS_AND_OBJECTIVES.md) | evidence and objective hierarchy |
 | [`TECH_STACK`](docs/TECH_STACK.md) | implementation and adapter choices |
 | [`SOURCE_LEARNINGS`](docs/SOURCE_LEARNINGS.md) | durable conclusions from research |

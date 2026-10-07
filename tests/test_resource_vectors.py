@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from decimal import Decimal
 from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError
 
+from business_master.domain.clock import utcnow
 from business_master.domain.enums import ResourceReservationStatus
 from business_master.domain.resources import (
     ResourceReservation,
     ResourceReservationRequest,
+    ResourceUsageRequest,
     ResourceVector,
 )
 
@@ -70,4 +73,31 @@ def test_released_reservation_requires_release_timestamp() -> None:
             idempotency_key="experiment:test:released",
             requirements=ResourceVector(quantities={"cash.usd": 1}),
             status=ResourceReservationStatus.RELEASED,
+        )
+
+
+def test_expired_reservation_has_distinct_expiry_provenance() -> None:
+    expires_at = utcnow()
+    expired_at = expires_at + timedelta(seconds=1)
+    reservation = ResourceReservation(
+        owner_type="experiment_contract",
+        owner_id=uuid4(),
+        idempotency_key="experiment:test:expired",
+        requirements=ResourceVector(quantities={"gpu.local": 1}),
+        status=ResourceReservationStatus.RELEASED,
+        expires_at=expires_at,
+        released_at=expired_at,
+        expired_at=expired_at,
+    )
+
+    assert reservation.expired_at == expired_at
+    assert reservation.released_at == expired_at
+
+
+def test_resource_usage_requires_observed_nonzero_vector() -> None:
+    with pytest.raises(ValidationError, match="at least one positive quantity"):
+        ResourceUsageRequest(
+            reservation_id=uuid4(),
+            idempotency_key="usage:test:empty",
+            actual=ResourceVector(),
         )

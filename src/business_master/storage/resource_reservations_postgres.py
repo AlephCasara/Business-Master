@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
@@ -62,12 +63,21 @@ class ReservationNotFoundError(ResourceReservationError):
         super().__init__(f"unknown resource reservation: {reservation_id}")
 
 
+class ReservationExpiryError(ResourceReservationError):
+    """Raised when a new reservation request is already expired."""
+
+
+class ReservationNotDueError(ResourceReservationError):
+    """Raised when explicit expiry is requested before the reservation is due."""
+
+
 class PostgresResourceReservationStore:
     """Atomic non-fungible resource reservations backed by PostgreSQL.
 
     Resource rows are locked in deterministic name order before capacity is checked.
     That makes two concurrent requests for the same scarce resource serialize instead
-    of both observing stale free capacity and overbooking it.
+    of both observing stale free capacity and overbooking it. Due reservations are
+    durably released before admission and availability calculations.
     """
 
     def __init__(self, dsn: str) -> None:
@@ -75,7 +85,13 @@ class PostgresResourceReservationStore:
 
     def reserve(self, request: ResourceReservationRequest) -> ResourceReservation:
         names = list(request.requirements.quantities)
+        now = utcnow()
+        if request.expires_at is not None and request.expires_at <= now:
+            raise ReservationExpiryError("reservation expires_at must be in the future")
+
         with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
+            self._expire_due(conn, now)
+
             # Serialize retries carrying the same semantic idempotency key even when
             # they request disjoint resource rows.
             conn.execute(
@@ -150,6 +166,7 @@ class PostgresResourceReservationStore:
                 owner_id=request.owner_id,
                 idempotency_key=request.idempotency_key,
                 requirements=request.requirements,
+                expires_at=request.expires_at,
             )
             requirements_payload = reservation.requirements.model_dump(mode="json")[
                 "quantities"
@@ -158,8 +175,8 @@ class PostgresResourceReservationStore:
                 """
                 INSERT INTO resource_reservation (
                     id, owner_type, owner_id, idempotency_key, requirements,
-                    status, created_at, released_at
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    status, created_at, expires_at, released_at, expired_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     reservation.id,
@@ -169,7 +186,9 @@ class PostgresResourceReservationStore:
                     Jsonb(requirements_payload),
                     reservation.status.value,
                     reservation.created_at,
+                    reservation.expires_at,
                     reservation.released_at,
+                    reservation.expired_at,
                 ),
             )
             for name, amount in reservation.requirements.quantities.items():
@@ -211,6 +230,50 @@ class PostgresResourceReservationStore:
                 }
             )
 
+    def expire(
+        self,
+        reservation_id: UUID,
+        *,
+        as_of: datetime | None = None,
+    ) -> ResourceReservation:
+        effective_time = as_of or utcnow()
+        with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
+            row = conn.execute(
+                "SELECT * FROM resource_reservation WHERE id = %s FOR UPDATE",
+                (reservation_id,),
+            ).fetchone()
+            if row is None:
+                raise ReservationNotFoundError(reservation_id)
+
+            reservation = self._reservation_from_row(row)
+            if reservation.status is ResourceReservationStatus.RELEASED:
+                return reservation
+            if reservation.expires_at is None or reservation.expires_at > effective_time:
+                raise ReservationNotDueError(
+                    f"resource reservation {reservation_id} is not due for expiry"
+                )
+
+            conn.execute(
+                """
+                UPDATE resource_reservation
+                SET status = 'released', released_at = %s, expired_at = %s
+                WHERE id = %s
+                """,
+                (effective_time, effective_time, reservation_id),
+            )
+            return reservation.model_copy(
+                update={
+                    "status": ResourceReservationStatus.RELEASED,
+                    "released_at": effective_time,
+                    "expired_at": effective_time,
+                }
+            )
+
+    def expire_due(self, *, as_of: datetime | None = None) -> int:
+        effective_time = as_of or utcnow()
+        with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
+            return self._expire_due(conn, effective_time)
+
     def get(self, reservation_id: UUID) -> ResourceReservation | None:
         with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
             row = conn.execute(
@@ -223,6 +286,7 @@ class PostgresResourceReservationStore:
 
     def availability(self, resource_names: Sequence[str] | None = None) -> ResourceAvailability:
         with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
+            self._expire_due(conn, utcnow())
             if resource_names is None:
                 rows = conn.execute(
                     """
@@ -280,6 +344,20 @@ class PostgresResourceReservationStore:
         )
 
     @staticmethod
+    def _expire_due(conn: Any, as_of: datetime) -> int:
+        cursor = conn.execute(
+            """
+            UPDATE resource_reservation
+            SET status = 'released', released_at = %s, expired_at = %s
+            WHERE status = 'active'
+              AND expires_at IS NOT NULL
+              AND expires_at <= %s
+            """,
+            (as_of, as_of, as_of),
+        )
+        return int(cursor.rowcount)
+
+    @staticmethod
     def _assert_same_request(
         reservation: ResourceReservation,
         request: ResourceReservationRequest,
@@ -288,6 +366,7 @@ class PostgresResourceReservationStore:
             reservation.owner_type != request.owner_type
             or reservation.owner_id != request.owner_id
             or reservation.requirements != request.requirements
+            or reservation.expires_at != request.expires_at
         ):
             raise ReservationConflictError(
                 "idempotency key already belongs to a different resource reservation"
@@ -303,5 +382,7 @@ class PostgresResourceReservationStore:
             requirements=ResourceVector(quantities=row["requirements"]),
             status=row["status"],
             created_at=row["created_at"],
+            expires_at=row["expires_at"],
             released_at=row["released_at"],
+            expired_at=row["expired_at"],
         )
