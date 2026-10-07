@@ -39,6 +39,7 @@ class PostgresFamilyEvaluationStore:
                     )
                 return existing
 
+            self._validate_lineage(conn, evaluation)
             payload = evaluation.model_dump(mode="json")
             conn.execute(
                 """
@@ -90,6 +91,43 @@ class PostgresFamilyEvaluationStore:
                 },
             )
             return evaluation
+
+    @staticmethod
+    def _validate_lineage(conn: Any, evaluation: FamilyEvaluation) -> None:
+        contract = conn.execute(
+            """
+            SELECT economic_hypothesis_id, business_family
+            FROM experiment_contract
+            WHERE id = %s
+            """,
+            (evaluation.contract_id,),
+        ).fetchone()
+        if contract is None:
+            raise ValueError("family evaluation contract does not exist")
+        if contract["economic_hypothesis_id"] != evaluation.hypothesis_id:
+            raise ValueError("family evaluation contract belongs to a different hypothesis")
+        if contract["business_family"] != evaluation.family.value:
+            raise ValueError("family evaluation contract belongs to a different family")
+
+        if not evaluation.evidence_ids:
+            return
+        rows = conn.execute(
+            """
+            SELECT evidence_id
+            FROM evidence_association
+            WHERE target_kind = 'economic_hypothesis'
+              AND target_id = %s
+              AND evidence_id = ANY(%s)
+            """,
+            (evaluation.hypothesis_id, evaluation.evidence_ids),
+        ).fetchall()
+        associated_ids = {row["evidence_id"] for row in rows}
+        missing = set(evaluation.evidence_ids) - associated_ids
+        if missing:
+            rendered = ", ".join(sorted(str(item) for item in missing))
+            raise ValueError(
+                f"family evaluation evidence is not associated with the hypothesis: {rendered}"
+            )
 
     def get(self, evaluation_id: UUID) -> FamilyEvaluation | None:
         with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
