@@ -24,22 +24,27 @@ CREATE TABLE IF NOT EXISTS capital_authorization (
     period_committed_before numeric(24,6) NOT NULL CHECK (period_committed_before >= 0),
     status text NOT NULL CHECK (status IN ('active', 'consumed', 'released', 'expired')),
     rationale text NOT NULL,
+    requested_at timestamptz NOT NULL,
     authorized_at timestamptz NOT NULL,
     expires_at timestamptz,
     consumed_at timestamptz,
     released_at timestamptz,
     expired_at timestamptz,
     ledger_transaction_id uuid REFERENCES economic_ledger_transaction(id) ON DELETE RESTRICT,
+    CHECK (expires_at IS NULL OR expires_at > authorized_at),
     CHECK (
         (status = 'active' AND consumed_at IS NULL AND released_at IS NULL
          AND expired_at IS NULL AND ledger_transaction_id IS NULL)
         OR
-        (status = 'consumed' AND consumed_at IS NOT NULL AND ledger_transaction_id IS NOT NULL)
+        (status = 'consumed' AND consumed_at IS NOT NULL AND ledger_transaction_id IS NOT NULL
+         AND released_at IS NULL AND expired_at IS NULL)
         OR
-        (status = 'released' AND released_at IS NOT NULL AND expired_at IS NULL)
+        (status = 'released' AND released_at IS NOT NULL AND consumed_at IS NULL
+         AND expired_at IS NULL AND ledger_transaction_id IS NULL)
         OR
         (status = 'expired' AND released_at IS NOT NULL AND expired_at IS NOT NULL
-         AND released_at = expired_at)
+         AND released_at = expired_at AND consumed_at IS NULL
+         AND ledger_transaction_id IS NULL)
     )
 );
 

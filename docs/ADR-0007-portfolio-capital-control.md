@@ -47,6 +47,14 @@ PR9 must not convert resources into one scalar budget before an explicit policy 
 
 Calculated scarcity must not override hard feasibility: a candidate that does not fit available resource capacity is ineligible regardless of score.
 
+### Portfolio allocation is not a resource lease
+
+A `PortfolioAllocation` is a durable selection/admission artifact evaluated against the authoritative `ResourceAvailability` snapshot. It does **not** itself create a PR5 `ResourceReservation` and must not be interpreted as permission to execute against a scarce resource.
+
+The continuation layer that turns a PR9 allocation into a child experiment or execution must acquire the required PR5 reservation transactionally before work begins. PR5 remains the concurrency authority that prevents two workers from overbooking the same non-fungible resource.
+
+This boundary is deliberate: PR9 decides what should receive capacity; the next layer atomically claims that capacity when it materializes authorized work. If reservation acquisition fails because availability changed after planning, the allocation is stale and must be replanned rather than executed optimistically.
+
 ## Financial authority
 
 The deterministic ledger is the only financial authority.
@@ -60,6 +68,16 @@ The following are not authoritative cash balances:
 - model-generated estimates.
 
 Bootstrap settings remain optional hard operator ceilings. Effective spend permission is bounded by both capital policy and those ceilings, but accounting truth still comes from the ledger.
+
+### Operator ceiling scope
+
+The bootstrap `operator_hard_ceiling` is category-local, matching the existing capital accounting/query semantics. It is never a replacement for ledger cash.
+
+- when `CapitalEnvelope.category` is set, the envelope applies only to that spend category and requests in another category are rejected;
+- when `CapitalEnvelope.category` is unset, the request's own category becomes the effective category for the ceiling calculation;
+- committed amounts are counted only within the same currency, category, and explicit control period.
+
+A future global or cross-category budget requires a separate explicit policy; PR9 does not silently reinterpret this ceiling as one.
 
 ## Authorization is not spend
 
@@ -75,6 +93,23 @@ Actual spend enters the ledger only when the external economic event occurs.
 
 Authorizations must support durable lifecycle states sufficient for active, consumed, released, and expired capacity.
 
+### Trusted time
+
+`requested_at` is request/audit data and is not trusted control time. Authorization, operator-period checks, release, and expiry use a timezone-aware clock owned by the capital store. The resulting `authorized_at` is persisted separately from the caller-supplied request timestamp.
+
+This prevents a future- or stale-dated request from expiring another authorization, crossing an operator control period, or otherwise manufacturing capacity.
+
+### Spend confirmation lineage
+
+Consumption of an authorization requires a separate authoritative ledger transaction. That transaction must:
+
+- explicitly cite the authorization through `metadata.capital_authorization_id`;
+- occur no earlier than `authorized_at` and strictly before `expires_at` when an expiry exists;
+- not be future-dated relative to reconciliation time;
+- contain net cash outflow in the authorization currency exactly equal to the authorized amount.
+
+PR9 models full authorization consumption only; partial consumption is not inferred.
+
 ## Concurrency and idempotency
 
 Capital authorization must use transactional locking/idempotency semantics comparable to resource reservations:
@@ -89,6 +124,8 @@ Capital authorization must use transactional locking/idempotency semantics compa
 PR9 must not perform implicit FX conversion.
 
 A portfolio/capital run operates in an explicit base currency. A financially material candidate in another currency is deferred/rejected unless an explicit valuation input exists with its own provenance and timestamp.
+
+Until such a valuation path exists, capital authorization currency must match the persisted portfolio base currency.
 
 ## Exploration and concentration
 
@@ -112,8 +149,10 @@ PR9 does not implement:
 - autonomous final `Decision` continuation;
 - external platform dispatch;
 - real paid spend;
+- direct resource reservation from portfolio planning;
 - implicit FX services;
+- partial capital consumption;
 - contextual bandits or reinforcement learning;
 - self-modifying live capital policy.
 
-The next layer consumes persisted PR9 outputs to produce the autonomous decision and idempotent child experiment.
+The next layer consumes persisted PR9 outputs to produce the autonomous decision, acquire required PR5 resource reservations, and create the idempotent child experiment.
