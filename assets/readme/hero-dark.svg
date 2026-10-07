@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">Business Master</title>
+  <desc id="desc">Autonomous economic control system: observe, believe, experiment, allocate, and learn.</desc>
+  <defs>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#60A5FA"/>
+      <stop offset="1" stop-color="#A78BFA"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1200" height="420" rx="28" fill="#0B1120"/>
+  <g opacity="0.22" stroke="#334155" stroke-width="1">
+    <path d="M0 70H1200M0 140H1200M0 210H1200M0 280H1200M0 350H1200"/>
+    <path d="M100 0V420M200 0V420M300 0V420M400 0V420M500 0V420M600 0V420M700 0V420M800 0V420M900 0V420M1000 0V420M1100 0V420"/>
+  </g>
+  <rect x="58" y="56" width="426" height="30" rx="15" fill="#172033" stroke="#26324A"/>
+  <text x="76" y="77" fill="#94A3B8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" font-weight="700" letter-spacing="1.6">AUTONOMOUS ECONOMIC CONTROL SYSTEM</text>
+  <text x="58" y="155" fill="#F8FAFC" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="58" font-weight="800" letter-spacing="-2">Business Master</text>
+  <text x="58" y="202" fill="#CBD5E1" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="22">Turn uncertainty into experiments.</text>
+  <text x="58" y="234" fill="#CBD5E1" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="22">Turn experiments into evidence.</text>
+  <text x="58" y="266" fill="#CBD5E1" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="22">Turn evidence into better allocation.</text>
+  <g transform="translate(58 315)">
+    <circle cx="7" cy="7" r="7" fill="#34D399"/>
+    <text x="24" y="12" fill="#94A3B8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14">observe → believe → experiment → allocate → learn ↺</text>
+  </g>
+  <g transform="translate(775 52)">
+    <circle cx="180" cy="158" r="132" fill="#101827" stroke="#26324A" stroke-width="2"/>
+    <circle cx="180" cy="158" r="90" fill="none" stroke="url(#accent)" stroke-width="3" stroke-dasharray="8 10" opacity="0.95"/>
+    <path d="M180 31A127 127 0 0 1 303 126" fill="none" stroke="url(#accent)" stroke-width="7" stroke-linecap="round" filter="url(#glow)"/>
+    <path d="M306 126l-5-22 19 11z" fill="#A78BFA"/>
+    <path d="M180 285A127 127 0 0 1 57 190" fill="none" stroke="url(#accent)" stroke-width="7" stroke-linecap="round" filter="url(#glow)"/>
+    <path d="M54 190l5 22-19-11z" fill="#60A5FA"/>
+    <circle cx="180" cy="158" r="49" fill="#E2E8F0"/>
+    <text x="180" y="151" text-anchor="middle" fill="#0F172A" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="800" letter-spacing="1">BELIEF</text>
+    <text x="180" y="171" text-anchor="middle" fill="#475569" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11">state</text>
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="700" fill="#94A3B8">
+      <text x="180" y="16" text-anchor="middle">WORLD</text>
+      <text x="327" y="163">ACTION</text>
+      <text x="180" y="316" text-anchor="middle">EVIDENCE</text>
+      <text x="6" y="163">OBSERVE</text>
+    </g>
+    <circle cx="180" cy="31" r="8" fill="#60A5FA"/>
+    <circle cx="307" cy="158" r="8" fill="#A78BFA"/>
+    <circle cx="180" cy="285" r="8" fill="#60A5FA"/>
+    <circle cx="53" cy="158" r="8" fill="#A78BFA"/>
+  </g>
+</svg>
