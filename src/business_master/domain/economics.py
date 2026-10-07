@@ -10,6 +10,8 @@ from business_master.domain.clock import utcnow
 
 
 class BusinessOutcome(BaseModel):
+    """Legacy-compatible outcome summary; the economic ledger is financial authority."""
+
     id: UUID = Field(default_factory=uuid4)
     experiment_id: UUID
     observed_at: datetime = Field(default_factory=utcnow)
