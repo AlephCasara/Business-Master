@@ -4,6 +4,8 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
+import pytest
+
 from business_master.domain.capital import (
     CapitalAuthorizationRequest,
     CapitalEnvelope,
@@ -22,6 +24,7 @@ def _request(
     currency: str = "USD",
     risk: RiskLevel = RiskLevel.LOW,
     stage: CapitalStage = CapitalStage.PROBE,
+    category: SpendCategory = SpendCategory.PAID_ADS,
     requested_at: datetime = NOW,
     expires_at: datetime | None = None,
 ) -> CapitalAuthorizationRequest:
@@ -32,7 +35,7 @@ def _request(
         hypothesis_id=uuid4(),
         amount=Decimal(amount),
         currency=currency,
-        category=SpendCategory.PAID_ADS,
+        category=category,
         stage=stage,
         risk=risk,
         requested_at=requested_at,
@@ -47,6 +50,7 @@ def _envelope(
     hard_ceiling: str | None = None,
     max_risk: RiskLevel = RiskLevel.MEDIUM,
     stage: CapitalStage = CapitalStage.PROBE,
+    category: SpendCategory | None = SpendCategory.PAID_ADS,
     period_start: datetime | None = None,
     period_end: datetime | None = None,
 ) -> CapitalEnvelope:
@@ -55,6 +59,7 @@ def _envelope(
     return CapitalEnvelope(
         currency="USD",
         stage=stage,
+        category=category,
         max_per_authorization=Decimal(max_per),
         max_outstanding=Decimal(max_outstanding),
         max_risk=max_risk,
@@ -104,6 +109,21 @@ def test_ledger_cash_is_reduced_by_active_authorizations() -> None:
     assert assessment.authorized is False
     assert assessment.authorizable_cash == Decimal("50")
     assert "ledger cash" in assessment.rationale.lower()
+
+
+def test_operator_hard_ceiling_requires_explicit_category() -> None:
+    with pytest.raises(ValueError, match="explicit spend category"):
+        _envelope(hard_ceiling="100", category=None)
+
+
+def test_category_scoped_envelope_rejects_other_spend_category() -> None:
+    assessment = _assess(
+        _request(category=SpendCategory.CLOUD_GPU),
+        _envelope(category=SpendCategory.PAID_ADS),
+    )
+
+    assert assessment.authorized is False
+    assert "category" in assessment.rationale.lower()
 
 
 def test_operator_zero_ceiling_blocks_otherwise_affordable_spend() -> None:
