@@ -1,408 +1,283 @@
-# Technical Stack — Current Implementation Targets
+# Technical Stack — Contracts vs Current Implementations
 
-Last research pass: 2026-10-06.
+Last alignment pass: 2026-10-07.
 
-This file records current technology targets, not permanent dependencies. Every external model/runtime/browser/media/platform system sits behind a port/adapter so SOTA can change without rewriting the economic control plane.
+This document distinguishes **architectural contracts** from **current implementation candidates**. A tool can be the best current implementation without becoming Business Master's domain architecture.
 
-The governing rule is:
+Governing rule:
 
-> best successful economic task per dollar/byte/human-minute, not technology for technology's sake.
+> choose the implementation that produces the best reliable economic-task outcome under current cash, compute, latency, quality, risk, and human-attention constraints.
 
 ---
 
-## 1. Core control plane
+## 1. Architecture/implementation map
 
-| Concern | Bootstrap choice | Why |
+| Concern | Architectural contract / boundary | Current implementation or candidate |
 |---|---|---|
-| Language | Python 3.13 | strongest combined AI/statistics/browser/media ecosystem; fastest iteration |
-| Validation/types | Pydantic | typed domain/tool/persistence boundaries |
-| AI contracts | PydanticAI where useful | provider flexibility + typed outputs/tools |
-| Durable execution | Hatchet | events, tasks/workflows, retries, schedules, worker routing, self-host/embedded |
-| World Model | PostgreSQL | durable relational source of truth + JSONB + analytics path |
-| DB access | explicit psycopg initially | keep SQL/state semantics visible while schema evolves |
-| Schema migration | SQL now, Alembic when migration surface warrants it | avoid unnecessary abstraction in V0 |
-| API ingress | FastAPI when actually needed | typed local/webhook/API boundary |
-| CLI | Typer | operator/debug surface, not normal scheduler |
-| Observability | structured domain events + OpenTelemetry path | vendor-neutral traces/evidence lineage |
-| AI trace/evals | Langfuse adapter candidate | model/tool trace/evaluation when volume justifies it |
+| Control language | typed deterministic control-plane code | Python 3.13 |
+| Validation | typed domain/config boundaries | Pydantic |
+| Durable state | authoritative relational world/economic state | PostgreSQL 17 |
+| DB access | explicit transactional persistence | psycopg / SQL |
+| Schema evolution | additive/versioned migrations | SQL migrations; Alembic only if justified |
+| Operator/debug surface | thin diagnostic/administrative commands | Typer CLI |
+| Durable execution | Job/Attempt/lease/retry/timer/receipt/dispatcher contracts | PostgreSQL-native runtime and/or Hatchet candidate; decide from PR11 workload |
+| Artifact persistence | `ArtifactStore` / `ArtifactRef` | local filesystem first, replaceable later |
+| Model cognition | provider-neutral model/cognitive adapter | local OpenAI-compatible servers and paid APIs when justified |
+| Browser execution | structured browser-executor contract | Playwright first; semantic recovery candidate where useful |
+| Aesthetic production | semantic aesthetic-workflow boundary | **ComfyUI** as current canonical aesthetic workflow runtime |
+| Deterministic media/file transforms | typed deterministic executor | FFmpeg / ordinary renderers |
+| Distribution | `Publisher` + external-action/receipt contracts | official APIs/direct adapters or replaceable aggregator |
+| Platform telemetry | `MetricCollector` | authoritative/native platform APIs where available |
+| Commerce | capability-based offer/event/settlement adapters | Hotmart/Kiwify/Eduzz/marketplace adapters as justified |
+| Observability | structured events/receipts/resource telemetry | structlog/OpenTelemetry path; external products only if justified |
+| Host/deployment | reproducible Linux/NixOS deployment boundary | NixOS + systemd/cgroups/containers where useful |
+
+Do not infer architecture from the rightmost column.
 
 ---
 
-## 2. Hatchet — durable orchestration target
+## 2. Core control plane
 
-Current official Hatchet docs support Python embedded mode:
-
-```python
-from hatchet_sdk import Hatchet
-
-hatchet = Hatchet.from_embedded()
-```
-
-Python/TypeScript embedded clients run a local Hatchet engine through a sidecar; by default embedded mode provisions an embedded PostgreSQL instance and does not require an external service, tenant/API token or Docker for local testing.
-
-This is a strong V0 fit because we can validate restart/retry/event semantics before deploying a permanent orchestration stack.
-
-### Deployment order
-
-1. **Embedded mode** for local dev/integration/CI experiments.
-2. Embedded mode backed by our existing local PostgreSQL if sharing durability is useful.
-3. Local self-hosted Hatchet/dashboard when operational inspection matters.
-4. VPS/multi-worker only after real workload justifies it.
-
-### Rule
-
-Domain policies must not import Hatchet.
+Current foundation:
 
 ```text
-policy decides WHAT
-runtime decides WHEN/WHERE/RETRY
-adapter decides HOW
+Python 3.13
+Pydantic
+PostgreSQL
+psycopg
+Typer
+structlog
+pytest
+```
+
+Python remains the default control language because it fits the current AI/statistics/integration ecosystem and existing codebase.
+
+Rust/TypeScript/other languages are justified only where a measured dependency/runtime ecosystem makes them materially better behind a language-neutral boundary.
+
+See `ADR-0001-language-boundaries.md`.
+
+---
+
+## 3. Durable execution — no constitutional vendor
+
+PR11 should implement behavior, not adopt a brand as architecture.
+
+Required concepts include, where the workload requires them:
+
+```text
+Job
+Attempt
+lease / ownership
+heartbeat/recovery signal
+retry/backoff
+durable timer/event
+reconciliation/idempotency
+resource-aware dispatch
+ExecutionReceipt
+ArtifactRef
+health/readiness
+```
+
+Hatchet remains a candidate because its Python/durable-work features may fit, but the earlier "Hatchet target" assumption is superseded. A minimal PostgreSQL-backed runtime can be better if it satisfies the required failure semantics with less operational complexity.
+
+Domain policy must not import an orchestration vendor.
+
+```text
+policy decides WHY/WHAT
+runtime decides durable WHEN/WHERE
+adapter/executor decides HOW
 ```
 
 ---
 
-## 3. Python vs Rust
+## 4. Local/model cognition
 
-Python is the control-plane default.
+Expose a provider-neutral model contract. OpenAI-compatible transport is useful where practical but is not itself a domain concept.
 
-Rust is introduced only when profiling proves value, for example:
-- long-running native resource daemon;
-- high-throughput parsing/media primitive;
-- low-overhead host/device agent;
-- CPU/memory bottleneck demonstrated by telemetry;
-- standalone binary where deployment reliability materially improves.
+Candidates such as SGLang, vLLM, llama.cpp/GGUF, or hosted model APIs should be benchmarked on actual Business Master tasks rather than public tokens/sec alone.
 
-Do not rewrite mature Python policy/state code into Rust for aesthetics.
-
-See `docs/ADR-0001-language-boundaries.md`.
-
----
-
-## 4. Local inference routing
-
-Business Master should expose a provider-neutral internal model contract, ideally OpenAI-compatible where practical.
-
-### SGLang
-
-High-priority benchmark candidate.
-
-Current documentation provides:
-- OpenAI-compatible server;
-- structured outputs/JSON-schema paths;
-- broad accelerator/model support;
-- throughput-oriented inference/caching;
-- a growing diffusion subsystem for image/video generation.
-
-Potential use:
-- resident local text/VLM models;
-- high-throughput agent/research workers;
-- structured generation;
-- future shared image/video inference if hardware/model compatibility is good.
-
-### vLLM
-
-Compatibility/high-throughput benchmark candidate.
-
-Current vLLM exposes an OpenAI-compatible server and broad serving features.
-
-Use when:
-- selected model works better in vLLM;
-- tool/multimodal/quant support is superior for the workload;
-- throughput is better on actual hardware.
-
-Security: current docs explicitly warn that `--api-key` does **not** protect every server endpoint. Bind local inference privately or place behind a proper reverse proxy/auth boundary; do not expose raw vLLM publicly.
-
-### llama.cpp / GGUF
-
-Primary quantization/offload candidate for consumer hardware.
-
-Use when:
-- model does not fit fully in VRAM;
-- CPU/GPU split is useful;
-- GGUF quantization yields better successful-task economics;
-- simple native deployment beats a heavier server.
-
-Current llama.cpp-family server tooling exposes OpenAI-compatible chat/completion-style endpoints and supports multiple compute backends depending on build.
-
-### Selection rule
-
-Benchmark on actual Business Master work:
+Measure:
 
 ```text
-successful tasks / wall hour
-successful tasks / GPU hour
-RAM/VRAM pressure
+successful task rate
 quality/error rate
-energy/cash cost
-```
-
-Do not choose a server from public tokens/sec alone.
-
----
-
-## 5. Computer use
-
-### Holo4
-
-Research priority: high.
-
-Holo4 was announced September 28, 2026 as a generalist agentic model family with:
-- Holo4-27B dense;
-- Holo4-35B-A3B Mixture-of-Experts;
-- interaction across GUI, code, MCP and APIs;
-- FP16/FP8/GGUF release variants in its model collection.
-
-Business Master use cases:
-- cross-application tasks;
-- unfamiliar GUI recovery;
-- combining visual computer use with tools/code;
-- fallback when DOM/accessibility/API paths are insufficient.
-
-License must be checked for the exact model/version before production routing.
-
-Do not route known stable workflows to a visual generalist by default.
-
----
-
-## 6. Browser execution hierarchy
-
-```text
-official API/SDK
-→ structured HTTP
-→ Playwright deterministic DOM/accessibility
-→ Stagehand semantic recovery/extraction
-→ Holo4/general computer-use
-→ human exception
-```
-
-### Playwright
-
-Default browser substrate for stable workflows.
-
-### Stagehand v3
-
-Current v3 is TypeScript-first and interoperates with Playwright over CDP. It exposes semantic methods including `act`, `extract` and `observe` while still allowing direct Playwright page control.
-
-Architecture choice:
-- Node/TypeScript sidecar/worker for Stagehand;
-- language-neutral task contract to Python control plane;
-- use semantic actions only where they improve success vs deterministic selectors.
-
-Do not depend on an archived Python client merely to keep everything one language.
-
----
-
-## 7. Desktop execution
-
-Candidate layers:
-
-```text
-OS/process/filesystem API
-→ accessibility/semantic desktop substrate
-→ deterministic input where stable
-→ Holo4/general visual executor
-→ human
-```
-
-On NixOS, actual Wayland/XWayland/desktop environment must be inspected locally before desktop automation becomes critical infrastructure.
-
-Prefer process/API integration over GUI control whenever possible.
-
----
-
-## 8. Android / phone worker
-
-The phone is opportunistic, not always-on.
-
-Priority:
-
-```text
-platform API
-→ ADB/uiautomator/accessibility tree
-→ semantic mobile agent with intelligence on workstation
-→ generalist visual agent
-→ human gate
-```
-
-KYC/liveness/CAPTCHA/identity owner confirmation remain human gates.
-
-The system should be disconnect-safe: phone-required jobs wait durably until the device is available.
-
----
-
-## 9. Media R&D
-
-### ComfyUI
-
-Preferred rapid graph laboratory for:
-- image/video model testing;
-- LoRA/quant/offload comparisons;
-- reference conditioning;
-- inpainting/replacement;
-- character/reference workflows;
-- experimental multi-model chains.
-
-Stable graphs can become versioned artifacts/adapters, but ComfyUI nodes do not belong in the economic domain.
-
-### FFmpeg
-
-Canonical deterministic media finishing/QC layer:
-- transcode;
-- mux;
-- crop/scale;
-- concat;
-- subtitles;
-- audio normalization;
-- frame extraction;
-- ffprobe validation;
-- simple programmatic composition.
-
-### Remotion
-
-Optional where React/browser-rendered programmatic motion graphics materially simplify:
-- animated charts;
-- reusable layout systems;
-- complex timed graphic compositions.
-
-Do not use it for tasks FFmpeg handles more simply.
-
----
-
-## 10. Media model adapters
-
-Domain interfaces should resemble:
-
-```text
-ImageGenerator
-VideoGenerator
-VoiceGenerator
-VisualEvaluator
-MediaComposer
-```
-
-Current research candidates include:
-- MiniMax H3 workflows;
-- Qwen/Image-family character/reference workflows;
-- Wan/image/video model families where locally viable;
-- SGLang diffusion as a possible optimized future execution layer.
-
-No media model is a permanent dependency.
-
-### Quality modes
-
-At minimum:
-
-```text
-probe       → cheapest fair representation
-production  → evidence-backed premium generation
-```
-
-Aesthetic hypotheses may require a higher-quality PROBE than information-heavy chart/explainer formats. Cheapest does not mean unfairly bad.
-
----
-
-## 11. Voice
-
-Routing:
-- local/lightweight TTS for volume/probes;
-- higher-quality local/paid voice for proven/premium work;
-- explicit provenance/rights for any persistent voice identity.
-
-Voice cost/quality is measured as another executor variable.
-
----
-
-## 12. Observability and evals
-
-Every execution should produce enough data to compare technologies:
-
-```text
-runner / model / version
-hardware profile
-input/task class
-success/failure class
 wall time
-CPU seconds
-GPU seconds
-peak RAM/VRAM
-model tokens
-retries
-human intervention
-quality/eval score
+RAM/VRAM pressure
+GPU time / tokens
 cash cost
+human recovery
 ```
 
-For browser/computer-use also record:
-- invalid actions;
-- recovery count;
-- destructive-action attempts blocked by policy.
+Paid APIs are not constitutionally forbidden. PR9 Capital Control/operator policy/evidence determine whether their expected value justifies cost.
 
 ---
 
-## 13. Repository vs runtime state
+## 5. Context/tool architecture
+
+Do not expose every integration/tool to every model call.
+
+The cognitive layer should discover/retrieve only the small tool/skill/context set relevant to the current task. Detailed context/skill/memory semantics live in `MEDIA_AND_AGENT_STACK.md`.
+
+Large third-party tool ecosystems/MCP servers are execution/integration catalogs, not the Business Master control plane.
+
+---
+
+## 6. Browser / computer use
+
+Preferred hierarchy for known external workflows:
+
+```text
+official API / SDK
+→ direct structured HTTP
+→ deterministic Playwright/browser execution
+→ semantic browser/computer-use recovery
+→ legitimate human gate
+```
+
+Use semantic/general visual execution only where it materially improves success on ambiguous interfaces.
+
+Do not automate protected identity/anti-abuse boundaries.
+
+---
+
+## 7. ComfyUI — canonical aesthetic workflow runtime
+
+ComfyUI is the current production architecture for **aesthetic generative workflows**, behind Business Master's semantic production boundary.
+
+It is not merely an image generator and not the economic/creative controller. It is a programmable node-graph inference/workflow runtime capable of composing models, references, conditioning, edits, video/image/audio generation, compositing, enhancement, QC, and local/remote model nodes.
+
+Business Master supplies economic/semantic intent and constraints; ComfyUI workflows materialize the aesthetic solution.
+
+Production use should be headless/API-driven through versioned validated workflows. The visual UI remains valuable for workflow authoring/R&D/debugging.
+
+Detailed workflow lifecycle, queue/reconciliation, provenance, headless compatibility, and aesthetic authority are specified in `MEDIA_AND_AGENT_STACK.md`.
+
+Models/checkpoints/custom nodes remain dependencies of workflows, not domain architecture.
+
+---
+
+## 8. Deterministic media/document execution
+
+FFmpeg and ordinary deterministic renderers remain useful for operations that do not require aesthetic judgment:
+
+- encode/transcode;
+- mux/concat;
+- file validation/ffprobe;
+- deterministic crop/scale;
+- serialization/export;
+- final PDF/HTML/file emission from an already resolved layout/spec when appropriate.
+
+A deterministic serializer can execute an aesthetic decision without becoming the aesthetic authority.
+
+---
+
+## 9. Distribution
+
+The distribution contract should remain provider-neutral.
+
+Initial required surfaces:
+
+```text
+TikTok
+Instagram
+YouTube
+```
+
+Publication can initially use:
+
+```text
+official direct API
+or
+replaceable multi-platform publishing adapter/aggregator
+```
+
+Do not create separate content architectures for each surface.
+
+A publishing convenience layer must not become Business Master's telemetry/intelligence authority.
+
+---
+
+## 10. Telemetry
+
+Prefer native/authoritative sources for decision-grade platform metrics where available.
+
+Keep:
+
+```text
+Publisher != MetricCollector
+```
+
+Telemetry adapters normalize raw observations/events; Evidence and economic interpretation remain separate layers.
+
+---
+
+## 11. Commerce / monetization adapters
+
+Commerce providers are capability sets, not one universal interface.
+
+Useful ports may include:
+
+```text
+OfferSource / OfferManager
+AttributionSource
+CommerceEventSource
+SettlementSource
+```
+
+Current candidate venues for digital/affiliate economic loops include Hotmart, Kiwify and related providers; marketplace adapters can expose different capability combinations. Select the first adapter from the acceptance scenario and current provider evidence.
+
+Do not make Hotmart/Kiwify/Mercado Livre/etc. domain architecture.
+
+---
+
+## 12. NixOS / host layer
+
+NixOS is the current target host environment, not the economic domain.
+
+Repository deployment support may eventually include Nix package/module/service definitions so the local engineering agent can integrate Business Master reproducibly.
+
+Host mechanisms such as systemd/cgroups can enforce restart policy, process isolation, state directories, credential delivery and physical resource ceilings. Business Master owns economic/resource admission semantics; the host owns physical enforcement.
+
+Do not make Business Master a workstation installer for itself.
+
+---
+
+## 13. Secrets and security
+
+Persist credential metadata/references, not raw secret values in model context or Git.
+
+Prefer deterministic adapters to resolve credentials at the execution boundary. Isolate untrusted-web/browser/platform-write/financial/aesthetic workloads by blast radius when evidence shows a distinct security/failure boundary.
+
+Process boundaries should exist for concrete authority/resource reasons, not one-per-agent-persona.
+
+---
+
+## 14. Repository vs runtime state
 
 ### Git repository
 
-Contains:
-- code;
-- schemas/migrations;
-- policies;
-- RFCs/ADRs;
-- adapters;
-- tests/benchmarks;
-- versioned skills/prompts;
-- deployment/Nix/container definitions;
-- synthetic fixtures.
+Contains source, migrations, policies, ADRs/living docs, adapters, tests, versioned workflow definitions/configuration, and reproducible deployment definitions.
 
-### Local machine/runtime
+### Runtime/host
 
-Contains:
-- PostgreSQL state;
-- platform secrets/tokens;
-- model weights;
-- raw screenshots/video/audio;
-- generated media;
-- browser profiles/session state where permitted;
-- caches;
-- large/sensitive benchmark outputs.
+Contains PostgreSQL state, secrets/tokens, model weights, generated/raw artifacts, caches, browser session state where permitted, and large/sensitive outputs.
 
-### Never commit
-
-- credentials;
-- cookies/session tokens;
-- KYC material;
-- private customer raw data;
-- model weights;
-- large generated media.
+Never commit credentials, cookies/session tokens, KYC material, private customer raw data, model weights, or large generated assets.
 
 ---
 
-## 14. No-cost bootstrap constraint
+## 15. Technology routing is an experiment
 
-Until changed by policy:
+For any meaningful interchangeable adapter/runtime/model/workflow, measure:
 
-```text
-paid_ads = 0
-paid_AI_APIs = 0
-cloud_GPU = 0
-paid_SaaS = 0
-```
-
-Use existing local hardware, open-source tooling and legitimate free development/platform capabilities first.
-
----
-
-## 15. Technology routing is itself an experiment
-
-Record per adapter/model:
-- success rate;
-- wall time;
+- success/failure rate;
+- quality/QC outcome;
+- latency;
 - resource use;
-- retries;
-- human interventions;
-- output quality;
-- effective cost per successful task;
-- license/production restrictions;
-- downstream business result where attributable.
+- retries/recovery;
+- human intervention;
+- cash cost;
+- licensing/production restrictions;
+- downstream economic effect when attributable.
 
-Public SOTA is a candidate-generation mechanism. **Our own workloads decide production routing.**
+Public SOTA produces candidates. **Business Master's own workloads determine production routing.**
