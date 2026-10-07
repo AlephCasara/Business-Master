@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from uuid import UUID
 
 import pytest
 
@@ -76,8 +77,11 @@ def _evidence(
     source: str,
     kind: str,
     evidence_class: EvidenceClass = EvidenceClass.MARKET,
+    provenance: EvidenceProvenance = EvidenceProvenance.OBSERVED_OWN,
+    independence_key: str | None = None,
     qualified_signal: float | None = None,
     rejection: float | None = None,
+    input_evidence_ids: list[UUID] | None = None,
 ) -> EvidenceRecord:
     features: dict[str, EvidenceScalar] = {}
     if qualified_signal is not None:
@@ -86,11 +90,13 @@ def _evidence(
         features["rejection"] = rejection
     return EvidenceRecord(
         evidence_class=evidence_class,
-        provenance=EvidenceProvenance.OBSERVED_OWN,
+        provenance=provenance,
         kind=kind,
         source=source,
+        independence_key=independence_key,
         observed_at=NOW,
         features=features,
+        input_evidence_ids=input_evidence_ids or [],
     )
 
 
@@ -143,6 +149,89 @@ def test_content_policy_uses_contract_criteria_and_replication_gate() -> None:
     assert with_replication.recommendation is EvaluationRecommendation.GRADUATE
 
 
+def test_creator_claim_cannot_become_market_progression_evidence() -> None:
+    hypothesis = EconomicHypothesis(
+        hypothesis_type=HypothesisType.HOOK,
+        subject="claimed content result",
+        proposition="The hook produces qualified external intent",
+    )
+    claim = _evidence(
+        source="creator-video",
+        kind="claimed_click",
+        provenance=EvidenceProvenance.CREATOR_CLAIM,
+        qualified_signal=100.0,
+    )
+
+    evaluation = policy_for_family("content").evaluate(
+        _request(
+            family="content",
+            hypothesis=hypothesis,
+            evidence=(claim,),
+            context=FamilyEvaluationContext(replication_count=1),
+        )
+    )
+
+    assert evaluation.external_observations == 0
+    assert evaluation.independent_sources == 0
+    assert evaluation.evidence_sufficient is False
+    assert evaluation.supporting_signal is False
+    assert evaluation.recommendation is EvaluationRecommendation.INSUFFICIENT_EVIDENCE
+    assert evaluation.interpretations[0].interpretation.value == "neutral"
+    assert "not decision-grade" in evaluation.interpretations[0].rationale
+
+
+def test_calculated_evidence_requires_complete_decision_grade_lineage() -> None:
+    hypothesis = EconomicHypothesis(
+        hypothesis_type=HypothesisType.HOOK,
+        subject="derived content metric",
+        proposition="A derived metric can support the hook only from observed inputs",
+    )
+    weak_parent = _evidence(
+        source="creator-video",
+        kind="claimed_raw_metric",
+        provenance=EvidenceProvenance.CREATOR_CLAIM,
+    )
+    weak_calculated = _evidence(
+        source="business_master.metrics",
+        kind="calculated_signal",
+        provenance=EvidenceProvenance.CALCULATED,
+        qualified_signal=1.0,
+        input_evidence_ids=[weak_parent.id],
+    )
+
+    weak = policy_for_family("content").evaluate(
+        _request(
+            family="content",
+            hypothesis=hypothesis,
+            evidence=(weak_parent, weak_calculated),
+        )
+    )
+    assert weak.supporting_signal is False
+    assert weak.external_observations == 0
+
+    observed_parent = _evidence(
+        source="youtube.analytics",
+        kind="raw_metric",
+        provenance=EvidenceProvenance.OBSERVED_OFFICIAL_EXTERNAL,
+    )
+    strong_calculated = _evidence(
+        source="business_master.metrics",
+        kind="calculated_signal",
+        provenance=EvidenceProvenance.CALCULATED,
+        qualified_signal=1.0,
+        input_evidence_ids=[observed_parent.id],
+    )
+    strong = policy_for_family("content").evaluate(
+        _request(
+            family="content",
+            hypothesis=hypothesis,
+            evidence=(observed_parent, strong_calculated),
+        )
+    )
+    assert strong.supporting_signal is True
+    assert strong.external_observations == 2
+
+
 def test_b2b_policy_requires_independent_companies_and_scale_economics() -> None:
     hypothesis = EconomicHypothesis(
         hypothesis_type=HypothesisType.OFFER,
@@ -154,8 +243,18 @@ def test_b2b_policy_requires_independent_companies_and_scale_economics() -> None
         ),
     )
     evidence = (
-        _evidence(source="company-a", kind="qualified_reply", qualified_signal=1.0),
-        _evidence(source="company-b", kind="qualified_reply", qualified_signal=1.0),
+        _evidence(
+            source="crm",
+            independence_key="company-a",
+            kind="qualified_reply",
+            qualified_signal=1.0,
+        ),
+        _evidence(
+            source="crm",
+            independence_key="company-b",
+            kind="qualified_reply",
+            qualified_signal=1.0,
+        ),
     )
 
     probe = policy_for_family("b2b").evaluate(
@@ -212,6 +311,46 @@ def test_b2b_policy_requires_independent_companies_and_scale_economics() -> None
     assert scale_ready.economic_readiness is ReadinessStatus.READY
     assert scale_ready.operational_readiness is ReadinessStatus.READY
     assert scale_ready.recommendation is EvaluationRecommendation.GRADUATE
+
+
+def test_b2b_independence_key_prevents_double_counting_across_sources() -> None:
+    hypothesis = EconomicHypothesis(
+        hypothesis_type=HypothesisType.OFFER,
+        subject="same account across collectors",
+        proposition="Independent companies, not transport sources, define replication",
+        evidence_requirements=EvidenceRequirements(
+            minimum_count=2,
+            minimum_independent_sources=2,
+        ),
+    )
+    evidence = (
+        _evidence(
+            source="linkedin",
+            independence_key="company-a",
+            kind="qualified_reply",
+            qualified_signal=1.0,
+        ),
+        _evidence(
+            source="crm",
+            independence_key="company-a",
+            kind="qualified_reply",
+            qualified_signal=1.0,
+        ),
+    )
+
+    evaluation = policy_for_family("b2b").evaluate(
+        _request(
+            family="b2b",
+            hypothesis=hypothesis,
+            evidence=evidence,
+            context=FamilyEvaluationContext(replication_count=1),
+        )
+    )
+
+    assert evaluation.external_observations == 2
+    assert evaluation.independent_sources == 1
+    assert evaluation.evidence_sufficient is False
+    assert evaluation.recommendation is EvaluationRecommendation.INSUFFICIENT_EVIDENCE
 
 
 def test_commerce_falsification_rejects_only_after_sufficient_evidence() -> None:
