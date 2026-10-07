@@ -1,295 +1,344 @@
-# Bootstrap Plan — First Autonomous Closed Loop in 24 Hours
+# First Operational Loop — 24h Runbook
 
-Objective: obtain **real external evidence** as fast as possible with zero incremental cash spend, while building the architecture that can later support many businesses/platforms.
+This document is an **operational proof runbook**, not a workstation setup guide and not an implementation roadmap for substrates that already exist.
 
-Success is not defined as "all integrations finished". Success is:
+The goal is to move a production-capable Business Master from internal control state to **real external and economic evidence** as quickly and safely as the available accounts/capabilities permit.
 
-1. a persisted hypothesis exists;
-2. Business Master creates a bounded experiment without a human scheduling it;
-3. the experiment produces an externalizable asset/offer;
-4. the asset is exposed to the real world (a temporary human publication gate is acceptable while platform API onboarding is incomplete);
-5. at least one real external metric is ingested;
-6. that metric causes Business Master to autonomously create a follow-up mutation/continuation/kill decision.
+The clock is operational, not constitutional. If a legitimate platform review, OAuth/KYC gate, or external settlement window takes longer, preserve the durable state rather than bypassing the gate.
 
-The **second experiment must be caused by the first experiment's evidence**.
+---
 
-## Phase 0 — Hardware and environment inventory
+## 1. Preconditions
 
-Do this first when the target workstation is available:
-
-```bash
-uname -a
-lscpu
-free -h
-lsblk
-df -h
-nvidia-smi || true
-rocminfo || true
-python3 --version
-docker --version || podman --version || true
-```
-
-Record:
-- CPU model/cores;
-- RAM;
-- GPU model/VRAM;
-- free disk/NVMe;
-- display server (Wayland/X11) only for later GUI benchmarks.
-
-Do **not** block the deterministic core on GPU availability.
-
-## Phase 1 — Local development bootstrap
-
-Target:
-
-```bash
-git clone https://github.com/AlephCasara/Business-Master.git
-cd Business-Master
-git checkout bootstrap/autonomous-core
-python3.13 -m venv .venv
-. .venv/bin/activate
-pip install -e '.[dev]'
-pytest
-```
-
-If the machine uses `uv`, use it instead of pip/venv; package metadata is standard Python.
-
-Exit criterion:
-- unit tests green;
-- no external service/account needed.
-
-## Phase 2 — PostgreSQL world model
-
-Start a local PostgreSQL instance using the machine's preferred NixOS/container method.
-
-Apply:
+Before using this runbook, the relevant implementation frontier must exist:
 
 ```text
-db/migrations/0001_core.sql
+PR0–PR10  internal economic-control substrate
+PR11      durable execution substrate
+PR12      external distribution edge
+PR13      external telemetry + autonomous closed-loop mechanics
 ```
 
-Do not put secrets or large assets in PostgreSQL.
+The economic leg may additionally require PR14 or equivalent commerce adapters.
 
-Exit criterion:
-- create/read/update hypothesis;
-- create experiment;
-- append event/evidence;
-- restart DB/process and state survives.
+This document does not tell an engineering agent how to install NixOS, PostgreSQL, drivers, models, or Business Master itself.
 
-## Phase 3 — Runtime adapter
+---
 
-Implement Hatchet behind `WorkDispatcher`.
+## 2. Proof objectives
 
-Development options in preferred order:
-1. Hatchet embedded mode for zero-setup tests;
-2. self-hosted local Hatchet for dashboard/persistent worker coordination.
+The first operational run has two connected legs.
 
-Initial work types:
+### Attention / external-response leg
 
 ```text
-reconcile
-create_probe
-research_hypothesis
-build_content_asset
-qc_asset
-request_externalization
-collect_metric
-evaluate_experiment
-mutate_experiment
+Opportunity / prior
+→ Hypothesis
+→ Experiment
+→ CreativeConcept
+→ production artifact
+→ platform-specific variants
+→ TikTok / Instagram / YouTube exposure
+→ authoritative external telemetry
+→ immutable Evidence
+→ autonomous next decision
+→ Experiment B
 ```
 
-Exit criterion:
-- kill worker during a durable workflow;
-- restart;
-- work resumes or retries without duplicating irreversible output.
-
-## Phase 4 — Global reconciler as liveness mechanism
-
-Persist or compute `ReconcileSnapshot` from PostgreSQL.
-
-Trigger reconciliation on:
-- new domain event;
-- worker/resource availability changes;
-- a slow safety timer (for example every few minutes) to recover lost wakeups.
-
-Priority rule:
+### Economic leg
 
 ```text
-consume evidence before producing more work
+Opportunity
+→ Product or existing product/offer
+→ Offer
+→ distribution / attribution route
+→ checkout / commerce event
+→ payment / refund / commission / settlement state
+→ deterministic Economic Ledger
+→ economic Evidence
+→ next portfolio decision
 ```
 
-Therefore due metrics/evaluations outrank new rendering.
+The two legs should share causal lineage when attention is intended to drive monetization.
 
-Exit criterion:
-- insert active hypothesis with no experiment;
-- system autonomously creates/dispatches a PROBE without operator command.
+---
 
-## Phase 5 — Seed priors, not schedules
+## 3. Constitutional autonomy proof
 
-Bootstrap needs initial priors because a blank system cannot infer a market from nothing.
-
-Seed a **small number** of hypotheses derived from project research, for example content formats that can later connect to products. Seeds are priors, not winners.
-
-Do not seed 100 channels/products.
-
-Recommended initial experiment family:
+The minimum real-world autonomy proof is:
 
 ```text
-short-form informational/chart content
+Hypothesis A
+→ Experiment A
+→ real external exposure
+→ genuine external observation
+→ immutable Evidence
+→ Belief update
+→ FamilyEvaluation
+→ PortfolioAllocation
+→ AutonomousDecision
+→ Experiment B
 ```
 
-Why for V0:
-- can be created deterministically without paid APIs;
-- easy to make useful rather than AI-sludge;
-- measurable via external views/engagement;
-- can later attach PDF/chart packs, affiliate offers or other products;
-- avoids blocking the control-loop test on expensive video diffusion.
+There must be **no new operator instruction between Evidence ingestion and creation of Experiment B**.
 
-The system should still choose the exact topic/hook from available research/evidence rather than hard-coding a single niche as truth.
+A human may have performed a previously declared legitimate platform/KYC/OAuth gate before that boundary. The gate must not become a hidden scheduler.
 
-## Phase 6 — First asset builder
+One external observation proves loop mechanics, not market validity or SCALE readiness.
 
-Do **not** start with the most advanced media model.
+---
 
-Implement a deterministic content executor capable of producing one publishable vertical asset from a structured spec using local tools, e.g.:
-- Python-generated chart/diagram/data visualization;
-- local/system TTS if needed;
-- FFmpeg composition;
-- captions;
-- metadata JSON.
+## 4. Initial distribution set
 
-Later media adapters (ComfyUI/Wan/H3/etc.) plug into the same `VideoGenerator` port.
-
-Probe objective is pipeline evidence, not cinematic maximum quality.
-
-## Phase 7 — QC gate
-
-V0 deterministic checks:
-- file exists and decodes;
-- duration in expected bounds;
-- target resolution/aspect ratio;
-- audio stream if required;
-- no black/empty output;
-- text/title fields present;
-- provenance/experiment IDs embedded in sidecar metadata.
-
-Semantic/VLM QC is a later adapter, not a prerequisite for the first loop.
-
-## Phase 8 — External exposure
-
-Preferred path is official platform API after legitimate setup/audit.
-
-If public automated posting is temporarily blocked by platform onboarding, create a durable `WAITING_HUMAN` / `WAITING_PLATFORM_BOOTSTRAP` action with the finished asset and exact metadata.
-
-Human performs only the publication/bootstrap step, then records the external platform ID back into Business Master.
-
-Do not redesign the control plane around this temporary gate.
-
-## Phase 9 — Adaptive metric collection
-
-For a newly externalized content experiment, schedule snapshots such as:
+The initial content/distribution surface is deliberately plural:
 
 ```text
-+10m
-+30m
-+2h
-+6h
-+24h
-+72h
+one production system
+→ TikTok
+→ Instagram
+→ YouTube
 ```
 
-Use the platform's official metrics when available.
+Use one creative nucleus with platform-specific variants. Preserve a clean master; do not build three independent content factories and do not blindly redistribute watermarked downloads.
 
-"Real external signal" means metrics generated by actual outside exposure; operator self-views/test requests must be excluded where identifiable.
+Each variant should retain enough lineage to distinguish concept, hook, format, CTA, platform, and other intentional changes.
 
-Persist raw metrics and normalized features separately.
-
-## Phase 10 — First autonomous mutation
-
-Initial evidence logic should be deliberately conservative.
-
-Examples of valid V0 behavior:
-- zero external reach after the observation window -> record negative/no-signal evidence and create a materially changed probe or pause;
-- genuine external reach/engagement -> record traction evidence and create a bounded child mutation;
-- technical publishing/render failure -> retry/fix execution **without** counting against economic hypothesis;
-- first sale/revenue event -> high-value evidence, but still not an automatic jump to unbounded scale.
-
-Mutation lineage records what changed:
+Representative lineage:
 
 ```text
-hook
-topic
-visual
-structure
-duration
-CTA
-offer
+CreativeConcept #42
+├─ TikTokVariant
+├─ InstagramVariant
+└─ YouTubeShortVariant
 ```
 
-## Phase 11 — Add local AI only where it improves the loop
+The purpose is not merely cross-posting. It is to learn concept effects, platform effects, hook/format effects, and CTA effects separately.
 
-Once deterministic V0 works, connect local OpenAI-compatible model endpoint through an adapter.
+---
 
-First high-value AI tasks:
-1. semantic research synthesis;
-2. hook/script candidate generation;
-3. semantic novelty comparison;
-4. classification of feedback/comments/competitor patterns;
-5. visual QC.
+## 5. First experiment selection
 
-Do not replace deterministic allocation/accounting/gates with an agent.
+Seed only enough prior state to avoid a blank system. Seeds are priors, not winners.
 
-## Phase 12 — Add advanced executors by benchmark
+Prefer an experiment that:
 
-After a task exists that needs them, benchmark:
-- SGLang vs vLLM vs llama.cpp serving;
-- Playwright vs Stagehand vs Holo4 fallback;
-- deterministic ADB vs semantic mobile agents;
-- ComfyUI/media models for specific content/UGC workflows.
+- can reach real people quickly;
+- is cheap/reversible;
+- can be produced with available capability;
+- can be measured on more than one required distribution surface;
+- can attach a monetization route without waiting for native platform monetization;
+- has a falsifiable creative/product/offer hypothesis.
 
-Every benchmark records success, latency, GPU seconds, retries and human intervention.
+The system should choose the actual topic, audience, angle, product, or offer from current research/evidence rather than hard-coding a niche as truth.
 
-## Zero-cash policy
+---
 
-Until a human explicitly changes policy after external evidence:
+## 6. Production and quality
+
+A production artifact is not successful because bytes were generated.
+
+Before externalization, validate at least:
 
 ```text
-paid_ads_budget = 0
-cloud_compute_budget = 0
-paid_ai_api_budget = 0
-paid_saas_budget = 0
+artifact exists and decodes/opens
+required dimensions/format are valid
+required metadata/lineage exists
+technical QC passes
+content/creative constraints are satisfied
+platform-specific variant is intentional
 ```
 
-A free platform account or local open-source service is allowed if its terms permit the intended use.
+Semantic/aesthetic QC may use probabilistic capabilities, but technical failure remains factory evidence and cannot silently become negative market evidence.
 
-## What not to build in the first night
-
-Do not spend bootstrap time on:
-- 100-channel account farms;
-- geographic arbitrage before eligibility is resolved;
-- full ecommerce fulfillment;
-- custom Rust workers without profiling;
-- a giant dashboard;
-- a vector database with no retrieval failure to solve;
-- multi-agent executive hierarchies;
-- perfect media generation;
-- automatic paid spend;
-- CAPTCHA/KYC evasion.
-
-## Morning-after report
-
-Business Master should be able to produce a machine-generated report containing:
+Production profiles should respect the economic stage:
 
 ```text
-active hypotheses
-experiments launched
-assets produced
-externalized experiments
-latest real metrics
-mutations created automatically
-killed/paused hypotheses
-resource usage
-human actions still blocking workflows
+PROBE  → optimize feedback speed / cost
+PILOT  → spend more for consistency/quality where evidence justifies it
+SCALE  → premium production only when economics justify the resource demand
 ```
 
-The report is for inspection. It must not be required for the system to continue operating.
+---
+
+## 7. Externalization
+
+Each real publication/external action should durably create or update an external-action record with enough information to reconcile retries and outcomes, including where available:
+
+```text
+experiment / creative lineage
+platform/account
+artifact reference
+idempotency identity
+external entity ID
+published/executed timestamp
+receipt / response reference
+```
+
+Publishing may use an official API, direct integration, or a replaceable publishing aggregator when that is the shortest legitimate path. The economic/domain architecture must not depend on the aggregator brand.
+
+Do not bypass CAPTCHA, KYC, 2FA, account review, access control, or platform security.
+
+---
+
+## 8. Telemetry
+
+Publishing and measurement are separate responsibilities.
+
+Prefer authoritative/native platform telemetry for measurement when available. Polling cadence is policy, not constitutional architecture; choose windows appropriate to the platform/experiment and avoid treating repeated snapshots as independent evidence.
+
+Persist distinctions between:
+
+```text
+raw observation / event
+snapshot
+derived metric
+inference
+Evidence
+```
+
+For content, useful observations can include views/reach, watch/retention, engagement, shares/comments, profile or link actions, and attributable clicks where available.
+
+External response is stronger than internal confidence but remains weaker than downstream economic evidence.
+
+---
+
+## 9. Product / Offer attachment
+
+Do not wait for platform-native monetization before testing economics.
+
+The first economic path may use, when justified:
+
+- an owned digital product / low-ticket offer;
+- an affiliate offer;
+- a marketplace/content-commerce offer;
+- another low-human-touch commerce path.
+
+Keep the ontology explicit:
+
+```text
+Product != Offer != Opportunity
+Offer != Checkout != Order != Payment != Settlement
+```
+
+An Offer should preserve the relevant venue/market/seller-role, price, fees/commission, attribution terms, settlement terms, availability, and time context that determine its economics.
+
+---
+
+## 10. Commerce telemetry and ledger closure
+
+Where a commerce venue exposes them, capture distinct events such as:
+
+```text
+attributed click
+checkout started / abandoned
+purchase/order created
+payment approved
+subscription/renewal
+refund
+chargeback
+commission/fee
+settlement/payout
+```
+
+Do not require every provider to support every capability.
+
+Normalize observed economic events into the existing deterministic Economic Ledger without making the provider dashboard financial authority.
+
+The strongest first-run economic proof is not "a product page exists". It is a real economically attributable event, preferably progressing toward settled cash.
+
+---
+
+## 11. Attribution
+
+Preserve the causal chain whenever observable:
+
+```text
+Hypothesis
+→ Experiment
+→ CreativeConcept
+→ CreativeVariant / PlatformVariant
+→ ExternalExposure
+→ CTA / attribution token
+→ Offer
+→ CommerceEvent
+→ LedgerTransaction
+```
+
+This allows Business Master to distinguish:
+
+```text
+creative generated views
+vs
+creative generated intent
+vs
+creative generated contribution
+```
+
+Do not manufacture attribution when a venue/channel does not provide enough evidence. Persist uncertainty explicitly.
+
+---
+
+## 12. Autonomous continuation
+
+After relevant Evidence is persisted, Business Master must use the existing PR7–PR10 chain rather than an operator prompt to determine continuation.
+
+Valid outcomes include:
+
+- replicate a promising signal conservatively;
+- mutate a material dimension such as hook, CTA, product, offer, or platform variant;
+- pause because evidence is insufficient or operational state is blocked;
+- kill when evidence no longer clears opportunity cost;
+- graduate exactly within existing evidence/capital/resource policy.
+
+A render/API/publisher failure triggers operational recovery, not economic falsification.
+
+---
+
+## 13. First-run report
+
+A machine-readable/operator-readable proof artifact should be able to reconstruct:
+
+```text
+hypothesis/contract
+resources reserved/used
+artifacts and production receipts
+platform variants
+external action receipts
+telemetry observations
+Evidence IDs
+belief/evaluation/allocation lineage
+autonomous Decision
+Experiment B
+Product/Offer lineage if used
+commerce events and ledger transaction IDs if used
+human gates/interventions
+```
+
+The report is observability. The system must not require a human to read it before continuing normal autonomous work.
+
+---
+
+## 14. Stop rule
+
+After a genuine external closed loop and first economic attachment exist, stop adding horizontal architecture by roadmap habit.
+
+```text
+OPERATE
+→ observe real bottleneck
+→ measure opportunity cost
+→ improve the bottleneck
+```
+
+Examples:
+
+```text
+poor reach            → creative/distribution problem
+reach + poor clicks   → CTA/offer problem
+clicks + poor sales   → product/checkout/offer problem
+sales + poor margin   → unit-economics problem
+render bottleneck     → production/runtime problem
+GPU saturation        → resource-routing problem
+manual gate dominates → automation/integration problem
+```
+
+Reality, not architectural completeness, chooses what comes next.
