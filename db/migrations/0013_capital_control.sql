@@ -16,6 +16,9 @@ CREATE TABLE IF NOT EXISTS capital_authorization (
     ),
     stage text NOT NULL CHECK (stage IN ('locked', 'probe', 'validated', 'pilot', 'scale')),
     risk text NOT NULL CHECK (risk IN ('zero', 'low', 'medium', 'high', 'critical')),
+    blast_radius double precision NOT NULL CHECK (blast_radius >= 0 AND blast_radius <= 1),
+    reversible boolean NOT NULL,
+    human_gate_required boolean NOT NULL,
     policy_name text NOT NULL,
     policy_version text NOT NULL,
     envelope jsonb NOT NULL,
@@ -52,14 +55,10 @@ CREATE INDEX IF NOT EXISTS ix_capital_authorization_active_currency
     ON capital_authorization (currency, status)
     WHERE status = 'active';
 
-CREATE UNIQUE INDEX IF NOT EXISTS ux_capital_authorization_active_allocation
-    ON capital_authorization (portfolio_allocation_id)
-    WHERE status = 'active';
+CREATE UNIQUE INDEX IF NOT EXISTS ux_capital_authorization_allocation
+    ON capital_authorization (portfolio_allocation_id);
 
 CREATE INDEX IF NOT EXISTS ix_capital_authorization_category_period
     ON capital_authorization (currency, category, authorized_at, status);
-
-CREATE INDEX IF NOT EXISTS ix_capital_authorization_allocation
-    ON capital_authorization (portfolio_allocation_id);
 
 COMMIT;
