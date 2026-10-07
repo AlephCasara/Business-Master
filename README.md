@@ -1,818 +1,540 @@
-# Business Master
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/hero-dark.svg">
+    <img src="assets/readme/hero-light.svg" alt="Business Master — Autonomous Economic Control System" width="100%">
+  </picture>
+</p>
 
-> **An autonomous economic control system for continuously discovering, testing, operating and reallocating resources across business hypotheses.**
+<h1 align="center">Business Master</h1>
 
-Business Master is not a collection of AI tools, a content factory, a workflow library, or one specific online business.
+<p align="center">
+  <strong>Autonomous Economic Control System</strong>
+</p>
 
-It is an operating system for a portfolio of economic experiments.
+<p align="center">
+  Turn uncertainty into experiments.<br>
+  Turn experiments into evidence.<br>
+  Turn evidence into better allocation.
+</p>
 
-Its job is to keep hypotheses alive, observe the world, decide what is worth testing next, allocate scarce resources, execute through deterministic code and agents, measure real outcomes, update beliefs, and continuously **kill, mutate, replicate, graduate or scale** what it is running.
+<p align="center">
+  <a href="https://github.com/AlephCasara/Business-Master/actions/workflows/test.yml"><img src="https://github.com/AlephCasara/Business-Master/actions/workflows/test.yml/badge.svg" alt="CI"></a>
+  <img src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white" alt="Python 3.13">
+  <img src="https://img.shields.io/badge/status-bootstrap-orange" alt="Bootstrap status">
+  <img src="https://img.shields.io/badge/control%20plane-evidence--driven-111827" alt="Evidence-driven control plane">
+</p>
 
-```text
-external world
-    ↓
-observations
-    ↓
-evidence
-    ↓
-beliefs / World Model
-    ↓
-economic hypotheses
-    ↓
-candidate interventions
-    ↓
-marginal-value evaluation
-    ↓
-resource allocation
-    ↓
-engine execution
-    ↓
-external exposure
-    ↓
-new evidence
-    └──────────────────────────────→ repeat
-```
-
-The intended steady state is not a human repeatedly asking an AI to perform the next task. The system should be able to determine the next bounded action from persisted state and external evidence.
+<p align="center">
+  <a href="#the-control-loop">Control loop</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#current-status">Status</a> ·
+  <a href="#quickstart">Quickstart</a> ·
+  <a href="#documentation">Documentation</a>
+</p>
 
 ---
 
-## 1. Why this project exists
+> **Business Master is not a collection of AI automations.**
+>
+> It is a control plane over evolving economic hypotheses.
 
-The central conclusion from the business, marketing, ecommerce and agent-engineering material audited for this project is:
+Business Master continuously observes the world, maintains structured beliefs, designs bounded experiments, allocates scarce resources, executes through reusable business engines, measures real outcomes, and updates what it does next.
 
-> **AI has made production dramatically cheaper. Production itself is no longer the main bottleneck.**
+Its core question is:
 
-Text, code, images, video, storefronts, research, prospecting and workflow automation are increasingly inexpensive.
+> **What is the highest-value thing the system can learn or do next with the resources currently available?**
 
-The scarce variables that repeatedly remain are:
-
-- distribution;
-- customer access;
-- offer quality;
-- creative advantage;
-- trust and specialization;
-- validated demand;
-- supplier and fulfillment reliability;
-- platform/account eligibility;
-- capital;
-- human attention;
-- proprietary evidence about what actually works.
-
-Business Master therefore does **not** optimize for generated artifacts.
-
-It optimizes for:
-
-1. **validated economic learning** during cold start;
-2. **repeatable positive unit economics** after traction;
-3. **sustainable profit and owned assets** after sufficient evidence exists.
-
-A thousand unattended outputs with no useful response are worse than ten experiments that materially reduce uncertainty.
+Human attention is one of those resources.
 
 ---
 
-## 2. The core economic objective
+## The control loop
 
-The objective function changes as evidence matures.
-
-### Cold start
-
-When the system has little proprietary evidence, the preferred experiment is the one that produces the most reusable learning per scarce resource.
-
-```text
-Experiment Value ≈
-    Information Gain
-  × Feedback Speed
-  × Downstream Reuse
-  × Parallelizability
-  ─────────────────────────────
-    Cash + Compute + Human Time
-```
-
-A zero-revenue experiment may still be excellent if it quickly invalidates a bad market, channel, creative format, product, offer or execution path.
-
-### Traction
-
-As real behavior appears, evidence becomes progressively more economic:
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/control-loop-dark.svg">
+    <img src="assets/readme/control-loop-light.svg" alt="Business Master autonomous economic control loop" width="100%">
+  </picture>
+</p>
 
 ```text
-attention
-→ retention / engagement
-→ intent
-→ click / reply / lead
-→ checkout / order
-→ revenue
-→ contribution margin
-→ repeatability
-→ LTV / sustainable profit
-```
-
-These levels must not be collapsed into one score.
-
-- a view is not a lead;
-- revenue is not profit;
-- gross spread is not contribution;
-- one viral post is not a scalable business;
-- one sale is not proof of repeatable economics.
-
-### Mature portfolio
-
-The long-run problem is approximately:
-
-```text
-maximize expected sustainable profit
-
-subject to:
-- evidence quality
-- cash capacity
-- compute capacity
-- platform capacity
-- human attention
-- operational risk
-- concentration risk
-- minimum exploration budget
-```
-
----
-
-## 3. What the research corpus changed
-
-Business Master was shaped by repeated cross-comparison of creator claims, real platform constraints, internal experiments and technical workflows. Creator videos are treated as **hypothesis sources**, not truth.
-
-Representative conclusions that survived comparison:
-
-| Research area | Durable conclusion |
-|---|---|
-| Paid acquisition / Bia Feldman | Offer, funnel, creative angles, backend monetization and testing velocity matter more than any single campaign recipe. Bid Cap/CBO-style tactics are parameters, not architecture. |
-| Low-ticket / Gabi Cervantes | A cheap front-end can be customer acquisition. AOV, upsells, recovery and LTV must be modeled separately. |
-| Sabrina Ramonov / Dan Martell | Automate cheap production and measurement early, but do not freeze creative strategy before learning what works. Faceless is a format; low-quality mass production is a different thing. |
-| Patrick Dang / Mr Reis / Jovens de Negócios | Productized services can reach payment faster than audience monetization when the offer solves a narrow, observable problem. |
-| Corey Ganim | High-touch AI concierge can create fast cash but scales human time poorly; it is better used as discovery or premium exception than as the core autonomous model. |
-| Nick Saraev | Generic automation implementation is likely to commoditize. Sales, specialization, domain knowledge and outcome ownership remain durable advantages. |
-| Jason Wardrop / micro-SaaS material | Build software after repeated pain is observed, not merely because AI made software cheap to produce. |
-| KDP / ebooks / digital-product material | AI removes production friction, not distribution, proof, positioning or customer acquisition. |
-| Affiliate / TikTok Shop material | Affiliate can validate demand with outsourced fulfillment, but account eligibility, commissions and attribution still determine the economics. |
-| WeAreNoCode / software-factory material | Long agent workflows need decomposition, validators, durable state, observability and deterministic gates. |
-| Tonbi's Agent-Run Business series | Canonical domain language, ADRs, privacy/IP boundaries and real end-to-end tests materially reduce ambiguity for autonomous agents. |
-| Honey Hammer internal experiment | Demand keyword != exact SKU. Gross spread != profit. Product identity, supplier reliability, account health, fulfillment, working capital and payout lock are first-class economic constraints. |
-
-The full research surface is preserved in [`docs/SOURCE_CATALOG.md`](docs/SOURCE_CATALOG.md), with durable conclusions in [`docs/SOURCE_LEARNINGS.md`](docs/SOURCE_LEARNINGS.md).
-
-The cross-source synthesis is simple:
-
-> Most “AI businesses” reduce to a smaller set of economic primitives: acquire attention or customer access, present an offer, deliver an outcome, capture value, measure the result, and reuse what was learned.
-
-Business Master therefore encodes **shared economic engines**, not one controller per guru method.
-
----
-
-## 4. Portfolio architecture
-
-The intended structure is not:
-
-```text
-12 businesses × 12 independent stacks
-```
-
-It is:
-
-```text
-                           BUSINESS MASTER
-                  Autonomous Economic Control Plane
-
-        ┌────────────────────────────────────────────┐
-        │              POSTGRES WORLD MODEL          │
-        │ hypotheses • evidence • beliefs • state    │
-        │ resources • accounts • metrics • outcomes  │
-        │ decisions • intents • lineage • events     │
-        └────────────────────────────────────────────┘
-                      │        │        │
-                      ▼        ▼        ▼
-                  Scoring   Allocation  Gates
-                      │        │        │
-                      └──────┬─┴────────┘
-                             ▼
-                      Global Reconciler
-                             │
-                             ▼
-                   Durable Execution Runtime
-                             │
-            ┌────────────────┼────────────────┐
-            ▼                ▼                ▼
-      CONTENT ENGINE    COMMERCE ENGINE     B2B ENGINE
-            │                │                │
-            └────────────────┼────────────────┘
-                             ▼
-                        ASSET ENGINE
-                             │
-                             ▼
-                     external evidence
-                             │
-                             └──────────────→ World Model
-```
-
-The project should eventually operate many hypotheses through roughly **3–5 reusable engines**, rather than constructing a new infrastructure stack for every business idea.
-
----
-
-## 5. Shared Core
-
-The Shared Core exists once and serves every business family.
-
-### World Model
-
-Canonical durable state for:
-
-- hypotheses;
-- observations and evidence;
-- belief state;
-- experiments and mutations;
-- accounts and channels;
-- products and offers;
-- creatives and assets;
-- externalizations;
-- metrics and economic outcomes;
-- resources;
-- decisions;
-- action intents;
-- human gates;
-- execution lineage.
-
-Observed facts and inferred beliefs are distinct. Raw observations must never be overwritten by normalized scores or model interpretations.
-
-### Portfolio control
-
-The control plane decides:
-
-- what uncertainty matters most;
-- which experiment should run next;
-- which hypothesis deserves more evidence;
-- when an experiment should stop;
-- when a winner should be replicated;
-- when a business family deserves more capacity;
-- when a repeated workflow should become an owned asset.
-
-### Deterministic substrate
-
-Use deterministic code for deterministic problems:
-
-- SQL;
-- accounting;
-- unit economics;
-- quotas;
-- retries;
-- scheduling;
-- deduplication;
-- idempotency;
-- rate limiting;
-- state machines;
-- policy gates;
-- media composition/QC when possible.
-
-### Intelligence layer
-
-Use models where semantic or perceptual intelligence materially changes the result:
-
-- research and synthesis;
-- hypothesis generation;
-- structured extraction from messy sources;
-- copy/script/creative generation;
-- visual evaluation;
-- ambiguous classification;
-- semantic browser recovery;
-- computer-use fallback.
-
----
-
-## 6. The four engines
-
-### 6.1 Content Engine — signal and distribution
-
-```text
-research
-→ concept
-→ hook
-→ script
-→ media plan
-→ generation/retrieval
-→ composition
-→ QC
-→ publish
-→ analytics
-→ mutation
-```
-
-Primary surfaces:
-
-- YouTube long-form;
-- YouTube Shorts;
-- TikTok;
-- Instagram/Reels;
-- faceless/dark formats;
-- avatar/UGC formats;
-- charts/data/explainer formats.
-
-The Content Engine is not only an ad-revenue business. It is also a **signal and distribution layer** for Commerce, B2B and owned products.
-
-Key rule:
-
-> automate execution aggressively; keep creative assumptions mutable until evidence justifies standardization.
-
-See [`docs/ENGINES_CONTENT.md`](docs/ENGINES_CONTENT.md).
-
-### 6.2 Commerce Engine — product and transaction economics
-
-```text
-demand signal
-→ exact product / offer identity
-→ supply or affiliate availability
-→ underwriting
-→ account / eligibility gate
-→ creative
-→ listing / storefront
-→ traffic
-→ order
-→ fulfillment
-→ settlement
-→ economic evidence
-```
-
-Supported families include:
-
-- affiliate;
-- TikTok Shop/content commerce;
-- ecommerce/dropshipping;
-- print-on-demand and personalization;
-- marketplace resale / zero-inventory tests;
-- future owned brands.
-
-Commerce must model **landed economics**, not screenshots of gross revenue.
-
-First-class variables include:
-
-- exact product identity;
-- supplier cost;
-- platform fees;
-- shipping/logistics;
-- tax assumptions;
-- returns/failure reserve;
-- working capital;
-- cash lock;
-- seller/account health;
-- supplier reliability;
-- contribution margin.
-
-See [`docs/ENGINES_COMMERCE.md`](docs/ENGINES_COMMERCE.md).
-
-### 6.3 B2B Cash Engine — fastest path to payment
-
-```text
-market
-→ observable pain
-→ account research
-→ narrow outcome offer
-→ outreach / inbound
-→ reply classification
-→ proof / demo
-→ payment
-→ onboarding
-→ automated delivery
-→ retention
-```
-
-Preferred offers sell a measurable outcome, not vague “AI automation.”
-
-Examples:
-
-- review response + issue reporting;
-- long-form content repurposed into platform-ready shorts;
-- lead enrichment/classification/follow-up;
-- narrow recurring social/content operations;
-- vertical workflow automation with explicit output.
-
-Human minutes are a first-class cost. A service only becomes a strong scaling candidate when additional customers do not require linear bespoke labor.
-
-See [`docs/ENGINES_B2B_AND_ASSETS.md`](docs/ENGINES_B2B_AND_ASSETS.md).
-
-### 6.4 Asset Engine — convert evidence into ownership
-
-The Asset Engine is downstream of validated repetition.
-
-Possible outputs:
-
-- vertical micro-SaaS;
-- proprietary datasets;
-- audience/email/community;
-- owned digital or physical products;
-- supplier/customer networks;
-- reusable creative or character IP;
-- channel portfolios;
-- internal capabilities exposed as products.
-
-Preferred path:
-
-```text
-pain observed
-→ customer pays for outcome
-→ workflow repeats
-→ delivery standardizes
-→ internal automation matures
-→ software/data/IP substrate emerges
-→ owned recurring asset
-```
-
-Do not build software because coding is cheap. Build it because repeated evidence shows that owning the workflow improves future economics.
-
----
-
-## 7. Business families currently in scope
-
-These are **experiment families**, not promises and not independent infrastructures.
-
-| Family | Initial role |
-|---|---|
-| Productized B2B services | Cash Engine |
-| AI video / UGC / editing service | Cash Engine + shared media capability |
-| Lead generation / outreach | Cash Engine |
-| Specialized SME automation | Cash Engine → Asset Engine |
-| Faceless short-form content | Signal / distribution |
-| YouTube long-form | Audience / authority / IP asset |
-| TikTok Shop affiliate | Commerce signal + cash |
-| Affiliate marketing | Low-ownership commerce probe |
-| Owned ecommerce / dropshipping | Commerce |
-| Print on demand / personalization | Commerce |
-| Marketplace resale | Commerce / supply radar |
-| Low-ticket funnels | Acquisition architecture |
-| Digital products | Owned offer |
-| KDP / books | Slow parallel asset experiment |
-| AI consulting / training | Discovery / premium exception |
-| Personal brand | Trust / inbound distribution |
-| Community | Recurring owned audience asset |
-| Vertical micro-SaaS | Long-term Asset Engine |
-
-Current priors are documented in [`docs/BUSINESS_METHOD_MATRIX.md`](docs/BUSINESS_METHOD_MATRIX.md). They are meant to be replaced by Business Master's own measurements.
-
----
-
-## 8. Experiment lifecycle
-
-Every economic hypothesis progresses through bounded evidence stages.
-
-```text
-IDEA
+World
   ↓
-HYPOTHESIS
+Observation
   ↓
-PROBE
-  ├── technical failure → repair / retry
-  ├── weak economic signal → kill / mutate
-  └── promising signal → bounded replication
-                            ↓
-                          PILOT
-                            ├── drift / weak economics → pause / mutate
-                            └── repeated evidence → SCALE
-                                                    ↓
-                                            COMPOUND / ASSET
+Evidence
+  ↓
+Belief
+  ↓
+Economic hypothesis
+  ↓
+Bounded experiment
+  ↓
+Resource allocation
+  ↓
+Real-world action
+  ↓
+Measurement
+  ↓
+Belief update
+  ↓
+Kill · Wait · Mutate · Replicate · Graduate · Scale
+  ↺
 ```
 
-### PROBE
+The loop is not closed when Business Master generates something.
 
-The cheapest fair test capable of generating useful real-world evidence.
+It is not closed when it publishes something.
 
-### PILOT
+It is not even closed when it measures something.
 
-Replication under more realistic conditions. The objective is to determine whether the signal repeats and expose operational failure modes.
+The loop closes when:
 
-### SCALE
-
-Material resource allocation only after evidence appropriate to that business family has repeated.
-
-A technical failure is **not** market rejection.
-
-```text
-render crash
-API timeout
-expired credential
-browser selector drift
-model OOM
-```
-
-are execution evidence unless the hypothesis itself concerns technical feasibility.
+> **external evidence changes the system's beliefs and causes a different autonomous decision.**
 
 ---
 
-## 9. Resource allocation
+## Why Business Master?
 
-Business Master allocates at least four distinct scarce resources:
+AI has made production dramatically cheaper.
 
-1. **cash** — ads, inventory, SaaS, API/GPU spend, samples;
-2. **compute** — CPU, RAM, GPU, storage, bandwidth;
-3. **platform capacity** — quota, rate limits, posting capacity, account eligibility;
-4. **human attention** — identity, consent, physical action, legal/tax setup, exceptional judgment.
+Code, text, images, video, research, storefronts, prospecting, and automation are increasingly abundant. The scarce variables remain elsewhere:
 
-These resources are not perfectly fungible.
-
-A financially attractive experiment can still be a poor next action if it consumes scarce human attention or blocks compute needed for a higher-information experiment.
-
-Parallelizability therefore matters: the system prefers models where throughput can rise without linear relationship labor.
-
----
-
-## 10. Execution hierarchy
-
-Use the cheapest reliable mechanism that solves the task.
-
-```text
-deterministic code
-→ official API / SDK
-→ structured HTTP
-→ deterministic browser/mobile automation
-→ semantic browser/mobile recovery
-→ generalist computer-use agent
-→ human exception
-```
-
-External actions with side effects must be durable and idempotent before dispatch.
-
-Retries must not accidentally duplicate:
-
-- experiments;
-- posts;
-- outreach;
-- listings;
-- orders;
-- purchases;
-- other irreversible effects.
-
----
-
-## 11. Human role
-
-Human labor is deliberately treated as scarce.
-
-Appropriate human gates include:
-
-- KYC/liveness;
-- 2FA and account consent;
-- legal/tax/account bootstrap;
-- physical handling when no reliable automation exists;
-- high-blast-radius spending decisions;
-- exceptional strategic review.
-
-The architecture does not target fake-account farming, CAPTCHA bypass, KYC evasion, fake engagement, identity masquerading or anti-abuse circumvention.
-
-Platform constraints and eligibility rules are re-verified when an adapter is implemented because they change over time.
-
-See [`docs/PLATFORMS_ACCOUNTS_AND_GATES.md`](docs/PLATFORMS_ACCOUNTS_AND_GATES.md).
-
----
-
-## 12. Local-first runtime assumption
-
-The bootstrap control plane is expected to run on a NixOS workstation.
-
-Declared host baseline:
-
-- AMD Ryzen 9 7900;
-- 32 GB DDR5-6000;
-- roughly 30 GB application-usable RAM;
-- roughly 5 GB minimal system baseline;
-- commonly 15–20 GB free during normal browser use;
-- browsers and other applications can be closed for heavy workloads.
-
-GPU/VRAM and device availability are intentionally discovered by the local agent at implementation time rather than assumed from stale repository text.
-
-Local-first does not mean local-only. VPS, cloud GPU or paid APIs are valid later when measured economics justify them.
-
-See [`docs/HARDWARE_AND_RUNTIME.md`](docs/HARDWARE_AND_RUNTIME.md).
-
----
-
-## 13. Technology direction
-
-Current implementation direction:
-
-| Concern | Direction |
+| Scarce resource | Examples |
 |---|---|
-| Control plane | Python 3.13 |
-| Contracts / validation | Pydantic |
-| Durable World Model | PostgreSQL |
-| Durable workflows | Hatchet target, embedded/local first |
-| Deterministic browser | Playwright |
-| Semantic browser recovery | Stagehand-class adapter |
-| General computer-use R&D | Holo4-class local models / replaceable adapters |
-| Local model serving | benchmark SGLang / vLLM / llama.cpp |
-| Media graph R&D | ComfyUI |
-| Deterministic media composition/QC | FFmpeg |
-| Programmatic motion graphics | Remotion when it materially simplifies a format |
-| Mobile | API → ADB/uiautomator → semantic agent → visual fallback |
-| Observability | structured events + OpenTelemetry path |
+| **Distribution** | audience, traffic, ranking, customer access |
+| **Economic knowledge** | what actually converts, retains, and scales |
+| **Capital** | cash, working capital, paid experiments |
+| **Platform capacity** | accounts, quotas, eligibility, reputation |
+| **Compute** | CPU, GPU, VRAM, tokens, browser workers |
+| **Human attention** | judgment, KYC, irreversible decisions |
+| **Time** | feedback latency and opportunity windows |
 
-No model, browser framework, media generator or orchestration vendor is a domain dependency.
+Business Master does not optimize for output volume.
 
-Technology itself is evaluated economically by:
-
-- success rate;
-- wall time;
-- compute consumption;
-- retries;
-- human interventions;
-- cash cost;
-- downstream business result where attributable.
-
-See [`docs/TECH_STACK.md`](docs/TECH_STACK.md) and [`docs/MEDIA_AND_AGENT_STACK.md`](docs/MEDIA_AND_AGENT_STACK.md).
+It optimizes for **validated learning, economic outcomes, and durable assets**.
 
 ---
 
-## 14. Current implementation state
+## From idea to economic knowledge
 
-The repository is intentionally between **a characterized V0 control-plane skeleton** and the full target economic control system.
+A "business idea" is too coarse to be the fundamental unit of reasoning.
 
-| Area | Current state |
+Business Master decomposes it into falsifiable economic hypotheses.
+
+```text
+"AI ecommerce business"
+          │
+          ├─ demand exists
+          ├─ audience responds to angle A
+          ├─ creative format B captures attention
+          ├─ offer C converts
+          ├─ channel D acquires customers economically
+          ├─ supplier E can fulfill reliably
+          └─ unit economics survive scale
+```
+
+A business becomes real only when enough of these beliefs survive contact with the market.
+
+```text
+BUSINESS CANDIDATE
+
+Demand          ● strong
+Acquisition     ● strong
+Offer           ● medium
+Delivery        ● strong
+Economics       ● strong
+Repeatability   ◐ unknown
+Scale           ○ unknown
+```
+
+Businesses are therefore **emergent compositions of evidence-backed beliefs**, not static workflows configured by an operator.
+
+---
+
+## Evidence hierarchy
+
+Business Master distinguishes three fundamentally different layers of evidence.
+
+### Factory evidence
+
+Did the machinery work?
+
+```text
+render succeeded
+API accepted action
+browser completed task
+QC passed
+```
+
+### Market evidence
+
+Did reality respond?
+
+```text
+views
+retention
+clicks
+replies
+qualified leads
+checkout starts
+```
+
+### Economic evidence
+
+Did the response create economic value?
+
+```text
+orders
+settled revenue
+CAC
+AOV
+contribution margin
+LTV
+repeat purchase
+MRR
+```
+
+A million views are not automatically worth more than ten qualified customers.
+
+Internal AI confidence is never market traction.
+
+---
+
+## Adaptive objective
+
+The objective changes as evidence matures.
+
+```text
+DISCOVERY
+    ↓
+information gain
+feedback speed
+cheap falsification
+
+INTENT
+    ↓
+clicks
+replies
+qualified leads
+
+CONVERSION
+    ↓
+orders
+CVR
+AOV
+revenue
+
+ECONOMICS
+    ↓
+CAC
+contribution margin
+LTV
+payback
+repeatability
+
+PORTFOLIO
+    ↓
+sustainable economic value
+```
+
+During cold start, a zero-revenue experiment can still be valuable if it cheaply eliminates a bad hypothesis.
+
+As economic evidence becomes available, proxy metrics progressively lose decision weight.
+
+---
+
+## Architecture
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/architecture-dark.svg">
+    <img src="assets/readme/architecture-light.svg" alt="Business Master control-plane architecture" width="100%">
+  </picture>
+</p>
+
+The **control plane decides what should happen**.
+
+Business engines provide reusable capabilities for making it happen.
+
+### Content
+
+```text
+research → concept → creative → publish → measure → mutate
+```
+
+Content can become audience, affiliate demand, product demand, leads, or owned distribution.
+
+### Commerce
+
+```text
+discover → validate → convert → improve fulfillment → source → scale
+```
+
+Demand is tested before significant inventory or sourcing commitments whenever possible.
+
+### B2B
+
+```text
+pain → prospect → offer → outreach → customer → repeated problem
+```
+
+B2B is both a cash engine and a market sensor. Repeated pain can become productized delivery or software hypotheses.
+
+### Assets
+
+```text
+validated pattern
+      ↓
+software · data · brand · audience · IP · recurring revenue
+```
+
+Engines are **not separate autonomous brains**. They are execution capabilities governed by the same evidence and portfolio system.
+
+---
+
+## Portfolio control
+
+Business Master can maintain different economic roles simultaneously.
+
+| Portfolio | Purpose |
 |---|---|
-| Economic thesis / business taxonomy | Documented |
-| Research corpus and source synthesis | Documented |
-| Portfolio / engine architecture | Documented |
-| Typed hypothesis / experiment / evidence / decision domain | Implemented, with legacy V0 compatibility surfaces being decomposed |
-| PostgreSQL World Model bootstrap | Implemented |
-| Durable action intents / idempotent probe creation | Implemented and tested against real PostgreSQL in CI |
-| Global reconciliation policies | Implemented in V0 form |
-| Probe/Pilot/Scale policies | Implemented in generic V0 form; future family-specific semantics remain |
-| Evidence / belief separation | Target contract established; migration/refactor in progress |
-| Deterministic local media executor | Implemented for a minimal vertical-card video path |
-| Media QC / canonical hashing / lineage | Implemented for that executor and tested with FFmpeg in CI |
-| Durable Hatchet worker runtime | Not yet complete |
-| Automatic platform publication | Not yet complete |
-| Genuine external metric ingestion | Not yet complete |
-| Metric-driven autonomous child experiment | Not yet complete |
-| B2B end-to-end adapter | Architecture defined; not yet complete |
-| Commerce end-to-end adapter | Architecture defined; not yet complete |
-| Real workstation executor benchmarks | Pending local measurement |
+| **Signal** | learn cheaply and quickly |
+| **Cash** | generate near-term cash flow |
+| **Asset** | accumulate durable economic value |
+| **Capability** | make future experiments cheaper or better |
 
-This distinction matters: the repository already contains a meaningful control substrate, but it is **not yet an autonomous profit-generating system**.
-
-See [`docs/ADR-0002-economic-control-system-v2.md`](docs/ADR-0002-economic-control-system-v2.md) for the current baseline contract and migration rules.
+A capability does not need to generate revenue directly. If it reduces the cost of every future validated experiment, it may deserve resources.
 
 ---
 
-## 15. Zero-cash bootstrap policy
+## Resource-aware by design
 
-Until evidence explicitly justifies spend:
+The system does not pretend all resources are one interchangeable budget.
 
 ```text
-paid ads      = 0
-paid AI APIs  = 0
-cloud GPU     = 0
-paid SaaS     = 0
+cash
+working capital
+
+CPU
+RAM
+GPU
+VRAM
+
+LLM tokens
+API quota
+
+browser capacity
+platform actions
+account capacity
+
+human minutes
 ```
 
-Bootstrap resources are:
-
-- owned local compute;
-- electricity;
-- open-source software;
-- existing legitimate accounts;
-- free development/sandbox capabilities.
-
-This is not an ideological constraint. It is a cold-start allocation policy.
-
-Paid resources should be unlocked when the expected improvement in learning speed, throughput or profit is supported by evidence.
-
----
-
-## 16. Evidence lineage
-
-Every material autonomous decision should eventually be reconstructable.
+An experiment must be able to express and eventually reserve the scarce capacity it needs.
 
 ```text
-source observation
-→ immutable evidence
-→ belief update
-→ hypothesis
-→ experiment
-→ changed / preserved dimensions
-→ execution
-→ externalization
-→ raw metric snapshot
-→ economic interpretation
-→ policy + version
-→ decision
-→ child action / experiment
+candidate action
+      ↓
+resource demand
+      ↓
+availability
+      ↓
+reservation
+      ↓
+execution
+      ↓
+actual usage
+      ↓
+release remainder
 ```
 
-This lineage is the foundation for later self-improvement.
-
-The system should be able to distinguish:
-
-- what happened;
-- what it believed happened;
-- why it acted;
-- what it spent;
-- what changed afterward.
+As scarcity changes, the economic cost of resources can change with it.
 
 ---
 
-## 17. Current roadmap
+## Deterministic where possible
 
-Progress is defined by closed-loop economic capability, not feature count.
+Business Master deliberately avoids this architecture:
 
 ```text
-Level 0  canonical knowledge + deterministic core
-Level 1  persisted autonomous reconciliation
-Level 2  durable local execution
-Level 3  real external exposure + metrics
-Level 4  external evidence autonomously causes next experiment
-Level 5  first real money
-Level 6  repeated positive unit economics
-Level 7  allocation among multiple profitable strategies
-Level 8  compounding owned assets
-Level 9  bounded autonomous policy improvement
+big LLM
+   ↓
+"run my businesses"
 ```
 
-Near-term priorities:
+Different problems belong to different mechanisms.
 
-1. finish durable event-driven execution;
-2. externalize one real bounded experiment;
-3. ingest a genuine platform metric;
-4. have that metric cause the next machine decision without a new human prompt;
-5. start a parallel B2B cash probe;
-6. add Commerce probes only after identity, underwriting and account gates exist;
-7. benchmark executor choices on the actual workstation;
-8. scale only after repeated evidence.
+| Mechanism | Used for |
+|---|---|
+| **Deterministic code** | accounting, budgets, state transitions, idempotency, quotas |
+| **Statistical policy** | uncertainty, anomaly detection, allocation, saturation |
+| **AI** | semantic research, hypothesis generation, creative work, perception |
 
-Full roadmap: [`docs/ROADMAP.md`](docs/ROADMAP.md).
+AI may propose actions.
+
+It does not get unrestricted authority over capital, accounting, or irreversible state.
 
 ---
 
-## 18. V0.1 definition of done
+## Every decision has lineage
 
-V0.1 is **not** complete when Business Master can generate a video, landing page, store or outreach message.
+Autonomous decisions must be explainable.
 
-It is complete when the first real closed loop exists:
+```text
+Decision D-184
+
+Action
+  REPLICATE experiment E-044
+
+Because
+  Evidence EV-301
+  Evidence EV-309
+
+Changed belief
+  B-017: 0.41 → 0.67
+
+Policy
+  replication-policy@3
+
+Expected cost
+  cash: 0
+  GPU: 480 s
+  human: 0 min
+
+Blast radius
+  LOW
+```
+
+No important autonomous decision should exist only as an LLM explanation.
+
+---
+
+## Autonomy proof standard
+
+Business Master does **not** earn the word *autonomous* because it can execute several tasks without supervision.
+
+The first constitutional proof is:
 
 ```text
 Hypothesis A
-→ autonomous PROBE
-→ valid asset / offer
-→ real external exposure
-→ genuine external metric
-→ persisted evidence
-→ automatic decision
-→ Experiment B / continue / kill
+     ↓
+Experiment A
+     ↓
+real external exposure
+     ↓
+external measurement
+     ↓
+Evidence
+     ↓
+Belief update
+     ↓
+autonomous decision
+     ↓
+Experiment B
 ```
 
-There must be no new human instruction between metric ingestion and the next machine decision.
+**No human prompt between A and B.**
 
-That is the minimum threshold at which Business Master stops being a repository of business automation components and starts becoming an autonomous economic control system.
+> **Target milestone: PR10 — Autonomous Closed Loop V0**
 
----
-
-## 19. Repository map
-
-### Economic model
-
-- [`docs/ECONOMIC_THESIS.md`](docs/ECONOMIC_THESIS.md) — objective hierarchy and durable economic thesis.
-- [`docs/BUSINESS_METHOD_MATRIX.md`](docs/BUSINESS_METHOD_MATRIX.md) — current cross-method priors.
-- [`docs/BUSINESS_GLOSSARY.md`](docs/BUSINESS_GLOSSARY.md) — marketing, funnel, ecommerce and portfolio vocabulary.
-
-### Portfolio and engines
-
-- [`docs/PORTFOLIO_ARCHITECTURE.md`](docs/PORTFOLIO_ARCHITECTURE.md) — Shared Core and engine relationships.
-- [`docs/ENGINES_CONTENT.md`](docs/ENGINES_CONTENT.md) — signal/distribution engine.
-- [`docs/ENGINES_COMMERCE.md`](docs/ENGINES_COMMERCE.md) — affiliate/ecommerce/POD/resale engine.
-- [`docs/ENGINES_B2B_AND_ASSETS.md`](docs/ENGINES_B2B_AND_ASSETS.md) — productized B2B and asset conversion.
-
-### Control plane
-
-- [`docs/RFC-0001-autonomous-control-plane.md`](docs/RFC-0001-autonomous-control-plane.md) — V0 controller architecture.
-- [`docs/ADR-0002-economic-control-system-v2.md`](docs/ADR-0002-economic-control-system-v2.md) — current baseline contract and migration rules.
-- [`docs/EXPERIMENTATION_AND_ALLOCATION.md`](docs/EXPERIMENTATION_AND_ALLOCATION.md) — experiments, scoring and allocation.
-- [`docs/METRICS_AND_OBJECTIVES.md`](docs/METRICS_AND_OBJECTIVES.md) — evidence and metric interpretation.
-- [`docs/WORLD_MODEL_AND_EVENTS.md`](docs/WORLD_MODEL_AND_EVENTS.md) — target entities and event taxonomy.
-
-### Runtime and implementation
-
-- [`docs/HARDWARE_AND_RUNTIME.md`](docs/HARDWARE_AND_RUNTIME.md) — workstation assumptions and resource routing.
-- [`docs/TECH_STACK.md`](docs/TECH_STACK.md) — replaceable implementation choices.
-- [`docs/MEDIA_AND_AGENT_STACK.md`](docs/MEDIA_AND_AGENT_STACK.md) — media, browser, local inference and agent stack.
-- [`docs/PLATFORMS_ACCOUNTS_AND_GATES.md`](docs/PLATFORMS_ACCOUNTS_AND_GATES.md) — account, quota, KYC and platform boundaries.
-- [`docs/LOCAL_AGENT_HANDOFF.md`](docs/LOCAL_AGENT_HANDOFF.md) — implementation contract for local coding agents.
-- [`docs/ROADMAP.md`](docs/ROADMAP.md) — staged path to a real autonomous portfolio.
-
-### Research
-
-- [`docs/SOURCE_CATALOG.md`](docs/SOURCE_CATALOG.md) — creator videos, technical material and internal evidence used by the project.
-- [`docs/SOURCE_LEARNINGS.md`](docs/SOURCE_LEARNINGS.md) — durable conclusions extracted from that material.
+When that loop exists against a real external surface, this section should contain a recorded demonstration rather than a simulated one.
 
 ---
 
-## 20. Quick start
+## Current status
+
+> **Bootstrap / architecture migration**
+
+The architecture described above is the target control system. Implementation is being migrated incrementally without a rewrite.
+
+| Capability | Status |
+|---|---|
+| Architecture invariants / V0 characterization | ✅ Implemented |
+| Decomposed domain model | ✅ Implemented |
+| Economic hypotheses | ✅ Foundation |
+| Persisted belief state | ✅ Foundation |
+| Immutable experiment contracts | ✅ Implemented |
+| Multidimensional resource vectors | 🟡 Current implementation phase |
+| Economic ledger | ⚪ Planned |
+| Business-family policies | ⚪ Planned |
+| Evidence → belief update engine | ⚪ Planned |
+| Portfolio controller | ⚪ Planned |
+| Capital controller | ⚪ Planned |
+| Autonomous external closed loop | ⚪ PR10 milestone |
+| Offer / Funnel / Creative domain | ⚪ Planned |
+| Business composition / adjacency | ⚪ Planned |
+| Capability self-optimization | ⚪ Planned |
+
+### Migration sequence
+
+```text
+PR0  Baseline & invariants                ✓
+ ↓
+PR1  Domain decomposition                 ✓
+ ↓
+PR2  Beliefs & economic hypotheses        ✓
+ ↓
+PR3  Experiment contracts                 ✓
+ ↓
+PR4  Resource vectors                     ◀ current phase
+ ↓
+PR5  Economic ledger
+ ↓
+PR6  Family policies
+ ↓
+PR7  Belief update engine
+ ↓
+PR8  Portfolio controller
+ ↓
+PR9  Capital controller
+ ↓
+PR10 Autonomous Closed Loop V0            ★
+ ↓
+PR11 Offer / Funnel / Creative
+ ↓
+PR12 Business composition
+ ↓
+PR13 Capability portfolio
+```
+
+PR10 is the first major autonomy milestone.
+
+PR12 adds cross-business economic discovery.
+
+PR13 adds learning about the factory itself.
+
+---
+
+## Three learning loops
+
+The long-term system learns at three levels.
+
+```text
+MARKET LEARNING
+"What does the world want?"
+
+        ↓
+
+BUSINESS LEARNING
+"What mechanism captures value?"
+
+        ↓
+
+FACTORY LEARNING
+"What is the best way to execute?"
+```
+
+---
+
+## Quickstart
 
 ### NixOS
 
 ```bash
 git clone https://github.com/AlephCasara/Business-Master.git
 cd Business-Master
+
 nix develop
 uv pip install -e '.[dev]'
 
@@ -820,54 +542,194 @@ bm doctor
 pytest
 ```
 
-### Generic Python environment
+### Standard Python
+
+Requires Python 3.13.
 
 ```bash
+git clone https://github.com/AlephCasara/Business-Master.git
+cd Business-Master
+
 python3.13 -m venv .venv
-. .venv/bin/activate
+source .venv/bin/activate
+
 pip install -e '.[dev]'
 
 bm doctor
 pytest
 ```
 
-`bm doctor` is read-only and exists to inspect local capabilities. Runtime state, secrets, browser sessions, model weights and large generated assets remain outside Git.
+`bm doctor` performs read-only capability discovery for the local runtime.
 
 ---
 
-## 21. Repository vs runtime state
+## Technology direction
 
-### Git contains
+The control-plane foundation is intentionally small.
 
-- source code;
-- domain contracts;
-- migrations;
-- policies;
-- RFCs and ADRs;
-- tests and benchmark harnesses;
-- versioned prompts/skills;
-- deployment/Nix definitions;
-- synthetic fixtures.
+```text
+Python 3.13
+Pydantic
+PostgreSQL
+psycopg
+Typer
+structlog
+pytest
+```
 
-### Runtime/local state contains
+Optional infrastructure is introduced only when justified by a real execution need:
 
-- PostgreSQL live data;
-- platform secrets/tokens;
-- browser profiles/sessions;
-- KYC/private data;
-- model weights;
-- raw/generated media;
-- large benchmark outputs;
-- caches.
+```text
+durable runtime
+observability
+browser / desktop / mobile adapters
+local or cloud inference
+media generation
+external platform APIs
+```
 
-Never commit credentials, cookies, KYC documents or private customer data.
+Business Master deliberately avoids premature Kubernetes, microservices, Kafka, generic vector databases, multi-agent swarms, reinforcement learning without data, and speculative schemas.
+
+Complexity must earn its place.
 
 ---
 
-## 22. The invariant
+## Engineering principles
 
-Every major automated action should eventually be able to answer:
+**External reality beats internal confidence.**  
+AI-generated scores do not substitute for market behavior.
 
-> **Why is this the highest-value next use of constrained cash, compute, platform capacity and human attention, given the evidence currently stored in the World Model?**
+**Technical failure is not market rejection.**  
+A broken renderer cannot falsify an economic hypothesis.
 
-When Business Master can answer that question, act, observe the external result, update its beliefs and improve the next decision autonomously, the repository has become the operating system of the business rather than a collection of automation scripts.
+**Persist before irreversible effects.**  
+Retries must not duplicate real-world actions.
+
+**Financial arithmetic is deterministic.**  
+Revenue, cost, margin, and capital accounting never depend on generated prose.
+
+**Reserve before spending.**  
+No policy may consume unreserved scarce resources.
+
+**Every temporal belief can age.**  
+Markets, platforms, tactics, and supplier conditions change.
+
+**Human attention is measured.**  
+Human intervention is an explicit economic cost.
+
+**No rewrite-driven architecture.**  
+The system evolves through bounded, testable migrations.
+
+---
+
+## What Business Master is not
+
+It is not:
+
+- an AI agency template;
+- a social-media bot;
+- a dropshipping bot;
+- a workflow library;
+- an agent swarm;
+- a prompt collection;
+- an LLM wrapper;
+- an automatic money machine.
+
+Those may become experiment surfaces or execution adapters.
+
+They are not the control system.
+
+---
+
+## Documentation
+
+The README is the front door, not the specification.
+
+| Document | Purpose |
+|---|---|
+| [`ADR-0002`](docs/ADR-0002-economic-control-system-v2.md) | V2 economic-control-system invariants |
+| [`RFC-0001`](docs/RFC-0001-autonomous-control-plane.md) | autonomous control-plane architecture |
+| [`ECONOMIC_THESIS`](docs/ECONOMIC_THESIS.md) | economic objective and business thesis |
+| [`EXPERIMENTATION_AND_ALLOCATION`](docs/EXPERIMENTATION_AND_ALLOCATION.md) | experiment and allocation model |
+| [`METRICS_AND_OBJECTIVES`](docs/METRICS_AND_OBJECTIVES.md) | evidence and objective hierarchy |
+| [`TECH_STACK`](docs/TECH_STACK.md) | implementation and adapter choices |
+| [`SOURCE_LEARNINGS`](docs/SOURCE_LEARNINGS.md) | durable conclusions from research |
+| [`SOURCE_CATALOG`](docs/SOURCE_CATALOG.md) | audited research surface and provenance |
+| [`ENGINES_CONTENT`](docs/ENGINES_CONTENT.md) | Content Engine design |
+| [`ENGINES_COMMERCE`](docs/ENGINES_COMMERCE.md) | Commerce Engine design |
+| [`ENGINES_B2B_AND_ASSETS`](docs/ENGINES_B2B_AND_ASSETS.md) | B2B and Asset Engine design |
+| [`HARDWARE_AND_RUNTIME`](docs/HARDWARE_AND_RUNTIME.md) | workstation and runtime constraints |
+| [`AGENTS.md`](AGENTS.md) | rules for coding agents working in this repository |
+
+Creator material is treated as a **source of hypotheses**, not as authoritative platform truth. Claims that matter operationally must survive cross-comparison or current verification before they become system assumptions.
+
+---
+
+## Repository boundaries
+
+Git stores the reproducible system:
+
+```text
+source
+schemas
+migrations
+policies
+tests
+RFCs
+ADRs
+skills
+versioned prompts
+```
+
+Runtime state stays outside Git:
+
+```text
+credentials
+database state
+model weights
+browser sessions
+generated media
+raw datasets
+device state
+large caches
+```
+
+---
+
+## North star
+
+The final measure of Business Master is not:
+
+> **How many tasks can it automate?**
+
+It is:
+
+> **How effectively can it convert scarce resources into validated economic knowledge, cash flow, and durable assets — while continuously improving the quality of its own decisions?**
+
+The intended end state is a persistent economic organism that can:
+
+```text
+observe
+   ↓
+believe
+   ↓
+experiment
+   ↓
+measure
+   ↓
+learn
+   ↓
+allocate
+   ↓
+build
+   ↺
+```
+
+and continue doing so when no human is there to tell it what to do next.
+
+---
+
+<p align="center">
+  <strong>Business Master</strong><br>
+  <sub>Observe reality. Allocate intelligently. Learn continuously.</sub>
+</p>
