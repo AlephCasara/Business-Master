@@ -1,6 +1,6 @@
 # ADR-0006 — Business-family evaluation policies
 
-Status: **Accepted for PR8**
+Status: **Accepted for PR8; hardened before PR9**
 
 ## Context
 
@@ -52,7 +52,9 @@ Content can graduate from Probe on sufficient supporting external signal plus ex
 
 ### B2B
 
-B2B Probe → Pilot requires evidence from multiple independent sources/companies plus replication. Pilot → Scale requires repeated signal, multiple contexts, operational readiness, and positive authoritative economic readiness.
+B2B Probe → Pilot requires evidence from multiple economically independent companies/accounts plus replication. Pilot → Scale requires repeated signal, multiple contexts, operational readiness, and positive authoritative economic readiness.
+
+`EvidenceRecord.source` identifies the collection/observation source. When the economically independent unit differs from that source, adapters must provide `EvidenceRecord.independence_key`. This prevents observations from LinkedIn, CRM and email for the same company from masquerading as three independent companies. Existing evidence without an explicit key falls back to source identity for compatibility.
 
 ### Commerce
 
@@ -76,9 +78,30 @@ For aggregate criteria, interpretation strength is divided across contributing r
 
 Technical evidence remains barred from economic support/falsification.
 
+### Decision-grade provenance
+
+Persistence and decision authority are separate concerns. Business Master may persist weak or claimed evidence for research/audit, but family progression may only use decision-grade evidence.
+
+Direct decision-grade observations are:
+
+- `observed_own`
+- `observed_official_external`
+- `observed_public`
+
+`calculated` evidence is decision-grade only when every declared input is present in the evaluation and is itself decision-grade. This makes provenance transitive and prevents weak evidence from being laundered through a calculated metric.
+
+The following remain persisted/auditable but cannot by themselves satisfy market/economic criteria, sufficiency, independent-source counts, or required evidence kinds:
+
+- `inferred`
+- `creator_claim`
+- `unknown`
+- `calculated` evidence with missing or non-decision-grade lineage
+
+This enforces the project rule that creator material is a source of hypotheses, not authoritative market truth.
+
 ## Sufficiency
 
-Evidence sufficiency combines:
+Evidence sufficiency combines decision-grade evidence only:
 
 - `MeasurementContract.minimum_external_observations`;
 - `EconomicHypothesis.evidence_requirements.minimum_count`;
@@ -114,7 +137,7 @@ Economic readiness uses only the PR6 ledger snapshot:
 - observed economic activity with non-positive contribution → `not_ready`;
 - no authoritative economic activity → `unknown`.
 
-Legacy `BusinessOutcome` and execution cash fields are not financial authority.
+Legacy `BusinessOutcome`, scalar execution cash fields, and bootstrap settings are not financial authority.
 
 ## Recommendations
 
@@ -145,7 +168,7 @@ Each persisted evaluation records:
 - economic and operational readiness;
 - recommendation and rationale.
 
-Reusing an idempotency key with different semantics fails rather than rewriting history.
+Reusing an idempotency key with different semantics fails rather than rewriting history. Policy semantic changes therefore require a new evaluation identity rather than mutating an old evaluation in place.
 
 ## Consequences
 
@@ -155,12 +178,15 @@ Reusing an idempotency key with different semantics fails rather than rewriting 
 - experiment contracts remain the source of metric thresholds;
 - PR7 receives explicit deterministic interpretations;
 - technical failure remains separated from market/economic rejection;
+- weak provenance cannot silently become progression evidence;
+- B2B independence can model the economic entity rather than the transport/source;
 - B2B and Commerce can require economics where appropriate without forcing revenue gates on Content/Capability;
 - later autonomous decisions can cite a durable evaluation artifact.
 
 ### Costs
 
 - replication/context facts still require upstream lineage derivation;
+- adapters that need entity-level independence must populate `independence_key` explicitly;
 - the bootstrap family gates are versioned policy, not universal economic truth;
 - cross-family and asset-composition policy remains later work.
 
