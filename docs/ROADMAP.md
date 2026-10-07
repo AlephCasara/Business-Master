@@ -16,6 +16,7 @@ The repository has already established the first V2 foundations:
 - immutable experiment contracts with machine-readable measurement criteria;
 - immutable evidence records with provenance, derivation lineage, and target associations;
 - deterministic, versioned evidence-to-belief transitions with explicit interpretation and freshness semantics;
+- family-aware evaluation for Content, B2B, Commerce, and Capability with contract-driven criteria, readiness gates, and durable recommendations;
 - multidimensional non-fungible resource vectors;
 - exact persisted resource capacity and durable atomic reservations with concurrency protection;
 - durable reservation expiry and separately persisted observed resource usage;
@@ -105,33 +106,37 @@ The update substrate provides:
 - retry idempotency and conflicting-reinterpretation rejection;
 - transactionally serialized updates so concurrent evidence receives distinct state versions.
 
-The bootstrap policy intentionally does not infer business semantics from raw evidence. It applies a versioned mathematical transition only after evidence interpretation is explicit. Business-family policy is the next layer.
+The bootstrap update policy intentionally does not infer business semantics from raw evidence. It applies a versioned mathematical transition only after evidence interpretation is explicit.
+
+---
+
+## Completed substrate — business-family evaluation
+
+Content, B2B, Commerce, and Capability no longer need to share one permanently generic definition of success.
+
+The family-evaluation substrate provides:
+- deterministic family policies for Content, B2B, Commerce, and Capability;
+- supporting and falsifying thresholds sourced from immutable `ExperimentContract` criteria rather than hidden global metric constants;
+- declared aggregation semantics for criterion evaluation;
+- evidence sufficiency combining contract requirements and hypothesis requirements;
+- explicit independent-source requirements;
+- explicit replication and distinct-context inputs rather than inferred pseudo-replication;
+- technical evidence preserved as technical rather than economic support/falsification;
+- PR7-compatible evidence interpretations without direct belief mutation;
+- operational-readiness gates;
+- authoritative PR6 ledger-backed economic readiness for B2B/Commerce scale evaluation;
+- family-specific progression recommendations;
+- append-only, idempotent PostgreSQL evaluation records with causal lineage to hypothesis, contract, belief version, and evidence IDs.
+
+Family recommendations are evaluation artifacts, not autonomous control-plane `Decision` objects. Legacy generic feedback/graduation behavior remains a compatibility surface while consumers migrate.
 
 ---
 
 ## Immediate architecture sequence
 
-### 1. Business-family evaluation policies
+### 1. Portfolio and capital control
 
-Content, B2B, commerce, and capability experiments should stop sharing one permanently generic definition of success.
-
-Introduce family-aware evaluation for:
-- which evidence supports or falsifies each hypothesis type;
-- sufficient evidence;
-- independent-source requirements;
-- replication;
-- falsification;
-- graduation;
-- economic readiness;
-- operational readiness.
-
-These policies should consume the PR7 update substrate rather than mutating belief state directly.
-
-Legacy generic feedback/graduation behavior remains only as a compatibility surface until each consumer migrates.
-
-### 2. Portfolio and capital control
-
-Once typed resources, authoritative economic state, versioned belief updates, and family-aware evaluation exist, migrate allocation from scalar `total_units` toward constrained portfolio decisions.
+Typed resources, authoritative economic state, versioned beliefs, and family-aware evaluation now exist. The next step is to migrate allocation from scalar `total_units` toward constrained portfolio decisions.
 
 The controller should reason over:
 - expected economic value;
@@ -142,14 +147,15 @@ The controller should reason over:
 - risk/blast radius;
 - reversible exploration vs exploitation.
 
-Capital policy and platform/risk gates remain deterministic.
+Capital policy and platform/risk gates remain deterministic. A family recommendation alone must not authorize spend or irreversible scale.
 
-### 3. Autonomous decision → experiment continuation
+### 2. Autonomous decision → experiment continuation
 
-Connect updated belief state and family evaluation to persisted autonomous decisions and child experiment creation.
+Connect updated belief state, family evaluation, resource/capital constraints, and portfolio policy to persisted autonomous decisions and child experiment creation.
 
 The transition must preserve:
 - decision policy/version;
+- family evaluation ID;
 - evidence IDs;
 - belief state version;
 - expected resource demand;
