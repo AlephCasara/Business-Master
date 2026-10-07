@@ -33,7 +33,6 @@ from business_master.domain.hypotheses import (
 from business_master.domain.ledger import EconomicLedgerSnapshot
 from business_master.policies.family_evaluation import policy_for_family
 
-
 NOW = datetime(2026, 10, 7, tzinfo=UTC)
 
 
