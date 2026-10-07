@@ -54,7 +54,7 @@ Content can graduate from Probe on sufficient supporting external signal plus ex
 
 B2B Probe → Pilot requires evidence from multiple economically independent companies/accounts plus replication. Pilot → Scale requires repeated signal, multiple contexts, operational readiness, and positive authoritative economic readiness.
 
-`EvidenceRecord.source` identifies the collection/observation source. When the economically independent unit differs from that source, adapters must provide `EvidenceRecord.independence_key`. This prevents observations from LinkedIn, CRM and email for the same company from masquerading as three independent companies. Existing evidence without an explicit key falls back to source identity for compatibility.
+`EvidenceRecord.source` identifies the collection/observation source. When the economically independent unit differs from that source, adapters should provide `EvidenceRecord.independence_key`. The B2B policy resolves identity in this order: explicit `independence_key`, then an existing explicit evidence subject (`subject_type` + `subject_id`) for PR8 compatibility, then `source` as the final legacy fallback. This prevents observations from LinkedIn, CRM and email for the same company from masquerading as independent companies without invalidating already-persisted B2B evidence.
 
 ### Commerce
 
@@ -99,6 +99,8 @@ The following remain persisted/auditable but cannot by themselves satisfy market
 
 This enforces the project rule that creator material is a source of hypotheses, not authoritative market truth.
 
+Decision-grade calculated evidence may satisfy contract criteria, but it does not create a new primary external observation or an additional independent source. Replication counts therefore remain grounded in actual observed external records rather than derived rows.
+
 ## Sufficiency
 
 Evidence sufficiency combines decision-grade evidence only:
@@ -107,6 +109,8 @@ Evidence sufficiency combines decision-grade evidence only:
 - `EconomicHypothesis.evidence_requirements.minimum_count`;
 - minimum independent sources;
 - required evidence kinds.
+
+External observation and independent-source counts use primary observed decision-grade evidence. Derived calculations may contribute a required kind or metric criterion when their lineage is valid, but cannot inflate replication.
 
 A falsifying criterion does not produce a rejection recommendation until evidence is sufficient.
 
@@ -186,7 +190,8 @@ Reusing an idempotency key with different semantics fails rather than rewriting 
 ### Costs
 
 - replication/context facts still require upstream lineage derivation;
-- adapters that need entity-level independence must populate `independence_key` explicitly;
+- adapters that need entity-level independence should populate `independence_key` explicitly;
+- legacy B2B records may still use subject/source fallback semantics until migrated;
 - the bootstrap family gates are versioned policy, not universal economic truth;
 - cross-family and asset-composition policy remains later work.
 
