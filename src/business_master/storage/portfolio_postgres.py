@@ -47,15 +47,16 @@ class PostgresPortfolioStore:
             conn.execute(
                 """
                 INSERT INTO portfolio_plan (
-                    id, idempotency_key, policy_name, policy_version,
+                    id, idempotency_key, policy_name, policy_version, base_currency,
                     policy_parameters, available_resources, evaluations, created_at
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     plan.id,
                     plan.idempotency_key,
                     plan.policy_name,
                     plan.policy_version,
+                    plan.base_currency,
                     Jsonb(payload["policy_parameters"]),
                     Jsonb(payload["available_resources"]),
                     Jsonb(payload["evaluations"]),
@@ -208,6 +209,7 @@ class PostgresPortfolioStore:
             policy_name=row["policy_name"],
             policy_version=row["policy_version"],
             policy_parameters=row["policy_parameters"],
+            base_currency=str(row["base_currency"]).strip(),
             available_resources=ResourceVector.model_validate(row["available_resources"]),
             evaluations=evaluations,
             allocations=allocations,

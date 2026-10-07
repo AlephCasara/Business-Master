@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS portfolio_plan (
     idempotency_key text NOT NULL UNIQUE,
     policy_name text NOT NULL,
     policy_version text NOT NULL,
+    base_currency char(3) NOT NULL,
     policy_parameters jsonb NOT NULL,
     available_resources jsonb NOT NULL,
     evaluations jsonb NOT NULL,
