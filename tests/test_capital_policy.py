@@ -4,8 +4,6 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
-import pytest
-
 from business_master.domain.capital import (
     CapitalAuthorizationRequest,
     CapitalEnvelope,
@@ -111,9 +109,14 @@ def test_ledger_cash_is_reduced_by_active_authorizations() -> None:
     assert "ledger cash" in assessment.rationale.lower()
 
 
-def test_operator_hard_ceiling_requires_explicit_category() -> None:
-    with pytest.raises(ValueError, match="explicit spend category"):
-        _envelope(hard_ceiling="100", category=None)
+def test_unscoped_category_ceiling_uses_request_category() -> None:
+    assessment = _assess(
+        _request(category=SpendCategory.CLOUD_GPU, amount="25"),
+        _envelope(category=None, hard_ceiling="100"),
+        period_committed=Decimal("50"),
+    )
+
+    assert assessment.authorized is True
 
 
 def test_category_scoped_envelope_rejects_other_spend_category() -> None:
