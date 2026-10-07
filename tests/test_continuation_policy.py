@@ -94,7 +94,11 @@ def _pair(
     return allocation, evaluation
 
 
-def _request(allocation: PortfolioAllocation, *, key: str = "continuation") -> AutonomousContinuationRequest:
+def _request(
+    allocation: PortfolioAllocation,
+    *,
+    key: str = "continuation",
+) -> AutonomousContinuationRequest:
     return AutonomousContinuationRequest(
         idempotency_key=key,
         parent_experiment_id=uuid4(),
