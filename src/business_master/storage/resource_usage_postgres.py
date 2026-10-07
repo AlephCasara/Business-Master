@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import psycopg
 from psycopg.rows import dict_row
@@ -88,7 +88,7 @@ class PostgresResourceUsageStore:
             )
             return usage
 
-    def get(self, usage_id: object) -> ResourceUsage | None:
+    def get(self, usage_id: UUID) -> ResourceUsage | None:
         with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
             row = conn.execute(
                 "SELECT * FROM resource_usage WHERE id = %s",
@@ -98,7 +98,7 @@ class PostgresResourceUsageStore:
             return None
         return self._usage_from_row(row)
 
-    def list_for_reservation(self, reservation_id: object) -> list[ResourceUsage]:
+    def list_for_reservation(self, reservation_id: UUID) -> list[ResourceUsage]:
         with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
             rows = conn.execute(
                 """
