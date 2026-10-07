@@ -61,3 +61,80 @@ class ExperimentStatus(StrEnum):
     COMPLETE = "complete"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
+
+class HypothesisType(StrEnum):
+    DEMAND = "demand"
+    PAIN = "pain"
+    AUDIENCE = "audience"
+    ANGLE = "angle"
+    HOOK = "hook"
+    CREATIVE = "creative"
+    OFFER = "offer"
+    PRICING = "pricing"
+    ACQUISITION = "acquisition"
+    CHANNEL = "channel"
+    FUNNEL = "funnel"
+    AOV = "aov"
+    LTV = "ltv"
+    PRODUCT = "product"
+    SUPPLY = "supply"
+    FULFILLMENT = "fulfillment"
+    B2B_PAIN = "b2b_pain"
+    OUTREACH = "outreach"
+    DELIVERY = "delivery"
+    CAPABILITY = "capability"
+    ASSET = "asset"
+
+
+class HypothesisStatus(StrEnum):
+    DRAFT = "draft"
+    ACTIVE = "active"
+    PAUSED = "paused"
+    REJECTED = "rejected"
+    SUPERSEDED = "superseded"
+
+
+class FreshnessMode(StrEnum):
+    NONE = "none"
+    TTL = "ttl"
+    LINEAR_DECAY = "linear_decay"
+    EXPONENTIAL_DECAY = "exponential_decay"
+
+
+class EvidenceClass(StrEnum):
+    TECHNICAL = "technical"
+    MARKET = "market"
+    ECONOMIC = "economic"
+
+
+class EvidenceProvenance(StrEnum):
+    OBSERVED_OWN = "observed_own"
+    OBSERVED_OFFICIAL_EXTERNAL = "observed_official_external"
+    OBSERVED_PUBLIC = "observed_public"
+    CALCULATED = "calculated"
+    INFERRED = "inferred"
+    CREATOR_CLAIM = "creator_claim"
+    UNKNOWN = "unknown"
+
+
+class EvidenceTargetKind(StrEnum):
+    ECONOMIC_HYPOTHESIS = "economic_hypothesis"
+    EXPERIMENT_CONTRACT = "experiment_contract"
+    EXPERIMENT = "experiment"
+
+
+class ComparisonOperator(StrEnum):
+    LT = "lt"
+    LTE = "lte"
+    EQ = "eq"
+    GTE = "gte"
+    GT = "gt"
+
+
+class MetricAggregation(StrEnum):
+    LATEST = "latest"
+    SUM = "sum"
+    MEAN = "mean"
+    MIN = "min"
+    MAX = "max"
