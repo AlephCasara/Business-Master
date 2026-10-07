@@ -120,6 +120,7 @@ class ContinuationPolicy:
             capital_requirement=allocation.capital_requirement,
             risk=allocation.risk,
             rationale=rationale,
+            reservation_expires_at=request.reservation_expires_at,
             child_experiment_id=child_experiment_id,
             child_contract_id=child_contract_id,
             capital_authorization_id=capital_authorization_id,
