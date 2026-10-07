@@ -394,9 +394,11 @@ The architecture above is the project direction, not a claim that every componen
 
 `main` is the canonical development base. PR0–PR8 established characterized invariants, decomposed economic hypotheses and experiment contracts, immutable evidence/provenance, multidimensional resource reservations, a deterministic currency-scoped economic ledger, versioned evidence-to-belief transitions, and family-aware evaluation for Content, B2B, Commerce, and Capability.
 
-PR9 adds the next control substrate: durable portfolio selection over `signal`, `cash`, `asset`, and `capability` roles; multidimensional scarcity-aware allocation without pretending resources are fungible; explicit base-currency boundaries; and ledger-authoritative, bounded capital authorization with concurrency, idempotency, lifecycle, risk/blast-radius, reversibility, human-gate, and evidence-tier guardrails.
+PR9 adds durable portfolio selection over `signal`, `cash`, `asset`, and `capability` roles; multidimensional scarcity-aware allocation without pretending resources are fungible; explicit base-currency boundaries; and ledger-authoritative, bounded capital authorization with concurrency, idempotency, lifecycle, risk/blast-radius, reversibility, human-gate, and evidence-tier guardrails.
 
-Persisted autonomous decision → child-experiment continuation is the next substrate. The real autonomous external closed loop remains a future milestone.
+PR10 adds the internal autonomous-continuation substrate: persisted decisions derived from current belief/evaluation/allocation lineage; deterministic continuation, replication, and one-tier graduation; atomic PR5 resource reservation plus child-contract/child-experiment creation; PR9 capital and human-gate enforcement; and PostgreSQL rollback, concurrency, retry, and restart guarantees.
+
+The next milestone is the real external Closed Loop V0 demonstration. PR10 supplies the internal machinery required for `autonomous decision → Experiment B`; it does **not** by itself prove that external evidence has closed the loop.
 
 The public proof standard remains unchanged: **external evidence must autonomously cause the next experiment before the system is presented as a completed autonomous business operator.**
 
@@ -520,6 +522,7 @@ The README is the front door, not the specification.
 | [`ADR-0005`](docs/ADR-0005-evidence-to-belief-updates.md) | versioned, auditable evidence-to-belief transition invariants |
 | [`ADR-0006`](docs/ADR-0006-business-family-evaluation.md) | family-aware experiment evaluation, readiness, and recommendation invariants |
 | [`ADR-0007`](docs/ADR-0007-portfolio-capital-control.md) | deterministic portfolio allocation and bounded capital-authorization invariants |
+| [`ADR-0008`](docs/ADR-0008-autonomous-decision-continuation.md) | persisted autonomous-decision and bounded child-continuation invariants |
 | [`METRICS_AND_OBJECTIVES`](docs/METRICS_AND_OBJECTIVES.md) | evidence and objective hierarchy |
 | [`TECH_STACK`](docs/TECH_STACK.md) | implementation and adapter choices |
 | [`SOURCE_LEARNINGS`](docs/SOURCE_LEARNINGS.md) | durable conclusions from research |
