@@ -135,9 +135,11 @@ class ResourceReservation(BaseModel):
     def validate_lifecycle(self) -> Self:
         if not self.requirements.quantities:
             raise ValueError("resource reservation requires at least one positive quantity")
-        if self.status is ResourceReservationStatus.ACTIVE:
-            if self.released_at is not None or self.expired_at is not None:
-                raise ValueError("active reservation cannot be released or expired")
+        if (
+            self.status is ResourceReservationStatus.ACTIVE
+            and (self.released_at is not None or self.expired_at is not None)
+        ):
+            raise ValueError("active reservation cannot be released or expired")
         if self.status is ResourceReservationStatus.RELEASED and self.released_at is None:
             raise ValueError("released reservation requires released_at")
         if self.expired_at is not None:
@@ -184,7 +186,8 @@ class ResourceUsage(BaseModel):
     @classmethod
     def validate_observed_at(cls, value: datetime) -> datetime:
         validated = _validate_aware_datetime(value)
-        assert validated is not None
+        if validated is None:
+            raise ValueError("observed_at is required")
         return validated
 
     @model_validator(mode="after")
