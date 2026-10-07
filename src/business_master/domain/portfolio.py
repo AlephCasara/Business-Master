@@ -19,6 +19,13 @@ from business_master.domain.family_evaluation import (
 from business_master.domain.resources import ResourceAvailability, ResourceVector
 
 
+def _normalize_currency(value: str) -> str:
+    normalized = value.strip().upper()
+    if len(normalized) != 3 or not normalized.isalpha():
+        raise ValueError("currency must be a 3-letter alphabetic code")
+    return normalized
+
+
 class PortfolioRole(StrEnum):
     SIGNAL = "signal"
     CASH = "cash"
@@ -54,12 +61,7 @@ class PortfolioValueEstimate(BaseModel):
     @field_validator("expected_value_currency", mode="before")
     @classmethod
     def normalize_currency(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        normalized = value.strip().upper()
-        if len(normalized) != 3 or not normalized.isalpha():
-            raise ValueError("expected value currency must be a 3-letter code")
-        return normalized
+        return None if value is None else _normalize_currency(value)
 
     @model_validator(mode="after")
     def validate_monetary_pair(self) -> Self:
@@ -122,7 +124,7 @@ class PortfolioPlanRequest(BaseModel):
     idempotency_key: str = Field(min_length=1, max_length=255)
     candidates: tuple[PortfolioCandidate, ...]
     availability: ResourceAvailability
-    base_currency: str = Field(default="USD", min_length=3, max_length=3)
+    base_currency: str = Field(min_length=3, max_length=3)
     max_candidates: int = Field(default=10, ge=1)
     exploration_fraction: float = Field(default=0.20, ge=0.0, le=1.0)
     max_group_fraction: float = Field(default=0.50, gt=0.0, le=1.0)
@@ -140,10 +142,7 @@ class PortfolioPlanRequest(BaseModel):
     @field_validator("base_currency", mode="before")
     @classmethod
     def normalize_base_currency(cls, value: str) -> str:
-        normalized = value.strip().upper()
-        if len(normalized) != 3 or not normalized.isalpha():
-            raise ValueError("portfolio base_currency must be a 3-letter alphabetic code")
-        return normalized
+        return _normalize_currency(value)
 
     @field_validator("created_at")
     @classmethod
@@ -202,10 +201,16 @@ class PortfolioPlan(BaseModel):
     policy_name: str
     policy_version: str
     policy_parameters: dict[str, str | int | float | bool]
+    base_currency: str = Field(min_length=3, max_length=3)
     available_resources: ResourceVector
     evaluations: list[PortfolioCandidateEvaluation]
     allocations: list[PortfolioAllocation]
     created_at: datetime
+
+    @field_validator("base_currency", mode="before")
+    @classmethod
+    def normalize_base_currency(cls, value: str) -> str:
+        return _normalize_currency(value)
 
     @classmethod
     def deterministic_id(cls, idempotency_key: str) -> UUID:
