@@ -47,6 +47,10 @@ CREATE INDEX IF NOT EXISTS ix_capital_authorization_active_currency
     ON capital_authorization (currency, status)
     WHERE status = 'active';
 
+CREATE UNIQUE INDEX IF NOT EXISTS ux_capital_authorization_active_allocation
+    ON capital_authorization (portfolio_allocation_id)
+    WHERE status = 'active';
+
 CREATE INDEX IF NOT EXISTS ix_capital_authorization_category_period
     ON capital_authorization (currency, category, authorized_at, status);
 
