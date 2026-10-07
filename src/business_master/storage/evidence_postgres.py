@@ -41,13 +41,14 @@ class PostgresEvidenceStore:
             inserted = conn.execute(
                 """
                 INSERT INTO evidence_record (
-                    id, evidence_class, provenance, kind, source, source_event_id,
-                    subject_type, subject_id, observed_at, ingested_at, features,
-                    payload_ref, schema_version
+                    id, evidence_class, provenance, kind, source, independence_key,
+                    source_event_id, subject_type, subject_id, observed_at, ingested_at,
+                    features, payload_ref, schema_version
                 ) VALUES (
                     %(id)s, %(evidence_class)s, %(provenance)s, %(kind)s, %(source)s,
-                    %(source_event_id)s, %(subject_type)s, %(subject_id)s, %(observed_at)s,
-                    %(ingested_at)s, %(features)s, %(payload_ref)s, %(schema_version)s
+                    %(independence_key)s, %(source_event_id)s, %(subject_type)s,
+                    %(subject_id)s, %(observed_at)s, %(ingested_at)s, %(features)s,
+                    %(payload_ref)s, %(schema_version)s
                 )
                 ON CONFLICT DO NOTHING
                 RETURNING id
@@ -58,6 +59,7 @@ class PostgresEvidenceStore:
                     "provenance": record.provenance.value,
                     "kind": record.kind,
                     "source": record.source,
+                    "independence_key": record.independence_key,
                     "source_event_id": record.source_event_id,
                     "subject_type": record.subject_type,
                     "subject_id": record.subject_id,
@@ -236,6 +238,7 @@ class PostgresEvidenceStore:
             provenance=row["provenance"],
             kind=row["kind"],
             source=row["source"],
+            independence_key=row["independence_key"],
             source_event_id=row["source_event_id"],
             subject_type=row["subject_type"],
             subject_id=row["subject_id"],
