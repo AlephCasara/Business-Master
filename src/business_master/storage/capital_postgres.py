@@ -56,8 +56,9 @@ class PostgresCapitalAuthorizationStore:
         request: CapitalAuthorizationRequest,
         envelope: CapitalEnvelope,
         *,
-        policy: CapitalPolicy = CapitalPolicy(),
+        policy: CapitalPolicy | None = None,
     ) -> CapitalAuthorization:
+        effective_policy = policy or CapitalPolicy()
         with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
             # Currency lock serializes competing claims on the same ledger cash.
             conn.execute(
@@ -72,14 +73,33 @@ class PostgresCapitalAuthorizationStore:
             )
             existing = self._load_by_idempotency(conn, request.idempotency_key)
             if existing is not None:
-                self._assert_same_request(existing, request, envelope, policy)
+                self._assert_same_request(
+                    existing,
+                    request,
+                    envelope,
+                    effective_policy,
+                )
                 return existing
 
             self._validate_allocation(conn, request)
+            active_for_allocation = conn.execute(
+                """
+                SELECT id
+                FROM capital_authorization
+                WHERE portfolio_allocation_id = %s AND status = 'active'
+                LIMIT 1
+                """,
+                (request.portfolio_allocation_id,),
+            ).fetchone()
+            if active_for_allocation is not None:
+                raise CapitalAuthorizationConflictError(
+                    "portfolio allocation already has an active capital authorization"
+                )
+
             ledger_cash = self._ledger_cash(conn, request.currency)
             active_outstanding = self._active_outstanding(conn, request.currency)
             period_committed = self._period_committed(conn, request, envelope)
-            assessment = policy.assess(
+            assessment = effective_policy.assess(
                 request,
                 envelope,
                 ledger_cash=ledger_cash,
@@ -100,8 +120,8 @@ class PostgresCapitalAuthorizationStore:
                 category=request.category,
                 stage=request.stage,
                 risk=request.risk,
-                policy_name=policy.name,
-                policy_version=policy.version,
+                policy_name=effective_policy.name,
+                policy_version=effective_policy.version,
                 envelope=envelope,
                 ledger_cash_at_authorization=assessment.ledger_cash,
                 active_outstanding_before=assessment.active_outstanding,
@@ -363,6 +383,22 @@ class PostgresCapitalAuthorizationStore:
             if authorization.status is not CapitalAuthorizationStatus.ACTIVE:
                 raise CapitalAuthorizationStateError(
                     "only active capital authorization can be consumed"
+                )
+            if authorization.expires_at is not None and authorization.expires_at <= consumed_at:
+                conn.execute(
+                    """
+                    UPDATE capital_authorization
+                    SET status = 'expired', released_at = %s, expired_at = %s
+                    WHERE id = %s
+                    """,
+                    (consumed_at, consumed_at, authorization_id),
+                )
+                return authorization.model_copy(
+                    update={
+                        "status": CapitalAuthorizationStatus.EXPIRED,
+                        "released_at": consumed_at,
+                        "expired_at": consumed_at,
+                    }
                 )
 
             transaction = conn.execute(
