@@ -14,7 +14,7 @@ from business_master.domain.enums import (
     HypothesisType,
     MetricAggregation,
 )
-from business_master.domain.evidence import EvidenceRecord
+from business_master.domain.evidence import EvidenceRecord, EvidenceScalar
 from business_master.domain.experiment_contracts import (
     ExperimentContract,
     MeasurementContract,
@@ -26,7 +26,10 @@ from business_master.domain.family_evaluation import (
     FamilyEvaluationRequest,
     ReadinessStatus,
 )
-from business_master.domain.hypotheses import EconomicHypothesis, EvidenceRequirements
+from business_master.domain.hypotheses import (
+    EconomicHypothesis,
+    EvidenceRequirements,
+)
 from business_master.domain.ledger import EconomicLedgerSnapshot
 from business_master.policies.family_evaluation import policy_for_family
 
@@ -77,7 +80,7 @@ def _evidence(
     qualified_signal: float | None = None,
     rejection: float | None = None,
 ) -> EvidenceRecord:
-    features: dict[str, float] = {}
+    features: dict[str, EvidenceScalar] = {}
     if qualified_signal is not None:
         features["qualified_signal"] = qualified_signal
     if rejection is not None:
