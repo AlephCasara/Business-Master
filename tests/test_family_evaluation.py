@@ -229,7 +229,8 @@ def test_calculated_evidence_requires_complete_decision_grade_lineage() -> None:
         )
     )
     assert strong.supporting_signal is True
-    assert strong.external_observations == 2
+    assert strong.external_observations == 1
+    assert strong.independent_sources == 1
 
 
 def test_b2b_policy_requires_independent_companies_and_scale_economics() -> None:
