@@ -221,18 +221,20 @@ class PortfolioPolicy:
                 rationale="Candidate resource demand does not fit current availability.",
             )
 
-        if candidate.capital_requirement is not None:
-            if candidate.capital_requirement.currency != request.base_currency:
-                return PortfolioCandidateEvaluation(
-                    candidate_id=candidate.id,
-                    eligible=False,
-                    utility=0.0,
-                    scarcity_pressure=scarcity,
-                    rationale=(
-                        "Capital requirement currency differs from portfolio base currency; "
-                        "explicit valuation/FX evidence is required."
-                    ),
-                )
+        if (
+            candidate.capital_requirement is not None
+            and candidate.capital_requirement.currency != request.base_currency
+        ):
+            return PortfolioCandidateEvaluation(
+                candidate_id=candidate.id,
+                eligible=False,
+                utility=0.0,
+                scarcity_pressure=scarcity,
+                rationale=(
+                    "Capital requirement currency differs from portfolio base currency; "
+                    "explicit valuation/FX evidence is required."
+                ),
+            )
 
         if (
             candidate.value.expected_value_currency is not None
