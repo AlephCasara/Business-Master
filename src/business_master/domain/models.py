@@ -1,8 +1,8 @@
 """Backward-compatible facade for V0 domain model imports.
 
-PR1 decomposes the former monolithic models module into cohesive domain modules.
+PR1 decomposed the former monolithic models module into cohesive domain modules.
 Existing callers may continue importing from ``business_master.domain.models``
-while newer code imports from the owning module directly.
+while newer V2 code imports from the owning modules directly.
 """
 
 from business_master.domain.clock import utcnow

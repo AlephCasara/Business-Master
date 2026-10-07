@@ -61,3 +61,42 @@ class ExperimentStatus(StrEnum):
     COMPLETE = "complete"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
+
+class HypothesisType(StrEnum):
+    DEMAND = "demand"
+    PAIN = "pain"
+    AUDIENCE = "audience"
+    ANGLE = "angle"
+    HOOK = "hook"
+    CREATIVE = "creative"
+    OFFER = "offer"
+    PRICING = "pricing"
+    ACQUISITION = "acquisition"
+    CHANNEL = "channel"
+    FUNNEL = "funnel"
+    AOV = "aov"
+    LTV = "ltv"
+    PRODUCT = "product"
+    SUPPLY = "supply"
+    FULFILLMENT = "fulfillment"
+    B2B_PAIN = "b2b_pain"
+    OUTREACH = "outreach"
+    DELIVERY = "delivery"
+    CAPABILITY = "capability"
+    ASSET = "asset"
+
+
+class HypothesisStatus(StrEnum):
+    DRAFT = "draft"
+    ACTIVE = "active"
+    PAUSED = "paused"
+    REJECTED = "rejected"
+    SUPERSEDED = "superseded"
+
+
+class FreshnessMode(StrEnum):
+    NONE = "none"
+    TTL = "ttl"
+    LINEAR_DECAY = "linear_decay"
+    EXPONENTIAL_DECAY = "exponential_decay"
