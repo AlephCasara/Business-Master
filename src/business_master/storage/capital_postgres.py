@@ -15,6 +15,7 @@ from business_master.domain.capital import (
     CapitalAuthorizationRequest,
     CapitalAuthorizationStatus,
     CapitalEnvelope,
+    CapitalStage,
 )
 from business_master.domain.clock import utcnow
 from business_master.policies.capital import CapitalPolicy
@@ -96,18 +97,18 @@ class PostgresCapitalAuthorizationStore:
                 return existing
 
             self._validate_allocation(conn, request)
-            active_for_allocation = conn.execute(
+            authorization_for_allocation = conn.execute(
                 """
-                SELECT id
+                SELECT id, status
                 FROM capital_authorization
-                WHERE portfolio_allocation_id = %s AND status = 'active'
+                WHERE portfolio_allocation_id = %s
                 LIMIT 1
                 """,
                 (request.portfolio_allocation_id,),
             ).fetchone()
-            if active_for_allocation is not None:
+            if authorization_for_allocation is not None:
                 raise CapitalAuthorizationConflictError(
-                    "portfolio allocation already has an active capital authorization"
+                    "portfolio allocation already has a capital authorization; replan is required"
                 )
 
             ledger_cash = self._ledger_cash(conn, request.currency)
@@ -135,6 +136,9 @@ class PostgresCapitalAuthorizationStore:
                 category=request.category,
                 stage=request.stage,
                 risk=request.risk,
+                blast_radius=request.blast_radius,
+                reversible=request.reversible,
+                human_gate_required=request.human_gate_required,
                 policy_name=effective_policy.name,
                 policy_version=effective_policy.version,
                 envelope=envelope,
@@ -152,7 +156,8 @@ class PostgresCapitalAuthorizationStore:
                 INSERT INTO capital_authorization (
                     id, idempotency_key, portfolio_allocation_id,
                     family_evaluation_id, hypothesis_id, amount, currency,
-                    category, stage, risk, policy_name, policy_version, envelope,
+                    category, stage, risk, blast_radius, reversible,
+                    human_gate_required, policy_name, policy_version, envelope,
                     ledger_cash_at_authorization, active_outstanding_before,
                     period_committed_before, status, rationale, requested_at,
                     authorized_at, expires_at, consumed_at, released_at, expired_at,
@@ -160,7 +165,7 @@ class PostgresCapitalAuthorizationStore:
                 ) VALUES (
                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s, %s
+                    %s, %s, %s, %s, %s, %s, %s, %s
                 )
                 """,
                 (
@@ -174,6 +179,9 @@ class PostgresCapitalAuthorizationStore:
                     authorization.category.value,
                     authorization.stage.value,
                     authorization.risk.value,
+                    authorization.blast_radius,
+                    authorization.reversible,
+                    authorization.human_gate_required,
                     authorization.policy_name,
                     authorization.policy_version,
                     Jsonb(authorization.envelope.model_dump(mode="json")),
@@ -202,7 +210,7 @@ class PostgresCapitalAuthorizationStore:
             """
             SELECT pa.family_evaluation_id, pa.hypothesis_id,
                    pa.capital_amount, pa.capital_currency, pa.capital_category,
-                   pp.base_currency
+                   pa.risk_assessment, pa.current_tier, pp.base_currency
             FROM portfolio_allocation AS pa
             JOIN portfolio_plan AS pp ON pp.id = pa.plan_id
             WHERE pa.id = %s
@@ -225,6 +233,34 @@ class PostgresCapitalAuthorizationStore:
             raise ValueError("capital request currency differs from portfolio base currency")
         if row["capital_category"] != request.category.value:
             raise ValueError("capital request category differs from portfolio allocation")
+
+        risk_assessment = row["risk_assessment"]
+        if not isinstance(risk_assessment, dict):
+            raise ValueError("portfolio allocation risk assessment is invalid")
+        if risk_assessment.get("level") != request.risk.value:
+            raise ValueError("capital request risk differs from portfolio allocation")
+        if float(risk_assessment.get("blast_radius", 0.0)) != request.blast_radius:
+            raise ValueError("capital request blast radius differs from portfolio allocation")
+        if bool(risk_assessment.get("reversible", True)) is not request.reversible:
+            raise ValueError("capital request reversibility differs from portfolio allocation")
+        if bool(risk_assessment.get("human_gate_required", False)) is not request.human_gate_required:
+            raise ValueError("capital request human-gate fact differs from portfolio allocation")
+
+        allowed_stages: dict[str, set[CapitalStage]] = {
+            "probe": {CapitalStage.LOCKED, CapitalStage.PROBE},
+            "pilot": {
+                CapitalStage.LOCKED,
+                CapitalStage.PROBE,
+                CapitalStage.VALIDATED,
+                CapitalStage.PILOT,
+            },
+            "scale": set(CapitalStage),
+            "paused": {CapitalStage.LOCKED},
+            "killed": {CapitalStage.LOCKED},
+        }
+        tier = str(row["current_tier"])
+        if request.stage not in allowed_stages.get(tier, {CapitalStage.LOCKED}):
+            raise ValueError("capital request stage exceeds portfolio allocation tier authority")
 
     @staticmethod
     def _ledger_cash(
@@ -316,6 +352,23 @@ class PostgresCapitalAuthorizationStore:
                 return authorization
             if authorization.status is CapitalAuthorizationStatus.CONSUMED:
                 raise CapitalAuthorizationStateError("consumed capital cannot be released")
+
+            if authorization.expires_at is not None and authorization.expires_at <= released_at:
+                conn.execute(
+                    """
+                    UPDATE capital_authorization
+                    SET status = 'expired', released_at = %s, expired_at = %s
+                    WHERE id = %s
+                    """,
+                    (released_at, released_at, authorization_id),
+                )
+                return authorization.model_copy(
+                    update={
+                        "status": CapitalAuthorizationStatus.EXPIRED,
+                        "released_at": released_at,
+                        "expired_at": released_at,
+                    }
+                )
 
             conn.execute(
                 """
@@ -514,6 +567,9 @@ class PostgresCapitalAuthorizationStore:
             or authorization.category is not request.category
             or authorization.stage is not request.stage
             or authorization.risk is not request.risk
+            or authorization.blast_radius != request.blast_radius
+            or authorization.reversible is not request.reversible
+            or authorization.human_gate_required is not request.human_gate_required
             or authorization.requested_at != request.requested_at
             or authorization.expires_at != request.expires_at
             or authorization.envelope != envelope
@@ -537,6 +593,9 @@ class PostgresCapitalAuthorizationStore:
             category=row["category"],
             stage=row["stage"],
             risk=row["risk"],
+            blast_radius=float(row["blast_radius"]),
+            reversible=bool(row["reversible"]),
+            human_gate_required=bool(row["human_gate_required"]),
             policy_name=row["policy_name"],
             policy_version=row["policy_version"],
             envelope=CapitalEnvelope.model_validate(row["envelope"]),
