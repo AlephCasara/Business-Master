@@ -3,18 +3,18 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
+from business_master.domain.experiment_contracts import (
+    ExperimentBudget,
+    ExperimentContract,
+    MeasurementContract,
+    MetricCriterion,
+)
 from pydantic import ValidationError
 
 from business_master.domain.enums import (
     ComparisonOperator,
     EvidenceClass,
     MetricAggregation,
-)
-from business_master.domain.experiment_contracts import (
-    ExperimentBudget,
-    ExperimentContract,
-    MeasurementContract,
-    MetricCriterion,
 )
 
 
