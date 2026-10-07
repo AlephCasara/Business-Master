@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from statistics import fmean
+from uuid import UUID
 
 from business_master.domain.belief_updates import EvidenceInterpretation
 from business_master.domain.enums import (
@@ -203,8 +204,8 @@ class FamilyEvaluationPolicy:
         evidence: tuple[EvidenceRecord, ...],
         criteria: list[CriterionEvaluation],
     ) -> list[EvidenceInterpretationDecision]:
-        supporting_weights: dict[object, float] = {}
-        falsifying_weights: dict[object, float] = {}
+        supporting_weights: dict[UUID, float] = {}
+        falsifying_weights: dict[UUID, float] = {}
 
         for criterion in criteria:
             if not criterion.met or not criterion.evidence_ids:
@@ -352,7 +353,10 @@ class FamilyEvaluationPolicy:
 
         return (
             EvaluationRecommendation.REPLICATE,
-            "Supporting evidence exists, but family progression gates require more replication/readiness.",
+            (
+                "Supporting evidence exists, but family progression gates require "
+                "more replication/readiness."
+            ),
         )
 
     def _probe_gate(
@@ -370,12 +374,10 @@ class FamilyEvaluationPolicy:
             return False
         if request.context.replication_count < self.profile.probe_replications:
             return False
-        if (
+        return not (
             self.profile.probe_requires_operational_ready
             and operational_readiness is not ReadinessStatus.READY
-        ):
-            return False
-        return True
+        )
 
     def _scale_gate(
         self,
@@ -393,12 +395,10 @@ class FamilyEvaluationPolicy:
             and operational_readiness is not ReadinessStatus.READY
         ):
             return False
-        if (
+        return not (
             self.profile.scale_requires_economic_ready
             and economic_readiness is not ReadinessStatus.READY
-        ):
-            return False
-        return True
+        )
 
 
 class ContentEvaluationPolicy(FamilyEvaluationPolicy):
