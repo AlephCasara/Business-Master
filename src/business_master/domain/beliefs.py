@@ -17,9 +17,11 @@ class FreshnessPolicy(BaseModel):
 
     @model_validator(mode="after")
     def validate_parameters(self) -> Self:
-        if self.mode in {FreshnessMode.TTL, FreshnessMode.LINEAR_DECAY}:
-            if self.ttl_seconds is None:
-                raise ValueError(f"{self.mode.value} requires ttl_seconds")
+        if (
+            self.mode in {FreshnessMode.TTL, FreshnessMode.LINEAR_DECAY}
+            and self.ttl_seconds is None
+        ):
+            raise ValueError(f"{self.mode.value} requires ttl_seconds")
         if self.mode is FreshnessMode.EXPONENTIAL_DECAY and self.half_life_seconds is None:
             raise ValueError("exponential_decay requires half_life_seconds")
         if self.mode is FreshnessMode.NONE and (
