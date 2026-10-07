@@ -1,329 +1,326 @@
-# Roadmap — From Repository to Autonomous Economic Organism
+# Roadmap — From Bootstrap Core to Autonomous Economic Control
 
-This roadmap prioritizes **closed-loop economic capability**, not feature count.
+This roadmap prioritizes **closed-loop economic capability**, not feature count, vendor adoption, or issue volume.
 
----
-
-## Phase 0 — Canonical knowledge and deterministic core
-
-Status: in progress / mostly implemented.
-
-Goals:
-- define economic thesis;
-- define shared engines;
-- define experiment/evidence model;
-- define account/human boundaries;
-- create typed domain and database schema;
-- establish CI.
-
-Acceptance:
-- a new local agent can understand the business architecture from repository documents;
-- deterministic policies are unit tested;
-- no live state is hidden in hard-coded registries.
-
-Artifacts:
-- economic thesis;
-- method matrix/glossary;
-- Content/Commerce/B2B/Asset engine docs;
-- World Model migration;
-- scoring/allocation/feedback/graduation policies;
-- local-agent handoff.
+Canonical architecture lives in the ADRs/RFCs and domain documentation. This roadmap describes capability order only. Exact pull-request numbering, runtime vendors, and benchmark candidates may change as the system discovers missing substrates.
 
 ---
 
-## Phase 1 — Autonomous local control loop
+## Current baseline
 
-Target: first hours/day.
+The repository has already established the first V2 foundations:
 
-### 1. Persisted reconciler
+- V0 behavior characterized and protected by compatibility tests;
+- decomposed domain model with a compatibility facade;
+- economic hypotheses and persisted versioned belief state foundations;
+- immutable experiment contracts with machine-readable measurement criteria;
+- immutable evidence records with provenance, derivation lineage, and target associations;
+- PostgreSQL restart/idempotency coverage for the bootstrap reconciler;
+- deterministic local content generation/QC as an execution capability.
 
-GitHub #2.
+These are substrates. They do **not** yet prove a complete autonomous economic loop.
+
+---
+
+## Immediate architecture sequence
+
+### 1. Multidimensional resources and reservations
+
+Replace the assumption that all scarce capacity can be represented by one fungible scalar.
+
+The system must be able to represent and reserve dimensions such as:
 
 ```text
-World Model
-→ snapshot/projection
-→ reconcile
-→ persisted action intent
-→ experiment creation
+cash
+working capital
+CPU / RAM
+GPU / VRAM
+LLM tokens
+API quota
+browser capacity
+platform actions
+account capacity
+human minutes
 ```
 
-Must survive restart/idempotently.
+Required properties:
+- deterministic vector arithmetic;
+- explicit capacity and availability;
+- durable reservations;
+- atomic over-allocation prevention;
+- idempotent release/expiry;
+- actual usage recorded separately from reserved usage;
+- V0 scalar allocation preserved behind compatibility boundaries until consumers migrate.
 
-### 2. Durable execution runtime
+### 2. Deterministic economic ledger
 
-GitHub #3.
+Introduce authoritative financial state rather than deriving economics from prose or simplified outcome objects.
 
-Event-driven + reconciliation safety net.
+The ledger should support, as applicable:
+- revenue and settlement;
+- fees;
+- refunds/returns;
+- direct costs;
+- contribution margin;
+- acquisition spend;
+- working-capital exposure;
+- receivables/payables;
+- cash availability;
+- attribution back to experiments/offers/channels.
 
-Candidate: Hatchet embedded for first local runtime.
+Financial arithmetic remains deterministic and currency-aware.
 
-### 3. First deterministic content executor
+### 3. Evidence → belief update engine
 
-GitHub #4.
+Persisted evidence must be able to produce a new versioned belief state through an explicit policy.
 
-Produce one real externalizable asset with:
-- structured spec;
-- local-only dependencies;
-- metadata/lineage;
-- deterministic QC.
+The update path must preserve:
+- provenance;
+- evidence class;
+- freshness/decay semantics;
+- supporting vs falsifying interpretation;
+- technical failure ≠ market rejection;
+- complete decision lineage.
 
-### 4. Local resource inventory
+No belief may be silently overwritten.
 
-Extend `bm doctor`.
+### 4. Business-family evaluation policies
 
-Record actual:
-- GPU/VRAM;
-- RAM;
-- CPU;
-- storage;
-- browsers;
-- ADB/device;
-- model/runtime availability.
+Content, B2B, commerce, and capability experiments should stop sharing one permanently generic definition of success.
+
+Introduce family-aware evaluation for:
+- sufficient evidence;
+- replication;
+- falsification;
+- graduation;
+- economic readiness;
+- operational readiness.
+
+Legacy generic feedback/graduation behavior remains only as a compatibility surface until each consumer migrates.
+
+### 5. Portfolio and capital control
+
+Once typed resources, economic state, and belief updates exist, migrate allocation from scalar `total_units` toward constrained portfolio decisions.
+
+The controller should reason over:
+- expected economic value;
+- information value;
+- uncertainty;
+- scarce-resource opportunity cost;
+- portfolio role (`Signal`, `Cash`, `Asset`, `Capability`);
+- risk/blast radius;
+- reversible exploration vs exploitation.
+
+Capital policy and platform/risk gates remain deterministic.
 
 ---
 
-## Phase 2 — First real feedback loop
+## First autonomy milestone
 
-Target: within 24 hours if platform onboarding permits.
-
-GitHub #5.
-
-### Content path
+The constitutional proof remains:
 
 ```text
-content hypothesis
-→ render
-→ publish/externalize
-→ collect views/retention/click signal
-→ FeedbackPolicy
-→ autonomous child experiment
+Hypothesis A
+→ Experiment A
+→ real external exposure
+→ external measurement
+→ immutable evidence
+→ versioned belief update
+→ autonomous decision
+→ Experiment B
 ```
 
-Use YouTube first if API/account onboarding is operationally cleaner; TikTok/Instagram can follow as adapters become ready.
+There must be **no new human instruction between evidence ingestion and Experiment B**.
 
-Success does not require meaningful revenue yet. It requires **genuine external evidence influencing the next machine decision**.
+A single legitimate external observation can be enough to prove that the loop is mechanically closed. It is not enough to justify SCALE.
 
----
-
-## Phase 3 — Cash Engine parallel track
-
-Start as soon as the control substrate can run a second experiment family.
-
-### Productized B2B initial candidate
-
-Select one narrow pain with:
-- observable lead signal;
-- low fulfillment cost;
-- automated delivery;
-- USD/EUR buyer potential if practical;
-- recurring value.
-
-Candidate classes:
-- review-response/reporting;
-- content repurposing;
-- lead enrichment/follow-up;
-- narrow social/content package.
-
-Loop:
-
-```text
-lead source
-→ pain evidence
-→ offer
-→ outbound
-→ reply
-→ demo/payment
-→ automated delivery
-→ contribution/human-time measurement
-```
-
-The first positive reply is signal; the first payment is economic evidence.
+The repository should contain a reproducible recorded demonstration when this milestone is reached.
 
 ---
 
-## Phase 4 — Commerce Engine probes
+## Execution runtime
 
-Do not create inventory/spend until underwriter and account gates exist.
+A durable runtime is required, but no orchestration vendor is part of the constitutional architecture.
 
-### 4A Affiliate/content commerce
+Introduce or select runtime infrastructure only when the control substrate needs it. Requirements include:
+- restart-safe execution;
+- durable timers/events;
+- idempotent retries;
+- resource-aware dispatch;
+- measurement/evaluation priority over speculative production;
+- replaceable adapter boundary.
 
-Low-capital path:
-- eligible offer/product;
-- creative test;
-- attributed click/order.
-
-### 4B Marketplace/resale
-
-Implement:
-1. Supplier/SupplierOffer;
-2. product identity resolution;
-3. underwriting;
-4. account health;
-5. listing/order/fulfillment/settlement.
-
-Re-use Honey Hammer evidence and provider-adapter design.
-
-### 4C Owned ecommerce/POD
-
-Use development store/provider sandbox/API before paid live store.
-
-Validate full end-to-end flow before acquisition spend.
+Candidate runtimes should be evaluated when there is a concrete workload, not chosen permanently from an early bootstrap issue.
 
 ---
 
-## Phase 5 — SOTA executor benchmark
+## Execution engines
 
-GitHub #6.
-
-After the workstation is measured, benchmark:
-
-### Browser/computer
-- Playwright;
-- Stagehand v3;
-- Holo4-27B;
-- Holo4-35B-A3B.
-
-### Local inference
-- SGLang;
-- vLLM;
-- llama.cpp/GGUF.
-
-### Media
-- ComfyUI current workflows;
-- deterministic FFmpeg/Remotion;
-- selected image/video generation runtimes.
-
-### Phone
-- ADB/uiautomator;
-- semantic mobile agents;
-- generalist computer-use if viable.
-
-Routing decisions use cost per successful Business Master task.
-
----
-
-## Phase 6 — Multi-channel / multi-business scaling
-
-Only after repeated signal.
+Business engines remain reusable capability surfaces governed by the same control plane.
 
 ### Content
 
 ```text
-1 channel
-→ 2
-→ small cluster
-→ format specialization
-→ channel portfolio
+research → concept → creative → publish → measure → mutate
 ```
+
+Purpose:
+- cheap market sensing;
+- audience/distribution learning;
+- affiliate/product demand tests;
+- owned distribution.
+
+### B2B
+
+```text
+pain → prospect → offer → outreach → customer → repeated problem
+```
+
+Purpose:
+- near-term cash;
+- high-signal customer discovery;
+- repeated-pain discovery that can become productized delivery or software.
 
 ### Commerce
 
 ```text
-1 product/offer
-→ variants
-→ adjacent products
-→ store/category portfolio
+discover → validate → convert → fulfill → source → scale
+```
+
+Demand and unit economics should be tested before significant capital commitment whenever possible.
+
+### Assets
+
+```text
+validated recurring pattern
+→ software · data · brand · audience · IP · recurring revenue
+```
+
+Assets are promoted when ownership improves future marginal economics.
+
+---
+
+## Capability benchmarking
+
+Technology choice is itself an experiment domain.
+
+Benchmark adapters/models/runtimes only when they are candidates for a real Business Master workload.
+
+Record:
+- task success rate;
+- output quality;
+- wall time;
+- CPU/GPU/RAM/VRAM usage;
+- model tokens/API usage;
+- retries;
+- human intervention;
+- invalid-action rate;
+- license/production restrictions;
+- effective cost per successful task.
+
+Do not maintain a permanent roadmap list of fashionable vendors. Candidate tools age faster than the architecture.
+
+---
+
+## Scaling sequence
+
+Scaling follows evidence, not a manually selected asset count.
+
+### Content
+
+```text
+one validated format/channel
+→ bounded replication
+→ format specialization
+→ channel portfolio
 ```
 
 ### B2B
 
 ```text
-1 vertical/offer
-→ repeat customers
+one validated vertical/offer
+→ repeated customers
 → adjacent segment
-→ productization
+→ productized delivery / asset hypothesis
 ```
 
-The scaling controller should add capacity based on evidence, not a manually chosen target such as "100 channels."
-
----
-
-## Phase 7 — Asset conversion
-
-Identify repeated economic patterns worth owning.
-
-Candidates:
-- vertical micro-SaaS;
-- proprietary lead/demand dataset;
-- supplier reliability graph;
-- creative-intelligence database;
-- owned digital/physical product;
-- audience/email/community;
-- reusable character/media IP.
-
-Require evidence that the asset improves future marginal economics.
-
----
-
-## Phase 8 — Financial scaling
-
-After validated positive contribution:
-
-Potential budget unlocks:
-- paid AI APIs;
-- cloud GPU;
-- SaaS;
-- paid ads;
-- dedicated phone/device;
-- VPS/always-on deployment;
-- inventory/samples;
-- additional domains/mailboxes.
-
-Each unlock needs a budget policy and expected return/information rationale.
-
----
-
-## Phase 9 — Autonomous policy improvement
-
-Later-stage system:
+### Commerce
 
 ```text
-historical replay
-→ policy/model proposal
-→ offline evaluation
-→ shadow mode
-→ bounded pilot
-→ promote/demote
+one validated offer/product
+→ variants
+→ adjacent products
+→ category/store portfolio
 ```
 
-Possible future methods:
-- contextual bandits;
-- Bayesian priors/posteriors;
-- hierarchical models by market/platform;
-- causal experiment analysis;
-- portfolio optimization under resource constraints.
-
-Do not introduce these before there is enough clean data to outperform simpler policies.
+Every expansion consumes reserved resources and remains reversible.
 
 ---
 
-## Near-term definition of progress
+## Financial scaling
 
-### Level 0
-Repo/documentation only.
+Cash-consuming capabilities unlock only after evidence justifies them.
 
-### Level 1
-Autonomous local state/reconciliation.
+Potential future unlocks include:
+- paid AI APIs;
+- cloud GPU;
+- paid SaaS;
+- acquisition spend;
+- always-on infrastructure;
+- dedicated devices;
+- inventory/samples;
+- additional operational accounts/domains.
 
-### Level 2
-Autonomous local production.
+Each unlock requires an explicit budget policy and expected economic/information rationale.
 
-### Level 3
-External exposure + metrics.
+---
 
-### Level 4
-External evidence autonomously causes next experiment.
+## Policy self-improvement
 
-### Level 5
-First real money.
+Later-stage policy improvement follows a gated path:
 
-### Level 6
-Repeated positive unit economics.
+```text
+observe policy performance
+→ propose change
+→ historical replay/backtest where possible
+→ shadow evaluation
+→ bounded pilot
+→ promote / reject
+```
 
-### Level 7
-Resource allocation among multiple profitable strategies.
+Possible methods may eventually include contextual bandits, Bayesian models, causal analysis, and constrained portfolio optimization.
 
-### Level 8
-Compounding owned assets.
+Do not introduce statistical sophistication before clean project data can demonstrate value over simpler deterministic policies.
 
-The project should always report which level is actually proven.
+---
+
+## Proven capability levels
+
+### Level 0 — Repository knowledge
+Architecture, domain language, and reproducible development environment exist.
+
+### Level 1 — Durable local control
+Persisted state, reconciliation, and idempotent local decisions survive restart.
+
+### Level 2 — Bounded local execution
+The system can execute useful work under explicit contracts and resource limits.
+
+### Level 3 — External evidence
+A bounded experiment reaches the real world and produces persisted external evidence.
+
+### Level 4 — Autonomous learning loop
+External evidence updates belief/decision state and causes the next experiment without a new human instruction.
+
+### Level 5 — Economic proof
+At least one experiment produces real economic value recorded by the ledger.
+
+### Level 6 — Repeated positive economics
+The mechanism replicates with measured contribution and known operational costs.
+
+### Level 7 — Portfolio allocation
+The system reallocates scarce resources among competing validated strategies.
+
+### Level 8 — Compounding assets
+Validated businesses continuously create owned capabilities/assets that improve future economics.
+
+The project should always report the highest level actually demonstrated, not the level implied by its architecture diagrams.
