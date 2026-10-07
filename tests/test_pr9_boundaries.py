@@ -11,10 +11,17 @@ from business_master.domain.capital import (
     CapitalStage,
     SpendCategory,
 )
-from business_master.domain.enums import EvidenceTier, RiskLevel
+from business_master.domain.enums import (
+    ComparisonOperator,
+    EvidenceClass,
+    EvidenceTier,
+    MetricAggregation,
+    RiskLevel,
+)
 from business_master.domain.experiment_contracts import (
     ExperimentContract,
     MeasurementContract,
+    MetricCriterion,
 )
 from business_master.domain.family_evaluation import (
     BusinessFamily,
@@ -46,6 +53,15 @@ def test_graduate_recommendation_does_not_imply_capital_authority() -> None:
         measurement=MeasurementContract(
             window_seconds=3600,
             primary_metric="signal",
+            supporting_criteria=[
+                MetricCriterion(
+                    metric="signal",
+                    operator=ComparisonOperator.GTE,
+                    threshold=1.0,
+                    evidence_class=EvidenceClass.MARKET,
+                    aggregation=MetricAggregation.SUM,
+                )
+            ],
         ),
         resource_requirements=ResourceVector(),
     )
@@ -130,6 +146,7 @@ def test_graduate_recommendation_does_not_imply_capital_authority() -> None:
         CapitalEnvelope(
             currency="USD",
             stage=CapitalStage.LOCKED,
+            category=SpendCategory.PAID_ADS,
             max_per_authorization=Decimal("1000000"),
             max_outstanding=Decimal("1000000"),
             max_risk=RiskLevel.CRITICAL,
