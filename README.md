@@ -392,9 +392,11 @@ When that loop exists against a real external surface, this section should conta
 
 The architecture above is the project direction, not a claim that every component is already complete.
 
-`main` is now the canonical development base and includes the PR0–PR8 migration foundations: characterized V0 invariants, the decomposed domain model, economic hypotheses, immutable experiment contracts, immutable evidence with provenance/lineage, multidimensional resources with atomic reservations/expiry/observed usage, a deterministic append-only economic ledger with currency-scoped financial state, versioned evidence-to-belief transitions with freshness, explicit interpretation, idempotency, and immutable belief history, and family-aware evaluation for Content, B2B, Commerce, and Capability with contract-driven criteria and durable readiness/recommendation records.
+`main` is the canonical development base. PR0–PR8 established characterized invariants, decomposed economic hypotheses and experiment contracts, immutable evidence/provenance, multidimensional resource reservations, a deterministic currency-scoped economic ledger, versioned evidence-to-belief transitions, and family-aware evaluation for Content, B2B, Commerce, and Capability.
 
-The next substrate is **portfolio and capital control**. Persisted autonomous decision → child-experiment continuation and the real autonomous external closed loop remain future milestones.
+PR9 adds the next control substrate: durable portfolio selection over `signal`, `cash`, `asset`, and `capability` roles; multidimensional scarcity-aware allocation without pretending resources are fungible; explicit base-currency boundaries; and ledger-authoritative, bounded capital authorization with concurrency, idempotency, lifecycle, risk/blast-radius, reversibility, human-gate, and evidence-tier guardrails.
+
+Persisted autonomous decision → child-experiment continuation is the next substrate. The real autonomous external closed loop remains a future milestone.
 
 The public proof standard remains unchanged: **external evidence must autonomously cause the next experiment before the system is presented as a completed autonomous business operator.**
 
@@ -517,6 +519,7 @@ The README is the front door, not the specification.
 | [`ADR-0004`](docs/ADR-0004-deterministic-economic-ledger.md) | deterministic, currency-aware economic ledger invariants |
 | [`ADR-0005`](docs/ADR-0005-evidence-to-belief-updates.md) | versioned, auditable evidence-to-belief transition invariants |
 | [`ADR-0006`](docs/ADR-0006-business-family-evaluation.md) | family-aware experiment evaluation, readiness, and recommendation invariants |
+| [`ADR-0007`](docs/ADR-0007-portfolio-capital-control.md) | deterministic portfolio allocation and bounded capital-authorization invariants |
 | [`METRICS_AND_OBJECTIVES`](docs/METRICS_AND_OBJECTIVES.md) | evidence and objective hierarchy |
 | [`TECH_STACK`](docs/TECH_STACK.md) | implementation and adapter choices |
 | [`SOURCE_LEARNINGS`](docs/SOURCE_LEARNINGS.md) | durable conclusions from research |

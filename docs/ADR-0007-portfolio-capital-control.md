@@ -1,6 +1,6 @@
 # ADR-0007 — Portfolio and Capital Control
 
-Status: **Proposed for PR9**
+Status: **Accepted by PR9**
 
 ## Context
 
@@ -12,7 +12,7 @@ The legacy V0 allocator uses scalar `total_units` and `OpportunityScore` costs. 
 
 ## Decision
 
-PR9 will introduce two distinct layers:
+PR9 introduces two distinct layers:
 
 ```text
 FamilyEvaluation + Belief + Contract + ResourceAvailability
@@ -37,7 +37,7 @@ Portfolio roles are first-class:
 - `asset` — build durable economic value;
 - `capability` — reduce future execution cost or increase quality/reliability.
 
-A candidate must cite the family evaluation that makes it eligible. Portfolio policy may rank only candidates that pass family, risk, and resource-feasibility gates.
+A candidate must cite the family evaluation that makes it eligible. Portfolio policy may rank only candidates that pass family, risk, currency, and resource-feasibility gates.
 
 ## Resource semantics
 
@@ -46,6 +46,14 @@ A candidate must cite the family evaluation that makes it eligible. Portfolio po
 PR9 must not convert resources into one scalar budget before an explicit policy has enough evidence to price the trade-off. Early policy may use normalized scarcity pressure for ranking, but scarcity pressure is not money and is not an accounting price.
 
 Calculated scarcity must not override hard feasibility: a candidate that does not fit available resource capacity is ineligible regardless of score.
+
+### Portfolio allocation is not a resource lease
+
+A `PortfolioAllocation` is a durable selection/admission artifact evaluated against the authoritative `ResourceAvailability` snapshot. It does **not** itself create a PR5 `ResourceReservation` and must not be interpreted as permission to execute against a scarce resource.
+
+The continuation layer that turns a PR9 allocation into a child experiment or execution must acquire the required PR5 reservation transactionally before work begins. PR5 remains the concurrency authority that prevents two workers from overbooking the same non-fungible resource.
+
+This boundary is deliberate: PR9 decides what should receive capacity; the next layer atomically claims that capacity when it materializes authorized work. If reservation acquisition fails because availability changed after planning, the allocation is stale and must be replanned rather than executed optimistically.
 
 ## Financial authority
 
@@ -61,6 +69,16 @@ The following are not authoritative cash balances:
 
 Bootstrap settings remain optional hard operator ceilings. Effective spend permission is bounded by both capital policy and those ceilings, but accounting truth still comes from the ledger.
 
+### Operator ceiling scope
+
+The bootstrap `operator_hard_ceiling` is category-local, matching the existing capital accounting/query semantics. It is never a replacement for ledger cash.
+
+- when `CapitalEnvelope.category` is set, the envelope applies only to that spend category and requests in another category are rejected;
+- when `CapitalEnvelope.category` is unset, the request's own category becomes the effective category for the ceiling calculation;
+- committed amounts are counted only within the same currency, category, and explicit control period.
+
+A future global or cross-category budget requires a separate explicit policy; PR9 does not silently reinterpret this ceiling as one.
+
 ## Authorization is not spend
 
 A capital authorization reserves permission/capacity to spend. It does not record a financial transaction.
@@ -73,22 +91,46 @@ ledger cash
 
 Actual spend enters the ledger only when the external economic event occurs.
 
-Authorizations must support durable lifecycle states sufficient for active, consumed, released, and expired capacity.
+Authorizations support durable lifecycle states for active, consumed, released, and expired capacity.
+
+A persisted `PortfolioAllocation` is one-shot with respect to capital authority. Exact retries are idempotent, but after its authorization reaches any terminal state a new authorization requires a new/replanned allocation rather than reusing stale portfolio evidence.
+
+### Trusted time
+
+`requested_at` is request/audit data and is not trusted control time. Authorization, operator-period checks, release, and expiry use a timezone-aware clock owned by the capital store. The resulting `authorized_at` is persisted separately from the caller-supplied request timestamp.
+
+This prevents a future- or stale-dated request from expiring another authorization, crossing an operator control period, or otherwise manufacturing capacity.
+
+If a manual release is attempted after `expires_at`, the durable terminal state is `expired`, preserving the historical meaning of the lifecycle.
+
+### Spend confirmation lineage
+
+Consumption of an authorization requires a separate authoritative ledger transaction. That transaction must:
+
+- explicitly cite the authorization through `metadata.capital_authorization_id`;
+- occur no earlier than `authorized_at` and strictly before `expires_at` when an expiry exists;
+- not be future-dated relative to reconciliation time;
+- contain net cash outflow in the authorization currency exactly equal to the authorized amount.
+
+PR9 models full authorization consumption only; partial consumption is not inferred.
 
 ## Concurrency and idempotency
 
-Capital authorization must use transactional locking/idempotency semantics comparable to resource reservations:
+Capital authorization uses transactional locking/idempotency semantics comparable to resource reservations:
 
 - concurrent requests cannot over-authorize spendable cash;
 - exact retries return the same semantic authorization;
 - reusing an idempotency key with different semantics fails;
-- release/expiry restores authorization capacity without fabricating ledger activity.
+- one portfolio allocation cannot mint multiple independent capital authorizations;
+- release/expiry restores aggregate authorization capacity without fabricating ledger activity.
 
 ## Currency
 
-PR9 must not perform implicit FX conversion.
+PR9 performs no implicit FX conversion.
 
 A portfolio/capital run operates in an explicit base currency. A financially material candidate in another currency is deferred/rejected unless an explicit valuation input exists with its own provenance and timestamp.
+
+Until such a valuation path exists, capital authorization currency must match the persisted portfolio base currency.
 
 ## Exploration and concentration
 
@@ -96,13 +138,26 @@ Portfolio policy preserves a configurable exploration floor and concentration ca
 
 Exploration applies only to candidates that already pass hard family/risk/resource/capital eligibility. It cannot be used to bypass a pause, rejection, resource shortage, or capital guardrail.
 
-## Risk
+Concentration is a strict ceiling. Slot arithmetic rounds down; if the configured share is below one admissible slot, policy selects zero from that group rather than silently exceeding the configured fraction.
 
-Risk/blast-radius inputs are explicit. PR9 may introduce a bounded risk assessment/envelope needed for authorization, but it must not infer irreversible authority from a family `graduate` recommendation alone.
+## Risk and authority progression
+
+Risk facts are part of the durable portfolio lineage:
+
+- categorical risk level;
+- normalized blast radius;
+- reversibility;
+- human-gate requirement.
+
+Capital requests must match the persisted allocation risk facts. Callers cannot lower declared risk, blast radius, irreversibility, or human-gate requirements to pass a looser envelope.
+
+Capital envelopes independently bound maximum risk and blast radius and explicitly decide whether irreversible or human-gated actions are admissible.
+
+Capital stage cannot be escalated above the evidence tier represented by the persisted allocation. A `graduate` family recommendation does not itself grant `scale` authority. Higher authority requires a later allocation whose persisted tier supports it.
 
 ## Compatibility
 
-The V0 `AllocationPolicy`, `ScoringPolicy`, scalar experiment costs, scalar decision costs, and reconcile slot counters remain compatibility surfaces until the V2 path is proven. They must not become dependencies of the new portfolio/capital authority.
+The V0 `AllocationPolicy`, `ScoringPolicy`, scalar experiment costs, scalar decision costs, and reconcile slot counters remain compatibility surfaces until the V2 path is proven. They are not dependencies of the new portfolio/capital authority.
 
 ## Non-goals
 
@@ -112,8 +167,10 @@ PR9 does not implement:
 - autonomous final `Decision` continuation;
 - external platform dispatch;
 - real paid spend;
+- direct resource reservation from portfolio planning;
 - implicit FX services;
+- partial capital consumption;
 - contextual bandits or reinforcement learning;
 - self-modifying live capital policy.
 
-The next layer consumes persisted PR9 outputs to produce the autonomous decision and idempotent child experiment.
+The next layer consumes persisted PR9 outputs to produce the autonomous decision, acquire required PR5 resource reservations, and create the idempotent child experiment.
