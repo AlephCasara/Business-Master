@@ -47,6 +47,14 @@ PR9 must not convert resources into one scalar budget before an explicit policy 
 
 Calculated scarcity must not override hard feasibility: a candidate that does not fit available resource capacity is ineligible regardless of score.
 
+### Portfolio allocation is not a resource lease
+
+A `PortfolioAllocation` is a durable selection/admission artifact evaluated against the authoritative `ResourceAvailability` snapshot. It does **not** itself create a PR5 `ResourceReservation` and must not be interpreted as permission to execute against a scarce resource.
+
+The continuation layer that turns a PR9 allocation into a child experiment or execution must acquire the required PR5 reservation transactionally before work begins. PR5 remains the concurrency authority that prevents two workers from overbooking the same non-fungible resource.
+
+This boundary is deliberate: PR9 decides what should receive capacity; the next layer atomically claims that capacity when it materializes authorized work. If reservation acquisition fails because availability changed after planning, the allocation is stale and must be replanned rather than executed optimistically.
+
 ## Financial authority
 
 The deterministic ledger is the only financial authority.
@@ -131,9 +139,10 @@ PR9 does not implement:
 - autonomous final `Decision` continuation;
 - external platform dispatch;
 - real paid spend;
+- direct resource reservation from portfolio planning;
 - implicit FX services;
 - partial capital consumption;
 - contextual bandits or reinforcement learning;
 - self-modifying live capital policy.
 
-The next layer consumes persisted PR9 outputs to produce the autonomous decision and idempotent child experiment.
+The next layer consumes persisted PR9 outputs to produce the autonomous decision, acquire required PR5 resource reservations, and create the idempotent child experiment.
