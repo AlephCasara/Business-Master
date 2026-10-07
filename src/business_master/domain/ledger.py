@@ -51,7 +51,7 @@ class LedgerPosting(BaseModel):
             raise ValueError("ledger amount supports at most 6 decimal places")
         return amount
 
-    @field_validator("currency")
+    @field_validator("currency", mode="before")
     @classmethod
     def normalize_currency(cls, currency: str) -> str:
         normalized = currency.strip().upper()
