@@ -87,6 +87,7 @@ class ResourceReservationRequest(BaseModel):
     owner_id: UUID
     idempotency_key: str = Field(min_length=1, max_length=255)
     requirements: ResourceVector
+    expires_at: datetime | None = None
 
     @field_validator("owner_type", "idempotency_key")
     @classmethod
@@ -110,16 +111,63 @@ class ResourceReservation(BaseModel):
     requirements: ResourceVector
     status: ResourceReservationStatus = ResourceReservationStatus.ACTIVE
     created_at: datetime = Field(default_factory=utcnow)
+    expires_at: datetime | None = None
     released_at: datetime | None = None
+    expired_at: datetime | None = None
 
     @model_validator(mode="after")
     def validate_lifecycle(self) -> Self:
         if not self.requirements.quantities:
             raise ValueError("resource reservation requires at least one positive quantity")
-        if self.status is ResourceReservationStatus.ACTIVE and self.released_at is not None:
-            raise ValueError("active reservation cannot have released_at")
+        if self.status is ResourceReservationStatus.ACTIVE:
+            if self.released_at is not None or self.expired_at is not None:
+                raise ValueError("active reservation cannot be released or expired")
         if self.status is ResourceReservationStatus.RELEASED and self.released_at is None:
             raise ValueError("released reservation requires released_at")
+        if self.expired_at is not None:
+            if self.expires_at is None:
+                raise ValueError("expired reservation requires expires_at")
+            if self.status is not ResourceReservationStatus.RELEASED:
+                raise ValueError("expired reservation must be released")
+            if self.released_at != self.expired_at:
+                raise ValueError("expired reservation must release at expired_at")
+            if self.expired_at < self.expires_at:
+                raise ValueError("expired_at cannot precede expires_at")
+        return self
+
+
+class ResourceUsageRequest(BaseModel):
+    reservation_id: UUID
+    idempotency_key: str = Field(min_length=1, max_length=255)
+    actual: ResourceVector
+    execution_id: UUID | None = None
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def validate_usage_key(cls, value: str) -> str:
+        if value != value.strip():
+            raise ValueError("usage idempotency key must be trimmed")
+        return value
+
+    @model_validator(mode="after")
+    def validate_actual_usage(self) -> Self:
+        if not self.actual.quantities:
+            raise ValueError("resource usage requires at least one positive quantity")
+        return self
+
+
+class ResourceUsage(BaseModel):
+    id: UUID = Field(default_factory=uuid4)
+    reservation_id: UUID
+    idempotency_key: str = Field(min_length=1, max_length=255)
+    actual: ResourceVector
+    execution_id: UUID | None = None
+    observed_at: datetime = Field(default_factory=utcnow)
+
+    @model_validator(mode="after")
+    def validate_actual_usage(self) -> Self:
+        if not self.actual.quantities:
+            raise ValueError("resource usage requires at least one positive quantity")
         return self
 
 
