@@ -38,11 +38,11 @@
 >
 > It is a control plane over evolving economic hypotheses.
 
-Business Master is designed to continuously observe the world, maintain structured beliefs, design bounded experiments, allocate scarce resources, execute through reusable business engines, measure real outcomes, and update what it does next.
+Business Master is designed to continuously observe the world, maintain structured beliefs, design bounded experiments, allocate scarce resources, execute through reusable capabilities, measure real outcomes, and update what it does next.
 
 Its core question is:
 
-> **What is the highest-value thing the system can learn or do next with the resources currently available?**
+> **What is the highest expected-value next use of the resources currently available, given the evidence we actually have?**
 
 Human attention is one of those resources.
 
@@ -89,7 +89,7 @@ Code, text, images, video, research, storefronts, prospecting, and automation ar
 
 Business Master therefore does not optimize for **output volume**.
 
-It is designed to optimize for **validated learning, economic outcomes, and durable assets**.
+It is designed to maximize **expected economic value under real constraints**. Information, options, durable assets, reusable capabilities and direct cash economics matter when they improve that objective.
 
 ---
 
@@ -178,9 +178,9 @@ Internal AI confidence is never market traction.
 
 ---
 
-## Adaptive objective
+## Adaptive evidence weighting
 
-The objective changes as evidence matures.
+The **objective stays economic**. What changes as evidence matures is which observations are useful enough to carry decision weight.
 
 ```text
 DISCOVERY
@@ -212,12 +212,12 @@ repeatability
 
 PORTFOLIO
     ↓
-sustainable economic value
+expected sustainable economic value
 ```
 
-During cold start, a zero-revenue experiment may still be valuable if it cheaply eliminates a bad hypothesis.
+During cold start, a zero-revenue experiment may still be valuable if it cheaply eliminates a bad hypothesis or creates a useful option.
 
-As economic evidence appears, proxy metrics should progressively lose decision weight.
+As stronger economic evidence appears, weaker proxy metrics should progressively lose decision weight.
 
 ---
 
@@ -230,43 +230,38 @@ As economic evidence appears, proxy metrics should progressively lose decision w
   </picture>
 </p>
 
-The **control plane decides what should happen**.
+The **economic control plane decides why and what should happen**.
 
-Execution engines provide reusable capabilities for making it happen.
-
-### Content
+Shared capability factories make bounded interventions possible:
 
 ```text
-research → concept → creative → publish → measure → mutate
+Intelligence
+    ↓
+Creative + Product
+    ↓
+Production
+    ↓
+Distribution + Monetization
+    ↓
+Telemetry
+    ↺ Evidence / Ledger / next decision
 ```
 
-Content can become audience, affiliate demand, product demand, leads, or owned distribution.
+`Content`, owned low-ticket, affiliate, marketplace commerce, B2B/services and future business models are **compositions of these capabilities**, not separate autonomous brains.
 
-### Commerce
+Examples:
 
 ```text
-discover → validate → convert → improve fulfillment → source → scale
+owned low-ticket
+= Intelligence + Product + Creative + Production
++ Distribution + Monetization + Telemetry
+
+affiliate
+= Intelligence + offer discovery + Creative + Production
++ Distribution + attribution + Telemetry
 ```
 
-Demand should be tested before significant inventory or sourcing commitments whenever possible.
-
-### B2B
-
-```text
-pain → prospect → offer → outreach → customer → repeated problem
-```
-
-B2B is both a cash engine and a market sensor. Repeated pain can become productized delivery or software hypotheses.
-
-### Assets
-
-```text
-validated pattern
-      ↓
-software · data · brand · audience · IP · recurring revenue
-```
-
-Engines are **not separate autonomous brains**. They are execution capabilities governed by the same evidence and portfolio system.
+Execution vendors remain below these semantic boundaries. In particular, ComfyUI is the canonical aesthetic workflow runtime, not the economic controller.
 
 ---
 
@@ -276,12 +271,12 @@ Business Master can reason about different economic roles simultaneously.
 
 | Portfolio | Purpose |
 |---|---|
-| **Signal** | learn cheaply and quickly |
+| **Signal** | acquire decision-relevant external evidence |
 | **Cash** | generate near-term cash flow |
 | **Asset** | accumulate durable economic value |
 | **Capability** | make future experiments cheaper or better |
 
-A capability does not need to generate revenue directly. If it reduces the cost of every future validated experiment, it can still have high economic value.
+A capability does not need to generate revenue directly. If it materially improves future expected economics, it can still have high economic value.
 
 ---
 
@@ -345,12 +340,12 @@ Different problems belong to different mechanisms.
 | Mechanism | Used for |
 |---|---|
 | **Deterministic code** | accounting, budgets, state transitions, idempotency, quotas |
-| **Statistical policy** | uncertainty, anomaly detection, allocation, saturation |
+| **Statistical policy** | uncertainty, anomaly detection, allocation, saturation when data supports it |
 | **AI** | semantic research, hypothesis generation, creative work, perception |
 
 AI may propose actions.
 
-It should not get unrestricted authority over capital, accounting, or irreversible state.
+It should not get unrestricted authority over capital, accounting, permissions, or irreversible state.
 
 ---
 
@@ -378,7 +373,7 @@ autonomous decision
 Experiment B
 ```
 
-**No human prompt between A and B.**
+**No human prompt between Evidence ingestion and Experiment B.**
 
 > **Target milestone: Autonomous Closed Loop V0**
 
@@ -388,19 +383,25 @@ When that loop exists against a real external surface, this section should conta
 
 ## Current status
 
-> **Bootstrap / active architecture migration**
+> **Bootstrap / operational edge**
 
-The architecture above is the project direction, not a claim that every component is already complete.
+`main` is the canonical development base.
 
-`main` is the canonical development base. PR0–PR8 established characterized invariants, decomposed economic hypotheses and experiment contracts, immutable evidence/provenance, multidimensional resource reservations, a deterministic currency-scoped economic ledger, versioned evidence-to-belief transitions, and family-aware evaluation for Content, B2B, Commerce, and Capability.
+PR0–PR10 already establish the internal economic-control substrate: hypotheses/beliefs, immutable experiment contracts and Evidence, multidimensional resource reservations/usage, deterministic economic ledger, evidence-to-belief transitions, family-aware evaluation, portfolio/capital control, and bounded autonomous Decision → child Experiment continuation.
 
-PR9 adds durable portfolio selection over `signal`, `cash`, `asset`, and `capability` roles; multidimensional scarcity-aware allocation without pretending resources are fungible; explicit base-currency boundaries; and ledger-authoritative, bounded capital authorization with concurrency, idempotency, lifecycle, risk/blast-radius, reversibility, human-gate, and evidence-tier guardrails.
+That internal continuation is **not** the real external proof.
 
-PR10 adds the internal autonomous-continuation substrate: persisted decisions derived from current belief/evaluation/allocation lineage; deterministic continuation, replication, and one-tier graduation; atomic PR5 resource reservation plus child-contract/child-experiment creation; PR9 capital and human-gate enforcement; and PostgreSQL rollback, concurrency, retry, and restart guarantees.
+Current forward path:
 
-The next milestone is the real external Closed Loop V0 demonstration. PR10 supplies the internal machinery required for `autonomous decision → Experiment B`; it does **not** by itself prove that external evidence has closed the loop.
+```text
+PR11  Durable Execution Architecture
+PR12  Multi-Surface External Edge — TikTok + Instagram + YouTube
+PR13  Telemetry + Real Autonomous Closed Loop
+PR14  First Economic Loop
+then  operate → observe bottleneck → justify next work
+```
 
-The public proof standard remains unchanged: **external evidence must autonomously cause the next experiment before the system is presented as a completed autonomous business operator.**
+The public proof standard remains: **external evidence must autonomously cause the next experiment before the system is presented as a completed autonomous business operator.**
 
 ---
 
@@ -436,7 +437,7 @@ bm doctor
 pytest
 ```
 
-`bm doctor` performs read-only capability discovery for the local runtime.
+`bm doctor` performs read-only capability discovery for the local runtime. It is a diagnostic primitive, not Business Master's architecture or self-installation mechanism.
 
 ---
 
@@ -457,12 +458,12 @@ pytest
 Optional infrastructure is introduced only when justified by a real execution need:
 
 ```text
-durable runtime
+durable execution
 observability
 browser / desktop / mobile adapters
 local or cloud inference
-media generation
-external platform APIs
+ComfyUI aesthetic workflows
+external distribution / commerce adapters
 ```
 
 Complexity must earn its place.
@@ -516,17 +517,21 @@ The README is the front door, not the specification.
 
 | Document | Purpose |
 |---|---|
-| [`RFC-0001`](docs/RFC-0001-autonomous-control-plane.md) | autonomous control-plane architecture |
+| [`ECONOMIC_THESIS`](docs/ECONOMIC_THESIS.md) | current economic objective and business sequencing |
+| [`ROADMAP`](docs/ROADMAP.md) | current implementation frontier |
+| [`PORTFOLIO_ARCHITECTURE`](docs/PORTFOLIO_ARCHITECTURE.md) | shared factories and business compositions |
+| [`MEDIA_AND_AGENT_STACK`](docs/MEDIA_AND_AGENT_STACK.md) | cognitive, execution and ComfyUI aesthetic runtime architecture |
+| [`RFC-0001`](docs/RFC-0001-autonomous-control-plane.md) | historical/partially superseded control-plane foundation |
 | [`ADR-0003`](docs/ADR-0003-resource-vectors-and-reservations.md) | multidimensional resources, reservations, usage, and expiry invariants |
 | [`ADR-0004`](docs/ADR-0004-deterministic-economic-ledger.md) | deterministic, currency-aware economic ledger invariants |
 | [`ADR-0005`](docs/ADR-0005-evidence-to-belief-updates.md) | versioned, auditable evidence-to-belief transition invariants |
 | [`ADR-0006`](docs/ADR-0006-business-family-evaluation.md) | family-aware experiment evaluation, readiness, and recommendation invariants |
 | [`ADR-0007`](docs/ADR-0007-portfolio-capital-control.md) | deterministic portfolio allocation and bounded capital-authorization invariants |
 | [`ADR-0008`](docs/ADR-0008-autonomous-decision-continuation.md) | persisted autonomous-decision and bounded child-continuation invariants |
-| [`METRICS_AND_OBJECTIVES`](docs/METRICS_AND_OBJECTIVES.md) | evidence and objective hierarchy |
-| [`TECH_STACK`](docs/TECH_STACK.md) | implementation and adapter choices |
-| [`SOURCE_LEARNINGS`](docs/SOURCE_LEARNINGS.md) | durable conclusions from research |
-| [`BOOTSTRAP_24H`](docs/BOOTSTRAP_24H.md) | bootstrap execution plan |
+| [`METRICS_AND_OBJECTIVES`](docs/METRICS_AND_OBJECTIVES.md) | telemetry, evidence and objective weighting |
+| [`TECH_STACK`](docs/TECH_STACK.md) | architecture contracts vs implementation candidates |
+| [`SOURCE_LEARNINGS`](docs/SOURCE_LEARNINGS.md) | research-derived hypotheses and durable lessons |
+| [`BOOTSTRAP_24H`](docs/BOOTSTRAP_24H.md) | first real operational-loop runbook |
 
 Creator material is treated as a **source of hypotheses**, not as authoritative platform truth. Operational claims should survive independent verification before they become policy.
 
@@ -540,7 +545,7 @@ The final measure of Business Master is not:
 
 It is:
 
-> **How effectively can it convert scarce resources into validated economic knowledge, cash flow, and durable assets — while continuously improving the quality of its own decisions?**
+> **How effectively can it convert scarce resources into expected and realized economic value while continuously improving the quality of its own decisions?**
 
 The intended end state is a persistent economic control system that can:
 
@@ -551,13 +556,13 @@ believe
    ↓
 experiment
    ↓
+produce / distribute / monetize
+   ↓
 measure
    ↓
 learn
    ↓
 allocate
-   ↓
-build
    ↺
 ```
 
