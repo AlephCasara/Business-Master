@@ -100,3 +100,25 @@ class FreshnessMode(StrEnum):
     TTL = "ttl"
     LINEAR_DECAY = "linear_decay"
     EXPONENTIAL_DECAY = "exponential_decay"
+
+
+class EvidenceClass(StrEnum):
+    TECHNICAL = "technical"
+    MARKET = "market"
+    ECONOMIC = "economic"
+
+
+class ComparisonOperator(StrEnum):
+    LT = "lt"
+    LTE = "lte"
+    EQ = "eq"
+    GTE = "gte"
+    GT = "gt"
+
+
+class MetricAggregation(StrEnum):
+    LATEST = "latest"
+    SUM = "sum"
+    MEAN = "mean"
+    MIN = "min"
+    MAX = "max"
