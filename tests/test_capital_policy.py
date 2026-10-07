@@ -22,6 +22,8 @@ def _request(
     currency: str = "USD",
     risk: RiskLevel = RiskLevel.LOW,
     stage: CapitalStage = CapitalStage.PROBE,
+    requested_at: datetime = NOW,
+    expires_at: datetime | None = None,
 ) -> CapitalAuthorizationRequest:
     return CapitalAuthorizationRequest(
         idempotency_key=f"capital-{uuid4()}",
@@ -33,8 +35,8 @@ def _request(
         category=SpendCategory.PAID_ADS,
         stage=stage,
         risk=risk,
-        requested_at=NOW,
-        expires_at=NOW + timedelta(hours=1),
+        requested_at=requested_at,
+        expires_at=expires_at or requested_at + timedelta(hours=1),
     )
 
 
@@ -45,7 +47,11 @@ def _envelope(
     hard_ceiling: str | None = None,
     max_risk: RiskLevel = RiskLevel.MEDIUM,
     stage: CapitalStage = CapitalStage.PROBE,
+    period_start: datetime | None = None,
+    period_end: datetime | None = None,
 ) -> CapitalEnvelope:
+    default_start = NOW.replace(hour=0)
+    default_end = default_start + timedelta(days=1)
     return CapitalEnvelope(
         currency="USD",
         stage=stage,
@@ -53,17 +59,34 @@ def _envelope(
         max_outstanding=Decimal(max_outstanding),
         max_risk=max_risk,
         operator_hard_ceiling=None if hard_ceiling is None else Decimal(hard_ceiling),
-        period_start=None if hard_ceiling is None else NOW.replace(hour=0),
-        period_end=None if hard_ceiling is None else NOW.replace(hour=0) + timedelta(days=1),
+        period_start=None if hard_ceiling is None else period_start or default_start,
+        period_end=None if hard_ceiling is None else period_end or default_end,
+    )
+
+
+def _assess(
+    request: CapitalAuthorizationRequest,
+    envelope: CapitalEnvelope,
+    *,
+    assessed_at: datetime = NOW,
+    ledger_cash: Decimal = Decimal("1000"),
+    active_outstanding: Decimal = Decimal(0),
+    period_committed: Decimal = Decimal(0),
+):
+    return CapitalPolicy().assess(
+        request,
+        envelope,
+        assessed_at=assessed_at,
+        ledger_cash=ledger_cash,
+        active_outstanding=active_outstanding,
+        period_committed=period_committed,
     )
 
 
 def test_locked_envelope_never_authorizes_paid_capital() -> None:
-    assessment = CapitalPolicy().assess(
+    assessment = _assess(
         _request(stage=CapitalStage.LOCKED),
         _envelope(stage=CapitalStage.LOCKED),
-        ledger_cash=Decimal("1000"),
-        active_outstanding=Decimal(0),
     )
 
     assert assessment.authorized is False
@@ -71,7 +94,7 @@ def test_locked_envelope_never_authorizes_paid_capital() -> None:
 
 
 def test_ledger_cash_is_reduced_by_active_authorizations() -> None:
-    assessment = CapitalPolicy().assess(
+    assessment = _assess(
         _request(amount="60"),
         _envelope(max_outstanding="100"),
         ledger_cash=Decimal("100"),
@@ -84,12 +107,9 @@ def test_ledger_cash_is_reduced_by_active_authorizations() -> None:
 
 
 def test_operator_zero_ceiling_blocks_otherwise_affordable_spend() -> None:
-    assessment = CapitalPolicy().assess(
+    assessment = _assess(
         _request(amount="10"),
         _envelope(hard_ceiling="0"),
-        ledger_cash=Decimal("1000"),
-        active_outstanding=Decimal(0),
-        period_committed=Decimal(0),
     )
 
     assert assessment.authorized is False
@@ -97,11 +117,9 @@ def test_operator_zero_ceiling_blocks_otherwise_affordable_spend() -> None:
 
 
 def test_operator_ceiling_can_be_stricter_than_ledger_cash() -> None:
-    assessment = CapitalPolicy().assess(
+    assessment = _assess(
         _request(amount="30"),
         _envelope(hard_ceiling="50"),
-        ledger_cash=Decimal("1000"),
-        active_outstanding=Decimal(0),
         period_committed=Decimal("25"),
     )
 
@@ -109,12 +127,39 @@ def test_operator_ceiling_can_be_stricter_than_ledger_cash() -> None:
     assert "operator hard ceiling" in assessment.rationale.lower()
 
 
+def test_operator_period_uses_trusted_assessment_time_not_request_time() -> None:
+    stale_request_time = NOW - timedelta(days=1)
+    envelope = _envelope(
+        hard_ceiling="100",
+        period_start=NOW - timedelta(minutes=5),
+        period_end=NOW + timedelta(hours=2),
+    )
+    request = _request(
+        requested_at=stale_request_time,
+        expires_at=NOW + timedelta(hours=1),
+    )
+
+    assessment = _assess(request, envelope, assessed_at=NOW)
+
+    assert assessment.authorized is True
+
+
+def test_stale_expiry_is_denied_at_trusted_assessment_time() -> None:
+    request = _request(
+        requested_at=NOW - timedelta(hours=2),
+        expires_at=NOW - timedelta(minutes=1),
+    )
+
+    assessment = _assess(request, _envelope(), assessed_at=NOW)
+
+    assert assessment.authorized is False
+    assert "already expired" in assessment.rationale.lower()
+
+
 def test_risk_limit_is_deterministic() -> None:
-    assessment = CapitalPolicy().assess(
+    assessment = _assess(
         _request(risk=RiskLevel.HIGH),
         _envelope(max_risk=RiskLevel.MEDIUM),
-        ledger_cash=Decimal("1000"),
-        active_outstanding=Decimal(0),
     )
 
     assert assessment.authorized is False
@@ -122,7 +167,7 @@ def test_risk_limit_is_deterministic() -> None:
 
 
 def test_valid_request_is_authorized_without_moving_money() -> None:
-    assessment = CapitalPolicy().assess(
+    assessment = _assess(
         _request(amount="25"),
         _envelope(hard_ceiling="100"),
         ledger_cash=Decimal("100"),
