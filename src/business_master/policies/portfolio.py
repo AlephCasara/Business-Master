@@ -45,7 +45,6 @@ class PortfolioPolicy:
             for candidate in request.candidates
         ]
         by_id = {item.candidate_id: item for item in evaluated}
-        candidates_by_id = {candidate.id: candidate for candidate in request.candidates}
         eligible = [
             candidate
             for candidate in request.candidates
