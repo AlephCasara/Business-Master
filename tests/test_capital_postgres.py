@@ -200,6 +200,7 @@ def _seed_allocations(
                 reserved=ResourceVector(),
                 available=ResourceVector(),
             ),
+            base_currency=currency,
             max_candidates=len(candidates),
             exploration_fraction=0.0,
             max_group_fraction=1.0,
