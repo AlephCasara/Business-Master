@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
@@ -48,8 +49,20 @@ class CapitalAuthorizationStateError(CapitalAuthorizationError):
 class PostgresCapitalAuthorizationStore:
     """Currency-serialized capital authorization over ledger-derived cash."""
 
-    def __init__(self, dsn: str) -> None:
+    def __init__(
+        self,
+        dsn: str,
+        *,
+        clock: Callable[[], datetime] = utcnow,
+    ) -> None:
         self._dsn = dsn
+        self._clock = clock
+
+    def _now(self) -> datetime:
+        value = self._clock()
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("capital store clock must return a timezone-aware timestamp")
+        return value
 
     def authorize(
         self,
@@ -59,13 +72,14 @@ class PostgresCapitalAuthorizationStore:
         policy: CapitalPolicy | None = None,
     ) -> CapitalAuthorization:
         effective_policy = policy or CapitalPolicy()
+        assessed_at = self._now()
         with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
             # Currency lock serializes competing claims on the same ledger cash.
             conn.execute(
                 "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
                 (f"capital:{request.currency}",),
             )
-            self._expire_due(conn, request.requested_at, request.currency)
+            self._expire_due(conn, assessed_at, request.currency)
 
             conn.execute(
                 "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
@@ -102,6 +116,7 @@ class PostgresCapitalAuthorizationStore:
             assessment = effective_policy.assess(
                 request,
                 envelope,
+                assessed_at=assessed_at,
                 ledger_cash=ledger_cash,
                 active_outstanding=active_outstanding,
                 period_committed=period_committed,
@@ -128,7 +143,8 @@ class PostgresCapitalAuthorizationStore:
                 period_committed_before=assessment.period_committed,
                 status=CapitalAuthorizationStatus.ACTIVE,
                 rationale=assessment.rationale,
-                authorized_at=request.requested_at,
+                requested_at=request.requested_at,
+                authorized_at=assessed_at,
                 expires_at=request.expires_at,
             )
             conn.execute(
@@ -138,12 +154,13 @@ class PostgresCapitalAuthorizationStore:
                     family_evaluation_id, hypothesis_id, amount, currency,
                     category, stage, risk, policy_name, policy_version, envelope,
                     ledger_cash_at_authorization, active_outstanding_before,
-                    period_committed_before, status, rationale, authorized_at,
-                    expires_at, consumed_at, released_at, expired_at,
+                    period_committed_before, status, rationale, requested_at,
+                    authorized_at, expires_at, consumed_at, released_at, expired_at,
                     ledger_transaction_id
                 ) VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s
                 )
                 """,
                 (
@@ -165,6 +182,7 @@ class PostgresCapitalAuthorizationStore:
                     authorization.period_committed_before,
                     authorization.status.value,
                     authorization.rationale,
+                    authorization.requested_at,
                     authorization.authorized_at,
                     authorization.expires_at,
                     authorization.consumed_at,
@@ -182,10 +200,12 @@ class PostgresCapitalAuthorizationStore:
     ) -> None:
         row = conn.execute(
             """
-            SELECT family_evaluation_id, hypothesis_id,
-                   capital_amount, capital_currency, capital_category
-            FROM portfolio_allocation
-            WHERE id = %s
+            SELECT pa.family_evaluation_id, pa.hypothesis_id,
+                   pa.capital_amount, pa.capital_currency, pa.capital_category,
+                   pp.base_currency
+            FROM portfolio_allocation AS pa
+            JOIN portfolio_plan AS pp ON pp.id = pa.plan_id
+            WHERE pa.id = %s
             """,
             (request.portfolio_allocation_id,),
         ).fetchone()
@@ -201,6 +221,8 @@ class PostgresCapitalAuthorizationStore:
             raise ValueError("capital request amount differs from portfolio allocation")
         if str(row["capital_currency"]).strip() != request.currency:
             raise ValueError("capital request currency differs from portfolio allocation")
+        if str(row["base_currency"]).strip() != request.currency:
+            raise ValueError("capital request currency differs from portfolio base currency")
         if row["capital_category"] != request.category.value:
             raise ValueError("capital request category differs from portfolio allocation")
 
@@ -278,6 +300,7 @@ class PostgresCapitalAuthorizationStore:
             return self._load_by_idempotency(conn, key)
 
     def release(self, authorization_id: UUID) -> CapitalAuthorization:
+        released_at = self._now()
         with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
             row = conn.execute(
                 "SELECT * FROM capital_authorization WHERE id = %s FOR UPDATE",
@@ -294,7 +317,6 @@ class PostgresCapitalAuthorizationStore:
             if authorization.status is CapitalAuthorizationStatus.CONSUMED:
                 raise CapitalAuthorizationStateError("consumed capital cannot be released")
 
-            released_at = utcnow()
             conn.execute(
                 """
                 UPDATE capital_authorization
@@ -310,13 +332,8 @@ class PostgresCapitalAuthorizationStore:
                 }
             )
 
-    def expire(
-        self,
-        authorization_id: UUID,
-        *,
-        as_of: datetime | None = None,
-    ) -> CapitalAuthorization:
-        effective_time = as_of or utcnow()
+    def expire(self, authorization_id: UUID) -> CapitalAuthorization:
+        effective_time = self._now()
         with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
             row = conn.execute(
                 "SELECT * FROM capital_authorization WHERE id = %s FOR UPDATE",
@@ -348,13 +365,8 @@ class PostgresCapitalAuthorizationStore:
                 }
             )
 
-    def expire_due(
-        self,
-        *,
-        as_of: datetime | None = None,
-        currency: str | None = None,
-    ) -> int:
-        effective_time = as_of or utcnow()
+    def expire_due(self, *, currency: str | None = None) -> int:
+        effective_time = self._now()
         with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
             return self._expire_due(conn, effective_time, currency)
 
@@ -362,10 +374,8 @@ class PostgresCapitalAuthorizationStore:
         self,
         authorization_id: UUID,
         ledger_transaction_id: UUID,
-        *,
-        as_of: datetime | None = None,
     ) -> CapitalAuthorization:
-        consumed_at = as_of or utcnow()
+        consumed_at = self._now()
         with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
             row = conn.execute(
                 "SELECT * FROM capital_authorization WHERE id = %s FOR UPDATE",
@@ -384,40 +394,51 @@ class PostgresCapitalAuthorizationStore:
                 raise CapitalAuthorizationStateError(
                     "only active capital authorization can be consumed"
                 )
-            if authorization.expires_at is not None and authorization.expires_at <= consumed_at:
-                conn.execute(
-                    """
-                    UPDATE capital_authorization
-                    SET status = 'expired', released_at = %s, expired_at = %s
-                    WHERE id = %s
-                    """,
-                    (consumed_at, consumed_at, authorization_id),
-                )
-                return authorization.model_copy(
-                    update={
-                        "status": CapitalAuthorizationStatus.EXPIRED,
-                        "released_at": consumed_at,
-                        "expired_at": consumed_at,
-                    }
-                )
 
             transaction = conn.execute(
-                "SELECT id FROM economic_ledger_transaction WHERE id = %s",
+                """
+                SELECT id, occurred_at, metadata
+                FROM economic_ledger_transaction
+                WHERE id = %s
+                """,
                 (ledger_transaction_id,),
             ).fetchone()
             if transaction is None:
                 raise ValueError("capital consumption ledger transaction does not exist")
-            posting = conn.execute(
+
+            metadata = transaction["metadata"]
+            if not isinstance(metadata, dict):
+                raise ValueError("capital consumption ledger metadata is invalid")
+            if metadata.get("capital_authorization_id") != str(authorization.id):
+                raise ValueError(
+                    "capital consumption ledger transaction is not linked to authorization"
+                )
+
+            occurred_at = transaction["occurred_at"]
+            if occurred_at < authorization.authorized_at:
+                raise ValueError("capital spend occurred before authorization")
+            if occurred_at > consumed_at:
+                raise ValueError("capital spend occurrence cannot be in the future")
+            if authorization.expires_at is not None and occurred_at >= authorization.expires_at:
+                raise ValueError("capital spend occurred after authorization expiry")
+
+            cash = conn.execute(
                 """
-                SELECT 1
+                SELECT COALESCE(SUM(
+                    CASE WHEN side = 'credit' THEN amount ELSE -amount END
+                ), 0) AS cash_outflow
                 FROM economic_ledger_posting
-                WHERE transaction_id = %s AND currency = %s
-                LIMIT 1
+                WHERE transaction_id = %s
+                  AND account = 'cash'
+                  AND currency = %s
                 """,
                 (ledger_transaction_id, authorization.currency),
             ).fetchone()
-            if posting is None:
-                raise ValueError("capital consumption ledger transaction currency is inconsistent")
+            cash_outflow = Decimal(0) if cash is None else Decimal(cash["cash_outflow"])
+            if cash_outflow != authorization.amount:
+                raise ValueError(
+                    "capital consumption ledger cash outflow does not match authorization"
+                )
 
             conn.execute(
                 """
@@ -493,7 +514,7 @@ class PostgresCapitalAuthorizationStore:
             or authorization.category is not request.category
             or authorization.stage is not request.stage
             or authorization.risk is not request.risk
-            or authorization.authorized_at != request.requested_at
+            or authorization.requested_at != request.requested_at
             or authorization.expires_at != request.expires_at
             or authorization.envelope != envelope
             or authorization.policy_name != policy.name
@@ -524,6 +545,7 @@ class PostgresCapitalAuthorizationStore:
             period_committed_before=Decimal(row["period_committed_before"]),
             status=row["status"],
             rationale=row["rationale"],
+            requested_at=row["requested_at"],
             authorized_at=row["authorized_at"],
             expires_at=row["expires_at"],
             consumed_at=row["consumed_at"],
