@@ -17,6 +17,7 @@ The repository has already established the first V2 foundations:
 - immutable evidence records with provenance, derivation lineage, and target associations;
 - multidimensional non-fungible resource vectors;
 - exact persisted resource capacity and durable atomic reservations with concurrency protection;
+- durable reservation expiry and separately persisted observed resource usage;
 - PostgreSQL restart/idempotency coverage for the bootstrap reconciler;
 - deterministic local content generation/QC as an execution capability.
 
@@ -49,12 +50,16 @@ Implemented properties include:
 - durable reservations;
 - atomic over-allocation prevention under concurrent PostgreSQL transactions;
 - semantic idempotency for reservation retries;
-- idempotent release;
+- idempotent manual release;
+- durable, idempotent expiry of capacity leases;
+- expired reservations no longer blocking admission/availability;
 - resource demand persisted on immutable experiment contracts;
+- actual observed resource usage persisted independently from reserved demand;
+- usage records surviving reservation release/expiry;
 - exact decimal capacity storage;
 - V0 scalar allocation preserved behind compatibility boundaries while consumers migrate.
 
-Actual economic usage and settlement remain separate from temporary capacity reservations and belong to the ledger substrate below.
+Operational resource usage is now represented. **Economic settlement is not.** Revenue, fees, refunds, receivables/payables, authoritative cash movement, and contribution economics belong to the ledger substrate below.
 
 ---
 
