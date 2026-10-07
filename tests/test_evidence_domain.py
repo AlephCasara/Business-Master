@@ -16,6 +16,7 @@ def test_observed_evidence_is_explicitly_classified() -> None:
         provenance=EvidenceProvenance.OBSERVED_OFFICIAL_EXTERNAL,
         kind="metric_snapshot",
         source="youtube.analytics",
+        independence_key="channel:finance-01",
         source_event_id="video-123:2026-10-07T00:00:00Z",
         subject_type="externalization",
         subject_id=subject_id,
@@ -25,7 +26,19 @@ def test_observed_evidence_is_explicitly_classified() -> None:
     assert record.evidence_class is EvidenceClass.MARKET
     assert record.provenance is EvidenceProvenance.OBSERVED_OFFICIAL_EXTERNAL
     assert record.subject_id == subject_id
+    assert record.independence_key == "channel:finance-01"
     assert record.input_evidence_ids == []
+
+
+def test_evidence_independence_identity_must_be_explicit_and_trimmed() -> None:
+    with pytest.raises(ValidationError, match="source identities must be trimmed"):
+        EvidenceRecord(
+            evidence_class=EvidenceClass.MARKET,
+            provenance=EvidenceProvenance.OBSERVED_OWN,
+            kind="reply",
+            source="crm",
+            independence_key=" company-a ",
+        )
 
 
 def test_derived_evidence_requires_explicit_lineage() -> None:
@@ -106,3 +119,4 @@ def test_legacy_conversion_requires_explicit_semantics() -> None:
     )
     assert converted.id == legacy.id
     assert converted.subject_id == legacy.entity_id
+    assert converted.independence_key is None
