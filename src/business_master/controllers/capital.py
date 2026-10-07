@@ -17,7 +17,7 @@ class CapitalStore(Protocol):
         request: CapitalAuthorizationRequest,
         envelope: CapitalEnvelope,
         *,
-        policy: CapitalPolicy = CapitalPolicy(),
+        policy: CapitalPolicy | None = None,
     ) -> CapitalAuthorization: ...
 
 
