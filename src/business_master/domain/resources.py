@@ -63,7 +63,7 @@ class Resource(BaseModel):
     name: str = Field(min_length=1, max_length=128)
     kind: ResourceKind
     available: bool = True
-    capacity: float = Field(default=1.0, ge=0.0)
+    capacity: Decimal = Field(default=Decimal("1"), ge=Decimal("0"))
     labels: dict[str, str | int | float | bool] = Field(default_factory=dict)
     last_seen_at: datetime = Field(default_factory=utcnow)
 
@@ -73,6 +73,13 @@ class Resource(BaseModel):
         if name != name.strip():
             raise ValueError("resource name must be trimmed")
         return name
+
+    @field_validator("capacity")
+    @classmethod
+    def validate_capacity(cls, capacity: Decimal) -> Decimal:
+        if not capacity.is_finite():
+            raise ValueError("resource capacity must be finite")
+        return capacity
 
 
 class ResourceReservationRequest(BaseModel):
