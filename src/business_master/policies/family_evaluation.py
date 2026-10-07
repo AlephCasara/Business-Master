@@ -516,6 +516,16 @@ class B2BEvaluationPolicy(FamilyEvaluationPolicy):
         scale_requires_economic_ready=True,
     )
 
+    def _independence_key(self, record: EvidenceRecord) -> str:
+        # Explicit adapter-provided identity is canonical. PR8 already taught B2B
+        # policies to prefer an entity subject over transport/source, so preserve
+        # that behavior for existing persisted records before falling back to source.
+        if record.independence_key is not None:
+            return super()._independence_key(record)
+        if record.subject_type is not None and record.subject_id is not None:
+            return f"subject:{record.subject_type}:{record.subject_id}"
+        return super()._independence_key(record)
+
 
 class CommerceEvaluationPolicy(FamilyEvaluationPolicy):
     family = BusinessFamily.COMMERCE
