@@ -90,6 +90,9 @@ class CapitalEnvelope(BaseModel):
     max_per_authorization: Decimal = Decimal(0)
     max_outstanding: Decimal = Decimal(0)
     max_risk: RiskLevel = RiskLevel.LOW
+    max_blast_radius: float = Field(default=1.0, ge=0.0, le=1.0)
+    allow_irreversible: bool = False
+    allow_human_gate: bool = False
     operator_hard_ceiling: Decimal | None = None
     period_start: datetime | None = None
     period_end: datetime | None = None
@@ -134,6 +137,9 @@ class CapitalAuthorizationRequest(BaseModel):
     category: SpendCategory
     stage: CapitalStage
     risk: RiskLevel
+    blast_radius: float = Field(default=0.0, ge=0.0, le=1.0)
+    reversible: bool = True
+    human_gate_required: bool = False
     requested_at: datetime = Field(default_factory=utcnow)
     expires_at: datetime | None = None
 
@@ -189,6 +195,9 @@ class CapitalAuthorization(BaseModel):
     category: SpendCategory
     stage: CapitalStage
     risk: RiskLevel
+    blast_radius: float = Field(ge=0.0, le=1.0)
+    reversible: bool
+    human_gate_required: bool
     policy_name: str
     policy_version: str
     envelope: CapitalEnvelope
