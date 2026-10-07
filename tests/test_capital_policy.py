@@ -21,6 +21,9 @@ def _request(
     amount: str = "25",
     currency: str = "USD",
     risk: RiskLevel = RiskLevel.LOW,
+    blast_radius: float = 0.0,
+    reversible: bool = True,
+    human_gate_required: bool = False,
     stage: CapitalStage = CapitalStage.PROBE,
     category: SpendCategory = SpendCategory.PAID_ADS,
     requested_at: datetime = NOW,
@@ -36,6 +39,9 @@ def _request(
         category=category,
         stage=stage,
         risk=risk,
+        blast_radius=blast_radius,
+        reversible=reversible,
+        human_gate_required=human_gate_required,
         requested_at=requested_at,
         expires_at=expires_at or requested_at + timedelta(hours=1),
     )
@@ -47,6 +53,9 @@ def _envelope(
     max_outstanding: str = "100",
     hard_ceiling: str | None = None,
     max_risk: RiskLevel = RiskLevel.MEDIUM,
+    max_blast_radius: float = 1.0,
+    allow_irreversible: bool = False,
+    allow_human_gate: bool = False,
     stage: CapitalStage = CapitalStage.PROBE,
     category: SpendCategory | None = SpendCategory.PAID_ADS,
     period_start: datetime | None = None,
@@ -61,6 +70,9 @@ def _envelope(
         max_per_authorization=Decimal(max_per),
         max_outstanding=Decimal(max_outstanding),
         max_risk=max_risk,
+        max_blast_radius=max_blast_radius,
+        allow_irreversible=allow_irreversible,
+        allow_human_gate=allow_human_gate,
         operator_hard_ceiling=None if hard_ceiling is None else Decimal(hard_ceiling),
         period_start=None if hard_ceiling is None else period_start or default_start,
         period_end=None if hard_ceiling is None else period_end or default_end,
@@ -189,10 +201,50 @@ def test_risk_limit_is_deterministic() -> None:
     assert "risk" in assessment.rationale.lower()
 
 
+def test_blast_radius_limit_is_deterministic() -> None:
+    assessment = _assess(
+        _request(blast_radius=0.8),
+        _envelope(max_blast_radius=0.4),
+    )
+
+    assert assessment.authorized is False
+    assert "blast radius" in assessment.rationale.lower()
+
+
+def test_irreversible_action_requires_explicit_envelope_permission() -> None:
+    denied = _assess(
+        _request(reversible=False),
+        _envelope(allow_irreversible=False),
+    )
+    allowed = _assess(
+        _request(reversible=False),
+        _envelope(allow_irreversible=True),
+    )
+
+    assert denied.authorized is False
+    assert "irreversible" in denied.rationale.lower()
+    assert allowed.authorized is True
+
+
+def test_human_gate_requirement_requires_explicit_envelope_permission() -> None:
+    denied = _assess(
+        _request(human_gate_required=True),
+        _envelope(allow_human_gate=False),
+    )
+    allowed = _assess(
+        _request(human_gate_required=True),
+        _envelope(allow_human_gate=True),
+    )
+
+    assert denied.authorized is False
+    assert "human gate" in denied.rationale.lower()
+    assert allowed.authorized is True
+
+
 def test_valid_request_is_authorized_without_moving_money() -> None:
     assessment = _assess(
-        _request(amount="25"),
-        _envelope(hard_ceiling="100"),
+        _request(amount="25", blast_radius=0.2),
+        _envelope(hard_ceiling="100", max_blast_radius=0.5),
         ledger_cash=Decimal("100"),
         active_outstanding=Decimal("20"),
         period_committed=Decimal("10"),
