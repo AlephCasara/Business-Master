@@ -1,439 +1,302 @@
-# Roadmap — From Bootstrap Core to Autonomous Economic Control
+# Roadmap — From Internal Economic Control to Real Operation
 
-This roadmap prioritizes **closed-loop economic capability**, not feature count, vendor adoption, or issue volume.
+This roadmap describes **capability order**, not a permanent feature backlog. Business Master optimizes for real closed-loop economic capability, not PR count or architectural breadth.
 
-Canonical architecture lives in the ADRs/RFCs and domain documentation. This roadmap describes capability order only. Exact pull-request numbering, runtime vendors, and benchmark candidates may change as the system discovers missing substrates.
-
----
-
-## Current baseline
-
-The repository has already established the first V2 foundations:
-
-- V0 behavior characterized and protected by compatibility tests;
-- decomposed domain model with a compatibility facade;
-- economic hypotheses and persisted versioned belief state foundations;
-- immutable experiment contracts with machine-readable measurement criteria;
-- immutable evidence records with provenance, derivation lineage, and target associations;
-- deterministic, versioned evidence-to-belief transitions with explicit interpretation and freshness semantics;
-- family-aware evaluation for Content, B2B, Commerce, and Capability with contract-driven criteria, readiness gates, and durable recommendations;
-- multidimensional non-fungible resource vectors;
-- exact persisted resource capacity and durable atomic reservations with concurrency protection;
-- durable reservation expiry and separately persisted observed resource usage;
-- deterministic append-only economic ledger with currency-scoped financial state and explicit attribution;
-- deterministic constrained portfolio selection with explicit exploration, concentration, risk, and currency boundaries;
-- transactional capital authorization with ledger-derived financial authority and no implicit spend;
-- persisted autonomous continuation decisions derived from PR7–PR9 authority;
-- atomic child-contract, resource-reservation, and child-experiment materialization under retry/restart;
-- PostgreSQL concurrency, rollback, restart, and idempotency coverage for the V2 continuation path;
-- deterministic local content generation/QC as an execution capability.
-
-These are substrates. They do **not** yet prove a complete autonomous economic loop in the real world.
+Implemented invariants live in ADRs/tests. Living architecture docs describe current direction. Vendors are implementation choices unless an accepted ADR explicitly says otherwise.
 
 ---
 
-## Completed substrate — multidimensional resources and reservations
+## Current baseline — PR0–PR10 implemented
 
-The system no longer needs to pretend all scarce capacity is one fungible scalar.
-
-It can represent dimensions such as:
+The repository already provides the internal economic-control substrate:
 
 ```text
-cash
-working capital
-CPU / RAM
-GPU / VRAM
-LLM tokens
-API quota
-browser capacity
-platform actions
-account capacity
-human minutes
+PR0  baseline / invariants
+PR1  domain decomposition
+PR2  EconomicHypothesis + BeliefState
+PR3  immutable ExperimentContract
+PR4  immutable Evidence / provenance / lineage
+PR5  multidimensional ResourceVector + reservation + actual usage
+PR6  deterministic Economic Ledger
+PR7  Evidence → Belief update
+PR8  family-aware evaluation
+PR9  Portfolio + Capital Control
+PR10 persisted autonomous Decision → bounded child Experiment
 ```
 
-Implemented properties include:
-- deterministic vector arithmetic;
-- explicit capacity and availability;
-- durable reservations;
-- atomic over-allocation prevention under concurrent PostgreSQL transactions;
-- semantic idempotency for reservation retries;
-- idempotent manual release;
-- durable, idempotent expiry of capacity leases;
-- expired reservations no longer blocking admission/availability;
-- resource demand persisted on immutable experiment contracts;
-- actual observed resource usage persisted independently from reserved demand;
-- usage records surviving reservation release/expiry;
-- exact decimal capacity storage;
-- V0 scalar allocation preserved behind compatibility boundaries while consumers migrate.
+Important consequences already proven in code/tests include:
 
-Operational resource usage is represented separately from authoritative financial state.
+- PostgreSQL-backed durable economic state;
+- immutable experiment/evidence lineage;
+- non-fungible resource admission and concurrent over-allocation protection;
+- deterministic currency-scoped ledger state;
+- evidence-to-belief transitions with technical-vs-market separation;
+- family-aware readiness/evaluation;
+- deterministic portfolio/capital authority;
+- transactional PR5 resource reservation + child continuation;
+- retry/restart/concurrency protections around the PR10 continuation path.
+
+These are **internal substrates**. They do not prove real external autonomy, public distribution, a sale, or settled cash.
 
 ---
 
-## Completed substrate — deterministic economic ledger
+# Current forward path
 
-Economic state no longer needs to be inferred from prose, mutable summaries, or execution telemetry.
+## PR11 — Durable Execution Architecture
 
-The ledger provides:
-- append-only double-entry economic transactions;
-- exact Decimal / PostgreSQL numeric arithmetic;
-- explicit single-currency transaction boundaries;
-- deterministic balance validation;
-- semantic idempotency for retries;
-- revenue recognition separated from cash settlement;
-- fees, refunds/returns, direct costs, and acquisition spend;
-- receivables and payables;
-- working-capital assets and exposure;
-- cash availability;
-- contribution-margin derivation;
-- explicit attribution to experiments, offers, and channels;
-- per-currency snapshots without implicit FX conversion.
+Goal:
 
-`BusinessOutcome`, execution cash-cost fields, and PR5 resource usage remain compatibility/telemetry surfaces. New monetary control logic should derive authoritative financial state from ledger postings as consumers migrate.
+> make existing control decisions safely executable across process failure and long-running real work.
 
----
-
-## Completed substrate — evidence → belief updates
-
-Persisted evidence can now cause an explicit, deterministic belief transition without silently overwriting prior state.
-
-The update substrate provides:
-- explicit supporting / falsifying / neutral / technical interpretation;
-- bounded interpretation strength and persisted rationale;
-- policy name/version on every update;
-- deterministic TTL, linear-decay, exponential-decay, and no-decay freshness semantics;
-- hard separation between technical failure and market/economic falsification;
-- append-only immutable belief-state versions;
-- latest `belief_state` retained as a compatibility/cache surface;
-- durable `belief_update` lineage with before/after state values;
-- evidence-association requirements before mutation;
-- retry idempotency and conflicting-reinterpretation rejection;
-- transactionally serialized updates so concurrent evidence receives distinct state versions.
-
-The bootstrap update policy intentionally does not infer business semantics from raw evidence. It applies a versioned mathematical transition only after evidence interpretation is explicit.
-
----
-
-## Completed substrate — business-family evaluation
-
-Content, B2B, Commerce, and Capability no longer need to share one permanently generic definition of success.
-
-The family-evaluation substrate provides:
-- deterministic family policies for Content, B2B, Commerce, and Capability;
-- supporting and falsifying thresholds sourced from immutable `ExperimentContract` criteria rather than hidden global metric constants;
-- declared aggregation semantics for criterion evaluation;
-- evidence sufficiency combining contract requirements and hypothesis requirements;
-- explicit independent-source requirements;
-- explicit replication and distinct-context inputs rather than inferred pseudo-replication;
-- technical evidence preserved as technical rather than economic support/falsification;
-- PR7-compatible evidence interpretations without direct belief mutation;
-- operational-readiness gates;
-- authoritative PR6 ledger-backed economic readiness for B2B/Commerce scale evaluation;
-- family-specific progression recommendations;
-- append-only, idempotent PostgreSQL evaluation records with causal lineage to hypothesis, contract, belief version, and evidence IDs.
-
-Family recommendations are evaluation artifacts, not autonomous control-plane `Decision` objects. Legacy generic feedback/graduation behavior remains a compatibility surface while consumers migrate.
-
----
-
-## Completed substrate — portfolio and capital control
-
-The V2 control plane can now select bounded work without collapsing every resource, risk, and economic constraint into one scalar score.
-
-The portfolio/capital substrate provides:
-- explicit `Signal`, `Cash`, `Asset`, and `Capability` portfolio roles;
-- deterministic candidate utility over economic value, information value, option value, asset value, feedback speed, uncertainty, and scarcity pressure;
-- hard multidimensional resource feasibility separate from ranking;
-- explicit exploration floors and strict concentration ceilings;
-- persisted family-evaluation, hypothesis, contract, and belief-version lineage on allocations;
-- deterministic risk/blast-radius and human-gate constraints;
-- explicit base currency and rejection of implicit FX assumptions;
-- ledger-derived cash as financial authority;
-- transactional capital authorization with concurrency protection;
-- authorization lifecycle distinct from actual ledger spend;
-- stage authority bounded by persisted evidence tier;
-- one capital authorization per persisted allocation, requiring replan after terminal lifecycle state.
-
-A portfolio allocation is selection authority, not an execution lease. Capital authorization is permission to commit bounded capital, not evidence that spend occurred.
-
----
-
-## Completed substrate — autonomous decision → experiment continuation
-
-The internal control plane can now turn persisted PR7–PR9 state into a durable autonomous continuation without trusting caller-supplied business authority.
-
-The continuation substrate provides:
-- a minimal caller request containing only idempotency key, parent experiment, portfolio allocation, and optional reservation expiry;
-- derivation of family evaluation, latest belief version, source contract, risk, resource demand, and capital authority from PostgreSQL;
-- rejection of stale family evaluations or belief versions;
-- rejection of parent/source-contract lineage drift;
-- persisted decision policy/version, evidence IDs, belief version, allocation lineage, risk facts, rationale, and chosen continuation;
-- deterministic `CONTINUE`, `PAUSE`, `KILL`, `REPLICATE`, and `GRADUATE` mapping;
-- same-tier bounded replication;
-- exactly-one-tier graduation (`PROBE → PILOT → SCALE`) with no implicit resource/capital inflation;
-- immutable descendant contracts with explicit parent/origin-decision lineage;
-- atomic PR5 resource reservation and child materialization in one serializable transaction;
-- PR9 capital authorization enforcement without consuming authorization or inventing spend;
-- human-gate enforcement before child materialization;
-- deterministic child/contract/reservation identities;
-- exact retry/restart idempotency;
-- one persisted autonomous decision per portfolio allocation;
-- rollback with no partial decision/contract/child/reservation when admission fails;
-- concurrent resource over-allocation prevention proven by PostgreSQL integration tests.
-
-This completes the **internal continuation substrate**. It does not prove that real external evidence has autonomously caused a subsequent experiment.
-
----
-
-## Immediate architecture sequence
-
-### 1. Genuine external closed-loop demonstration
-
-The next priority is not another internal policy layer. It is a reproducible real-world proof that the existing substrates connect end to end:
+Required behavior, not vendor:
 
 ```text
-bounded external action
-→ external observation
-→ immutable evidence
-→ versioned belief update
-→ family evaluation
-→ portfolio allocation
-→ autonomous continuation decision
+Job / Attempt
+durable state transitions
+lease / ownership
+heartbeat or equivalent recovery signal where needed
+retry/backoff
+idempotency / reconciliation
+durable timers/events
+resource-aware dispatch
+ArtifactStore / ArtifactRef
+ExecutionReceipt
+health/readiness
+structured operational telemetry
+```
+
+PR11 does **not** mean Business Master installs or configures its host. NixOS/systemd/container/runtime integration is deployment/host infrastructure around these contracts.
+
+Acceptance center:
+
+```text
+work is dispatched
+→ process dies
+→ durable state survives
+→ work is reconciled/resumed/retried safely
+→ irreversible effect is not duplicated
+→ receipt/artifact lineage remains reconstructible
+```
+
+Do not make Hatchet, systemd, or another runtime the domain architecture.
+
+---
+
+## PR12 — Multi-Surface External Edge
+
+Goal:
+
+> externalize one production system across the minimum strategically required distribution set.
+
+Initial distribution surfaces:
+
+```text
+TikTok
+Instagram
+YouTube
+```
+
+The strategy is:
+
+```text
+one production system
+→ few mandatory surfaces
+→ measure differential performance
+→ specialize from evidence
+```
+
+Do not build three independent content factories and do not require blind identical cross-posting. Preserve clean source artifacts and platform-specific lineage.
+
+Conceptual external-edge responsibilities include:
+
+```text
+Platform / ExternalSurface
+PlatformAccount
+ExternalAction
+ExternalEntity
+ExternalActionReceipt
+Publisher
+CredentialRef
+Eligibility / AccountHealth
+HumanGate
+```
+
+Publishing may use official APIs, direct adapters, or a replaceable aggregator when that materially reduces time-to-evidence. Provider identity must not become domain architecture.
+
+PR12 is about **external action capability**. It does not make publishing telemetry authoritative.
+
+---
+
+## PR13 — Telemetry + Real Autonomous Closed Loop
+
+Goal:
+
+> prove that the external world changes what Business Master does next.
+
+Initial collectors should obtain authoritative/native telemetry for TikTok, Instagram, and YouTube when available.
+
+```text
+ExternalExposure
+→ MetricObservation
+→ immutable Evidence
+→ Belief update
+→ FamilyEvaluation
+→ PortfolioAllocation
+→ AutonomousDecision
 → Experiment B
 ```
 
-The demonstration must preserve the existing constitutional boundaries:
-- real external evidence, not a fixture or manually injected success claim;
-- no new human instruction between evidence ingestion and Experiment B;
-- deterministic resource, capital, risk, and tier gates remain authoritative;
-- complete persisted lineage must make the run auditable and reproducible;
-- a successful mechanical loop proves autonomy plumbing, not SCALE economics.
+No new operator instruction between Evidence ingestion and Experiment B.
 
-### 2. Durable runtime hardening where the demonstration requires it
+Publishing and measurement remain separate capabilities:
 
-Introduce runtime infrastructure only to make the real loop restart-safe and operable. The runtime must remain an adapter, not become constitutional authority.
+```text
+Publisher != MetricCollector
+```
 
-Priorities include:
-- durable timers/events;
-- restart-safe workers;
-- idempotent retries around external side effects;
-- resource-aware dispatch;
-- measurement/evaluation priority over speculative production;
-- explicit platform/account gates;
-- replayable execution records sufficient to reproduce the external proof.
+A publishing aggregator is acceptable as a replaceable execution shortcut. Business Master should own/normalize the intelligence used for decision-making.
 
-Do not choose a permanent orchestration vendor before a concrete workload demonstrates the need.
+Acceptance proves loop mechanics, not SCALE economics.
 
 ---
 
-## First autonomy milestone
+## PR14 — First Economic Loop
 
-The constitutional proof remains:
+Goal:
+
+> connect attention/intent to a real monetizable Offer and deterministic economic events.
+
+Initial preferred paths are low-human-touch:
 
 ```text
-Hypothesis A
-→ Experiment A
-→ real external exposure
-→ external measurement
-→ immutable evidence
-→ versioned belief update
-→ autonomous decision
-→ Experiment B
+owned low-ticket digital product
+affiliate offer
+marketplace / content-commerce offer
 ```
 
-There must be **no new human instruction between evidence ingestion and Experiment B**.
+B2B remains valid but is not a prerequisite for the first economic loop.
 
-A single legitimate external observation can be enough to prove that the loop is mechanically closed. It is not enough to justify SCALE.
+The architecture must preserve:
 
-The repository should contain a reproducible recorded demonstration when this milestone is reached.
+```text
+Product
+!= Offer
+!= Opportunity
+!= Checkout
+!= Order
+!= Payment
+!= Settlement
+```
 
-PR10 supplies the internal decision/continuation machinery required by the final two arrows. Until the external demonstration exists, the project must not claim Level 4 autonomy merely because the internal substrate is implemented.
+A representative loop:
+
+```text
+Opportunity
+→ ProductSpec or existing Product/Offer
+→ Offer at a CommerceVenue
+→ attributed distribution
+→ checkout / commerce events
+→ payment / refund / commission / settlement
+→ deterministic Economic Ledger
+→ economic Evidence
+→ next allocation/decision
+```
+
+The first real adapter may target a venue such as Hotmart/Kiwify or another provider whose current capabilities fit the acceptance scenario. That choice is replaceable; PR14 is **not** "the Hotmart architecture."
+
+Commerce providers should advertise supported capabilities instead of being forced into one giant universal interface, e.g. offer discovery/management, commerce events, attribution, or settlement.
 
 ---
 
-## Execution runtime
+# Shared production/composition direction
 
-A durable runtime is required, but no orchestration vendor is part of the constitutional architecture.
+Business models are compositions of shared capabilities rather than separate autonomous brains:
 
-Introduce or select runtime infrastructure only when the control substrate needs it. Requirements include:
-- restart-safe execution;
-- durable timers/events;
-- idempotent retries;
-- resource-aware dispatch;
-- measurement/evaluation priority over speculative production;
-- replaceable adapter boundary.
+```text
+Intelligence
+Creative
+Product
+Production
+Distribution
+Monetization
+Telemetry
+```
 
-Candidate runtimes should be evaluated when there is a concrete workload, not chosen permanently from an early bootstrap issue.
+Examples:
+
+```text
+owned low-ticket
+= Intelligence + Product + Creative + Production
++ Distribution + Monetization + Telemetry
+
+affiliate
+= Intelligence + offer discovery + Creative + Production
++ Distribution + attribution + Telemetry
+
+content/audience
+= Intelligence + Creative + Production + Distribution + Telemetry
+(+ monetization attachment when justified)
+```
+
+The economic control plane remains above all of them.
 
 ---
 
-## Execution engines
+# After PR14 — production-driven development
 
-Business engines remain reusable capability surfaces governed by the same control plane.
+Do **not** predeclare PR15–PR24 as horizontal architecture.
 
-### Content
-
-```text
-research → concept → creative → publish → measure → mutate
-```
-
-Purpose:
-- cheap market sensing;
-- audience/distribution learning;
-- affiliate/product demand tests;
-- owned distribution.
-
-### B2B
+After a genuine external loop and first economic attachment:
 
 ```text
-pain → prospect → offer → outreach → customer → repeated problem
+OPERATE
+→ observe measured bottleneck
+→ estimate opportunity cost
+→ fix the bottleneck
+→ measure again
 ```
 
-Purpose:
-- near-term cash;
-- high-signal customer discovery;
-- repeated-pain discovery that can become productized delivery or software.
-
-### Commerce
+Examples:
 
 ```text
-discover → validate → convert → fulfill → source → scale
+poor reach             → creative/distribution
+reach + poor clicks    → CTA/offer
+clicks + poor sales    → product/checkout/offer
+sales + poor margin    → unit economics
+render latency         → production/execution
+GPU contention         → resource routing
+publisher failures     → distribution reliability
+missing attribution    → telemetry/commerce integration
+manual gate dominates  → justified automation
 ```
 
-Demand and unit economics should be tested before significant capital commitment whenever possible.
-
-### Assets
-
-```text
-validated recurring pattern
-→ software · data · brand · audience · IP · recurring revenue
-```
-
-Assets are promoted when ownership improves future marginal economics.
+No new architecture exists merely because it would be aesthetically complete.
 
 ---
 
-## Capability benchmarking
+# Milestone truth
 
-Technology choice is itself an experiment domain.
+Track reality, not only merged PRs:
 
-Benchmark adapters/models/runtimes only when they are candidates for a real Business Master workload.
+```text
+M0  repository/runtime can execute on target environment
+M1  first real external exposure
+M2  first genuine external reaction observed
+M3  first autonomous decision caused by the world
+M4  first sellable Product/Offer
+M5  first real money received
+M6  first sale attributable to Business Master lineage
+M7  positive economics replicated
+M8  first real reallocation across competing opportunities
+M9  economics sustain continued operation
+```
 
-Record:
-- task success rate;
-- output quality;
-- wall time;
-- CPU/GPU/RAM/VRAM usage;
-- model tokens/API usage;
-- retries;
-- human intervention;
-- invalid-action rate;
-- license/production restrictions;
-- effective cost per successful task.
-
-Do not maintain a permanent roadmap list of fashionable vendors. Candidate tools age faster than the architecture.
+Never claim a milestone from architecture diagrams, fixtures, or internal-only continuation.
 
 ---
 
-## Scaling sequence
+# Stop rule
 
-Scaling follows evidence, not a manually selected asset count.
+When the system is operating, **reality chooses the next PR**.
 
-### Content
-
-```text
-one validated format/channel
-→ bounded replication
-→ format specialization
-→ channel portfolio
-```
-
-### B2B
-
-```text
-one validated vertical/offer
-→ repeated customers
-→ adjacent segment
-→ productized delivery / asset hypothesis
-```
-
-### Commerce
-
-```text
-one validated offer/product
-→ variants
-→ adjacent products
-→ category/store portfolio
-```
-
-Every expansion consumes reserved resources and remains reversible.
-
----
-
-## Financial scaling
-
-Cash-consuming capabilities unlock only after evidence justifies them.
-
-Potential future unlocks include:
-- paid AI APIs;
-- cloud GPU;
-- paid SaaS;
-- acquisition spend;
-- always-on infrastructure;
-- dedicated devices;
-- inventory/samples;
-- additional operational accounts/domains.
-
-Each unlock requires an explicit budget policy and expected economic/information rationale.
-
----
-
-## Policy self-improvement
-
-Later-stage policy improvement follows a gated path:
-
-```text
-observe policy performance
-→ propose change
-→ historical replay/backtest where possible
-→ shadow evaluation
-→ bounded pilot
-→ promote / reject
-```
-
-Possible methods may eventually include contextual bandits, Bayesian models, causal analysis, and constrained portfolio optimization.
-
-Do not introduce statistical sophistication before clean project data can demonstrate value over simpler deterministic policies.
-
----
-
-## Proven capability levels
-
-### Level 0 — Repository knowledge
-Architecture, domain language, and reproducible development environment exist.
-
-### Level 1 — Durable local control
-Persisted state, reconciliation, and idempotent local decisions survive restart.
-
-### Level 2 — Bounded local execution
-The system can execute useful work under explicit contracts and resource limits.
-
-### Level 3 — External evidence
-A bounded experiment reaches the real world and produces persisted external evidence.
-
-### Level 4 — Autonomous learning loop
-External evidence updates belief/decision state and causes the next experiment without a new human instruction.
-
-### Level 5 — Economic proof
-At least one experiment produces real economic value recorded by the ledger.
-
-### Level 6 — Repeated positive economics
-The mechanism replicates with measured contribution and known operational costs.
-
-### Level 7 — Portfolio allocation
-The system reallocates scarce resources among competing validated strategies.
-
-### Level 8 — Compounding assets
-Validated businesses continuously create owned capabilities/assets that improve future economics.
-
-The project should always report the highest level actually demonstrated, not the level implied by its architecture diagrams. Internal PR10 continuation capability is a prerequisite for Level 4, not proof that Level 4 has occurred.
+Preserve the implemented economic substrate. Add capability only when observed production or economics demonstrate its value.
