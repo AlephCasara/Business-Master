@@ -230,6 +230,10 @@ def _request(
     *,
     key: str,
     risk: RiskLevel = RiskLevel.LOW,
+    blast_radius: float = 0.0,
+    reversible: bool = True,
+    human_gate_required: bool = False,
+    stage: CapitalStage = CapitalStage.PROBE,
     requested_at: datetime = NOW,
     expires_at: datetime | None = None,
 ):
@@ -243,8 +247,11 @@ def _request(
         amount=capital.amount,
         currency=capital.currency,
         category=capital.category,
-        stage=CapitalStage.PROBE,
+        stage=stage,
         risk=risk,
+        blast_radius=blast_radius,
+        reversible=reversible,
+        human_gate_required=human_gate_required,
         requested_at=requested_at,
         expires_at=expires_at or requested_at + timedelta(hours=1),
     )
@@ -256,13 +263,15 @@ def _envelope(
     max_per: Decimal = Decimal("100"),
     max_outstanding: Decimal = Decimal("100"),
     hard_ceiling: Decimal | None = None,
+    stage: CapitalStage = CapitalStage.PROBE,
 ) -> CapitalEnvelope:
     return CapitalEnvelope(
         currency=currency,
-        stage=CapitalStage.PROBE,
+        stage=stage,
         max_per_authorization=max_per,
         max_outstanding=max_outstanding,
         max_risk=RiskLevel.MEDIUM,
+        max_blast_radius=1.0,
         operator_hard_ceiling=hard_ceiling,
         period_start=None if hard_ceiling is None else NOW,
         period_end=None if hard_ceiling is None else NOW + timedelta(days=1),
@@ -335,6 +344,9 @@ def test_authorization_itself_does_not_create_ledger_spend(postgres_dsn: str) ->
     with psycopg.connect(postgres_dsn) as conn:
         after = conn.execute("SELECT COUNT(*) FROM economic_ledger_transaction").fetchone()
     assert authorization.status is CapitalAuthorizationStatus.ACTIVE
+    assert authorization.blast_radius == 0.0
+    assert authorization.reversible is True
+    assert authorization.human_gate_required is False
     assert before == after
 
 
@@ -453,6 +465,41 @@ def test_release_and_expiry_restore_authorization_capacity(postgres_dsn: str) ->
     assert expired_again == expired
 
 
+def test_release_after_expiry_preserves_expired_semantics(postgres_dsn: str) -> None:
+    _fund_cash(postgres_dsn, Decimal("100"), "USD")
+    _, _, allocations = _seed_allocations(postgres_dsn, (Decimal("20"),))
+    clock = MutableClock(NOW)
+    store = _store(postgres_dsn, clock)
+    authorization = store.authorize(
+        _request(allocations[0], key="late-release"),
+        _envelope(),
+    )
+
+    clock.value = NOW + timedelta(hours=2)
+    terminal = store.release(authorization.id)
+
+    assert terminal.status is CapitalAuthorizationStatus.EXPIRED
+    assert terminal.expired_at == clock.value
+    assert terminal.released_at == clock.value
+
+
+def test_terminal_authorization_requires_replan_for_same_allocation(postgres_dsn: str) -> None:
+    _fund_cash(postgres_dsn, Decimal("100"), "USD")
+    _, _, allocations = _seed_allocations(postgres_dsn, (Decimal("20"),))
+    store = _store(postgres_dsn)
+    first = store.authorize(
+        _request(allocations[0], key="one-shot-first"),
+        _envelope(),
+    )
+    store.release(first.id)
+
+    with pytest.raises(CapitalAuthorizationConflictError, match="replan"):
+        store.authorize(
+            _request(allocations[0], key="one-shot-second"),
+            _envelope(),
+        )
+
+
 def test_currency_isolation_prevents_using_other_currency_cash(postgres_dsn: str) -> None:
     _fund_cash(postgres_dsn, Decimal("100"), "USD")
     _fund_cash(postgres_dsn, Decimal("1000"), "EUR")
@@ -475,6 +522,52 @@ def test_capital_store_rejects_tampered_portfolio_base_currency(postgres_dsn: st
         _store(postgres_dsn).authorize(
             _request(allocations[0], key="tampered-base-currency"),
             _envelope(),
+        )
+
+
+def test_capital_store_rejects_understated_allocation_risk(postgres_dsn: str) -> None:
+    _fund_cash(postgres_dsn, Decimal("100"), "USD")
+    _, _, allocations = _seed_allocations(postgres_dsn, (Decimal("25"),))
+    with psycopg.connect(postgres_dsn) as conn:
+        conn.execute(
+            "UPDATE portfolio_allocation "
+            "SET risk_assessment = jsonb_set(risk_assessment, '{level}', '\"medium\"')"
+        )
+
+    with pytest.raises(ValueError, match="risk differs"):
+        _store(postgres_dsn).authorize(
+            _request(allocations[0], key="understated-risk"),
+            _envelope(),
+        )
+
+
+def test_capital_store_rejects_tampered_blast_radius(postgres_dsn: str) -> None:
+    _fund_cash(postgres_dsn, Decimal("100"), "USD")
+    _, _, allocations = _seed_allocations(postgres_dsn, (Decimal("25"),))
+
+    with pytest.raises(ValueError, match="blast radius differs"):
+        _store(postgres_dsn).authorize(
+            _request(
+                allocations[0],
+                key="tampered-blast-radius",
+                blast_radius=0.5,
+            ),
+            _envelope(),
+        )
+
+
+def test_probe_allocation_cannot_escalate_directly_to_scale_capital(postgres_dsn: str) -> None:
+    _fund_cash(postgres_dsn, Decimal("100"), "USD")
+    _, _, allocations = _seed_allocations(postgres_dsn, (Decimal("25"),))
+
+    with pytest.raises(ValueError, match="stage exceeds"):
+        _store(postgres_dsn).authorize(
+            _request(
+                allocations[0],
+                key="probe-to-scale",
+                stage=CapitalStage.SCALE,
+            ),
+            _envelope(stage=CapitalStage.SCALE),
         )
 
 
