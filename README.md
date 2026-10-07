@@ -436,7 +436,7 @@ Experiment B
 
 **No human prompt between A and B.**
 
-> **Target milestone: PR10 — Autonomous Closed Loop V0**
+> **Target milestone: Autonomous Closed Loop V0**
 
 When that loop exists against a real external surface, this section should contain a recorded demonstration rather than a simulated one.
 
@@ -455,54 +455,21 @@ The architecture described above is the target control system. Implementation is
 | Economic hypotheses | ✅ Foundation |
 | Persisted belief state | ✅ Foundation |
 | Immutable experiment contracts | ✅ Implemented |
-| Multidimensional resource vectors | 🟡 Current implementation phase |
+| Immutable evidence + provenance | ✅ Implemented |
+| Multidimensional resource vectors | ⚪ Planned |
 | Economic ledger | ⚪ Planned |
 | Business-family policies | ⚪ Planned |
 | Evidence → belief update engine | ⚪ Planned |
 | Portfolio controller | ⚪ Planned |
 | Capital controller | ⚪ Planned |
-| Autonomous external closed loop | ⚪ PR10 milestone |
+| Autonomous external closed loop | ⚪ Major milestone |
 | Offer / Funnel / Creative domain | ⚪ Planned |
 | Business composition / adjacency | ⚪ Planned |
 | Capability self-optimization | ⚪ Planned |
 
-### Migration sequence
+Implementation proceeds through small, reversible pull requests with characterization tests and additive migrations. Exact PR numbering is intentionally **not** part of the README contract: implementation order may evolve as new invariants or missing substrates are discovered.
 
-```text
-PR0  Baseline & invariants                ✓
- ↓
-PR1  Domain decomposition                 ✓
- ↓
-PR2  Beliefs & economic hypotheses        ✓
- ↓
-PR3  Experiment contracts                 ✓
- ↓
-PR4  Resource vectors                     ◀ current phase
- ↓
-PR5  Economic ledger
- ↓
-PR6  Family policies
- ↓
-PR7  Belief update engine
- ↓
-PR8  Portfolio controller
- ↓
-PR9  Capital controller
- ↓
-PR10 Autonomous Closed Loop V0            ★
- ↓
-PR11 Offer / Funnel / Creative
- ↓
-PR12 Business composition
- ↓
-PR13 Capability portfolio
-```
-
-PR10 is the first major autonomy milestone.
-
-PR12 adds cross-business economic discovery.
-
-PR13 adds learning about the factory itself.
+The canonical public contract is the architecture and its invariants; the current PR/issue history records the migration path.
 
 ---
 
