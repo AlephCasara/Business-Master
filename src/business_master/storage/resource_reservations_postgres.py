@@ -56,6 +56,12 @@ class ReservationConflictError(ResourceReservationError):
     """Raised when an idempotency key is reused for a different reservation request."""
 
 
+class ReservationNotFoundError(ResourceReservationError):
+    def __init__(self, reservation_id: UUID) -> None:
+        self.reservation_id = reservation_id
+        super().__init__(f"unknown resource reservation: {reservation_id}")
+
+
 class PostgresResourceReservationStore:
     """Atomic non-fungible resource reservations backed by PostgreSQL.
 
@@ -183,7 +189,7 @@ class PostgresResourceReservationStore:
                 (reservation_id,),
             ).fetchone()
             if row is None:
-                raise ResourceNotFoundError([str(reservation_id)])
+                raise ReservationNotFoundError(reservation_id)
 
             reservation = self._reservation_from_row(row)
             if reservation.status is ResourceReservationStatus.RELEASED:
@@ -264,7 +270,8 @@ class PostgresResourceReservationStore:
             held = Decimal(row["reserved"])
             capacity[name] = cap
             reserved[name] = held
-            available[name] = max(cap - held, Decimal(0)) if bool(row["enabled"]) else Decimal(0)
+            free = max(cap - held, Decimal(0))
+            available[name] = free if bool(row["enabled"]) else Decimal(0)
 
         return ResourceAvailability(
             capacity=ResourceVector(quantities=capacity),
