@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from concurrent.futures import ThreadPoolExecutor
+from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
 from threading import Barrier
@@ -10,12 +11,14 @@ from uuid import uuid4
 import psycopg
 import pytest
 
+from business_master.domain.clock import utcnow
 from business_master.domain.enums import ResourceKind, ResourceReservationStatus
 from business_master.domain.resources import Resource, ResourceReservationRequest, ResourceVector
 from business_master.storage.postgres import PostgresStore
 from business_master.storage.resource_reservations_postgres import (
     PostgresResourceReservationStore,
     ReservationConflictError,
+    ReservationNotDueError,
     ResourceCapacityError,
     ResourceNotFoundError,
     ResourceUnavailableError,
@@ -50,7 +53,7 @@ def _seed_resources(dsn: str) -> None:
         Resource(
             name="cash.usd",
             kind=ResourceKind.CASH,
-            capacity=100.0,
+            capacity=Decimal("100"),
             labels={"unit": "USD"},
         )
     )
@@ -58,7 +61,7 @@ def _seed_resources(dsn: str) -> None:
         Resource(
             name="gpu.local",
             kind=ResourceKind.GPU,
-            capacity=1.0,
+            capacity=Decimal("1"),
             labels={"unit": "slot"},
         )
     )
@@ -114,6 +117,39 @@ def test_reservation_is_idempotent_and_release_restores_capacity(postgres_dsn: s
     assert store.availability().available.amount("gpu.local") == Decimal("1")
 
 
+def test_expiry_is_durable_idempotent_and_restores_capacity(postgres_dsn: str) -> None:
+    _seed_resources(postgres_dsn)
+    store = PostgresResourceReservationStore(postgres_dsn)
+    expires_at = utcnow() + timedelta(minutes=5)
+    reservation = store.reserve(
+        ResourceReservationRequest(
+            owner_type="experiment_contract",
+            owner_id=uuid4(),
+            idempotency_key="contract:expiring:reserve",
+            requirements=ResourceVector(quantities={"cash.usd": Decimal("80")}),
+            expires_at=expires_at,
+        )
+    )
+
+    assert store.availability().available.amount("cash.usd") == Decimal("20")
+    with pytest.raises(ReservationNotDueError):
+        store.expire(reservation.id, as_of=expires_at - timedelta(seconds=1))
+
+    expiry_time = expires_at + timedelta(seconds=1)
+    assert store.expire_due(as_of=expiry_time) == 1
+    assert store.expire_due(as_of=expiry_time) == 0
+
+    expired = store.get(reservation.id)
+    assert expired is not None
+    assert expired.status is ResourceReservationStatus.RELEASED
+    assert expired.expires_at == expires_at
+    assert expired.expired_at == expiry_time
+    assert expired.released_at == expiry_time
+    assert store.expire(reservation.id, as_of=expiry_time) == expired
+    assert store.release(reservation.id) == expired
+    assert store.availability().available.amount("cash.usd") == Decimal("100")
+
+
 def test_unknown_and_unavailable_resources_are_rejected(postgres_dsn: str) -> None:
     _seed_resources(postgres_dsn)
     world_store = PostgresStore(postgres_dsn)
@@ -122,7 +158,7 @@ def test_unknown_and_unavailable_resources_are_rejected(postgres_dsn: str) -> No
             name="human.operator_minutes",
             kind=ResourceKind.HUMAN,
             available=False,
-            capacity=60.0,
+            capacity=Decimal("60"),
             labels={"unit": "minutes"},
         )
     )
