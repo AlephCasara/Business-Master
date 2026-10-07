@@ -1,326 +1,368 @@
 # Economic Thesis — What Business Master Is Optimizing
 
-Business Master is not a generic automation framework and not a content factory. It is an **autonomous economic experimentation and resource-allocation system**.
+Business Master is an **autonomous economic experimentation and resource-allocation system**. It is not a generic automation framework, a content factory, or a collection of independent business bots.
 
-The economic thesis behind the system is simple:
+Its economic objective is always:
 
-> AI has made production dramatically cheaper. The scarce resources are now distribution, customer access, offer quality, creative advantage, trust, domain expertise, proprietary evidence, and the speed at which a system learns what produces real-world outcomes.
+> **maximize expected economic value under real constraints.**
 
-The system therefore optimizes **validated economic learning first, then sustainable profit**, rather than maximizing generated artifacts.
+Economic value can be direct or instrumental. Direct cash/economics, information value, option value, durable assets, and reusable capability can all justify an action when their expected value exceeds their opportunity cost and risk.
+
+Do not encode a philosophy of:
+
+```text
+learn first
+→ make money later
+```
+
+Learning is useful because it improves future economic decisions.
 
 ---
 
-## 1. Objective hierarchy
+## 1. Objective under uncertainty
 
-The objective function changes as evidence matures.
+The final objective does not change by stage. What changes is the quality of available evidence and therefore which estimators are useful.
 
-### Cold start
+### Sparse direct economics
 
-When there is no proprietary evidence, the system should maximize:
+When sales/cash evidence is weak or absent, the system may rationally value:
 
 ```text
-Experiment Value =
-    Information Gain
-    × Feedback Speed
-    × Downstream Reuse
-    × Parallelizability
-    ───────────────────────────────
-    Cash Cost + Compute Cost + Human Time
+external response
+information gain
+feedback speed
+option value
+downstream reuse
+asset value
+capability value
 ```
 
-A zero-revenue experiment may be excellent if it quickly invalidates a bad market, channel, format, product, or workflow.
+A zero-revenue experiment can be economically excellent if it cheaply eliminates an expensive false hypothesis or creates a valuable future option.
 
-### Traction stage
+### Stronger economic evidence
 
-Once real external behavior exists, the hierarchy becomes:
+As real behavior appears, proxies must yield to stronger downstream evidence:
 
 ```text
 attention
 → retention / engagement
 → intent
 → click / reply / lead
-→ checkout / order
+→ checkout
+→ order
+→ approved payment
 → revenue
-→ contribution margin
-→ repeatability
-→ LTV / durable profit
+→ contribution
+→ settled cash
+→ repeatability / retention / LTV where applicable
 ```
 
-Do not collapse these levels prematurely. A view is not a lead; revenue is not profit; gross spread is not contribution margin.
+Do not collapse these levels. Views are not purchases. Orders are not settled cash. Revenue is not contribution.
 
-### Mature stage
+### Portfolio objective
 
-The mature portfolio objective is approximately:
+Conceptually:
 
 ```text
-maximize expected sustainable profit
+maximize expected economic value
 subject to:
-- platform and legal constraints
-- human-time scarcity
-- compute and capital capacity
-- concentration risk
-- minimum exploration budget
-- evidence quality requirements
+- available cash and working capital
+- compute/resource capacity
+- platform/account capacity
+- human attention
+- legal/platform constraints
+- risk and blast radius
+- evidence quality
+- concentration limits
+- bounded exploration
 ```
+
+PR9 Capital Control remains financial admission authority; no prose, model, or creator heuristic overrides it.
 
 ---
 
 ## 2. What is scarce
 
-Across the supplied business material, the same scarce variables recur.
+AI has made many forms of production cheaper. The scarce variables increasingly include:
 
-### Distribution
+### Distribution and customer access
 
-Producing another article, book, video, image, SaaS prototype or product page is increasingly cheap. Getting the right person to see and act on it is not.
+Producing another asset is often cheap. Reaching the right person economically is not. Audience, search demand, marketplace position, traffic, account eligibility, partnerships, outbound access, and owned surfaces are economically relevant capabilities.
 
 ### Offer quality
 
-An `offer` is not the underlying product alone. It is the complete exchange presented to a customer: result, positioning, price, risk reversal, bonuses, proof, timing, delivery and the next step.
+A product is not its offer. The offer is the actual exchange presented to a market: product/deliverable, positioning, price, proof, risk reversal, bonuses, timing, delivery, attribution conditions, settlement conditions, and next step.
 
-### Creative angle
+### Creative advantage
 
-A creative angle is a specific framing of the customer problem or desired outcome. In paid acquisition, angles behave like perishable inventory: competitors can copy them and audiences can saturate.
-
-### Customer access
-
-An existing audience, channel, email list, outbound capability, marketplace demand surface, affiliate program or trusted distribution partner can be more valuable than superior production technology.
+Angles, hooks, visual grammar, proof, structure, CTA, and format influence whether distribution becomes attention and whether attention becomes intent. Creative is measurable state, not decoration.
 
 ### Proprietary evidence
 
-The highest-value asset Business Master should accumulate is a structured record of what happened when a particular hypothesis was exposed to the real world.
-
-That evidence should include lineage:
+One of the highest-value assets Business Master can accumulate is a structured record of what happened when an economic hypothesis met the world.
 
 ```text
 hypothesis
 → experiment
-→ creative / product / offer / channel configuration
+→ product / offer / creative / channel configuration
 → exposure
-→ metrics
-→ economic outcome
+→ external behavior
+→ commerce/economic events
 → decision
-→ child mutation
+→ descendant experiment
 ```
 
----
+### Human attention
 
-## 3. Business families in scope
-
-Business Master treats the following as experiment families sharing common infrastructure, not as isolated projects.
-
-| Family | Primary monetization | First useful signal | Automation ceiling | Parallelizability | Primary scarce variable |
-|---|---|---|---:|---:|---|
-| Faceless / dark content | ads, sponsor, affiliate, owned offer | views + retention | very high | very high | creative/distribution |
-| TikTok Shop / content commerce | affiliate commission / merchant margin | views, clicks, orders | high | high | product × creative fit |
-| Owned ecommerce / POD | margin | clicks, add-to-cart, order | high | high after plumbing | offer + creative + unit economics |
-| Marketplace resale | contribution margin | demand + viable underwriting | high | high | supply reliability + economics |
-| Productized B2B service | setup + subscription | reply / booked call / payment | high delivery, medium sales | high if standardized | pain + customer access |
-| AI video / UGC service | project / subscription | reply / order | high | high | quality + acquisition |
-| Lead generation | fee / retainer / performance | qualified lead / reply | high | high | list quality + deliverability |
-| AI consulting / training | fee / retainer | conversation / payment | medium | low-medium | trust + expertise |
-| Digital products | one-time / subscription | click / checkout / sale | high production | high | distribution + outcome specificity |
-| KDP / books | royalties | impressions / sales | high production | high | research + distribution |
-| Affiliate marketing | commission | clicks / EPC / orders | high | high | traffic economics |
-| Vertical micro-SaaS | subscription / usage | activation / willingness-to-pay | high after build | very high | pain validation + distribution |
-| Community | subscription | signup / retention | medium | medium-high | trust + continuing value |
-| Personal brand | service / sponsor / product | engagement / inbound intent | medium | medium | trust + consistency |
-
-These scores are architectural heuristics, not permanent rankings. The system should replace them with its own measurements.
+A workflow that silently requires a human every cycle is not autonomous. Human minutes are a scarce resource and should be explicit in planning and measurement.
 
 ---
 
-## 4. Current strategic ranking
+## 3. Commercial ontology
 
-### Best initial cash engines
-
-Current working priority:
-
-1. productized B2B outcome service;
-2. AI video/UGC/editing service;
-3. lead-generation / outreach service;
-4. specialized SME automation;
-5. TikTok Shop/content commerce when account eligibility exists;
-6. specialized AI consulting/training when human interaction is acceptable.
-
-Why: these can reach payment without first building a large audience.
-
-### Best initial signal engines
-
-1. short-form content experiments;
-2. YouTube channel/format experiments;
-3. creative/product tests for commerce;
-4. outbound offer tests;
-5. marketplace/product radar experiments.
-
-Why: they provide comparatively fast evidence even before revenue.
-
-### Best long-term asset engines
-
-1. service → vertical software/data asset;
-2. owned audience + owned offer;
-3. validated vertical micro-SaaS;
-4. repeatable commerce brand/supply system;
-5. authority YouTube/IP portfolio;
-6. proprietary experiment and creative intelligence datasets.
-
----
-
-## 5. Why the portfolio is not one business
-
-A single business can fail for reasons unrelated to execution quality: market timing, platform changes, geographic eligibility, capital requirements or simply bad luck.
-
-Business Master therefore treats businesses as a portfolio of hypotheses competing for resources.
-
-The intended structure is not:
+Do not collapse the commercial chain into a generic "platform sale".
 
 ```text
-12 businesses × 12 separate infrastructures
+Signal
+!= Product / ProductConcept
+!= Offer
+!= Opportunity
+!= Checkout
+!= Order
+!= Payment
+!= Settlement
 ```
 
-It is closer to:
+### Product
+
+A product describes **what is delivered** and the problem/desire it addresses. It is not intrinsically owned by one sales platform.
+
+### Offer
+
+An Offer is the monetizable presentation of a product or economic exchange at a specific time and venue. Conceptually it can vary by:
 
 ```text
-shared research + world model + controllers + media + browser/API + analytics
-       │
-       ├── Content Engine
-       ├── Commerce Engine
-       ├── B2B Engine
-       └── Asset Engine
-              │
-              └── many businesses / channels / products / offers
+Product
+× Venue
+× Market
+× Seller / commercial role
+× Price
+× commission / fees / economics
+× attribution terms
+× settlement terms
+× availability
+× time
 ```
 
-The system should create another business instance only when the marginal experiment is justified by expected information or economic value.
+The same product can have materially different economics across owned sales, affiliate promotion, marketplaces, or different checkout venues.
+
+### Opportunity
+
+An Opportunity is a temporal decision candidate, not an Offer. It combines signals and economic context:
+
+```text
+Signal
++ Product/Concept
++ Offer or offer hypothesis
++ Market
++ distribution route
++ expected economics
++ uncertainty
++ time horizon
++ constraints
+```
+
+This separation allows Business Master to compare "create an owned product", "promote an affiliate offer", "list on a marketplace", and "test demand first" without creating separate control planes.
 
 ---
 
-## 6. Economic lessons from the supplied methodologies
+## 4. Funnel and economic truth
 
-### Paid direct response — Bia Feldman material
+Acquisition and monetization are connected but different systems.
 
-Durable lesson:
+A representative digital funnel may be:
 
 ```text
-market/pain
-→ offer
+ExternalExposure
+→ CTA / attributed click
+→ Offer
+→ checkout started
+→ primary purchase
+→ optional order bump / upsell / downsell
+→ approved payment
+→ refund / chargeback if any
+→ commission / platform fees / direct costs
+→ settlement
+→ Economic Ledger
+```
+
+Not every venue exposes every step. Model capabilities and observed facts rather than inventing unavailable telemetry.
+
+For low-ticket and direct-response economics, useful measures can include:
+
+- click-through and checkout-start rates;
+- checkout conversion;
+- front-end conversion;
+- order-bump attach rate;
+- upsell/downsell acceptance;
+- gross order value and AOV;
+- refund/chargeback rate;
+- affiliate/producer commission;
+- platform/payment fees;
+- acquisition cost when applicable;
+- contribution;
+- settled cash;
+- repeat purchase / LTV where the business model makes them meaningful.
+
+The deterministic Economic Ledger, not platform dashboards or generated prose, is the authority for financial state after events are normalized and recorded.
+
+---
+
+## 5. Business families are compositions, not separate brains
+
+Business Master can explore many monetization families while reusing the same control and execution capabilities.
+
+Examples include:
+
+| Family | Typical monetization | Early useful evidence | Important scarce variable |
+|---|---|---|---|
+| Content / audience | affiliate, owned offer, sponsor, ads | views, retention, intent | creative + distribution |
+| Digital products / low-ticket | product revenue | checkout/purchase | distribution + offer |
+| Affiliate | commission | attributed clicks/orders | traffic + offer economics |
+| Content commerce | affiliate/merchant economics | clicks/orders | product × creative fit |
+| Marketplace | margin/commission | demand + viable offer | demand + supply/economics |
+| Ecommerce | margin | click/cart/order | offer + creative + unit economics |
+| B2B/service | fee/subscription | reply/meeting/payment | pain + customer access + human time |
+| Software/assets | subscription/license/asset value | activation/payment | validated recurring pain + distribution |
+
+These are experiment families and compositions of shared capabilities, not permanent rankings.
+
+---
+
+## 6. Current bootstrap sequencing
+
+The current bootstrap favors **low-human-touch paths capable of reaching external and economic evidence quickly**. This is a sequencing policy, not a constitutional claim about which business model is universally superior.
+
+### Layer 1 — initial critical path
+
+Prefer, where evidence supports them:
+
+- content/audience acquisition;
+- affiliate offers;
+- owned digital products and low-ticket offers;
+- marketplaces and content commerce;
+- other low-human-touch commerce with measurable attribution.
+
+This allows the system to connect attention, intent, offer, checkout, and economic events without making relationship-heavy selling a prerequisite for the first autonomous economic loop.
+
+### Layer 2 — valid but not mandatory first
+
+Preserve and use when justified:
+
+- productized B2B services;
+- AI/media services;
+- lead generation;
+- consulting/training;
+- high-ticket/high-touch sales;
+- custom enterprise delivery.
+
+B2B remains valuable as a cash engine, market sensor, and path from repeated pain to product/software. It is simply not the mandatory first cash engine.
+
+The portfolio should replace these bootstrap priors with observed economics over time.
+
+---
+
+## 7. Durable lessons from project research
+
+Creator/operator material is useful for hypotheses and operating patterns, not automatic economic truth.
+
+### Direct response
+
+A durable abstraction is:
+
+```text
+market / pain
+→ product / offer
 → creative angle
 → acquisition
 → conversion
 → backend monetization
-→ LTV
-→ new creative and offer evidence
+→ LTV / contribution
+→ new evidence
 ```
 
-Campaign mechanics such as Bid Cap or CBO are experimental parameters. They are not the business.
+Campaign mechanics are experiment parameters, not the business itself.
 
-The architecture therefore needs:
-- creative lineage;
-- angle-level metrics;
-- funnel-step metrics;
-- acquisition cost;
-- backend revenue attribution;
-- saturation detection.
+### Low-ticket
 
-### Low-ticket funnel
-
-Low ticket can function as customer acquisition rather than final monetization.
-
-Model separately:
-- front-end product;
-- order bump;
-- upsell;
-- downsell;
-- abandoned-checkout recovery;
-- later offers;
-- AOV;
-- LTV.
+Low-ticket can be customer acquisition as well as direct monetization. Front-end product, bump, upsell/downsell, abandoned checkout, later offers, AOV, refund behavior, and LTV should remain separable where observable.
 
 ### Affiliate
 
-Affiliate offers can be useful for market discovery because fulfillment/product ownership is outsourced. This reduces initial build cost but increases platform/offer-owner dependence.
+Affiliate can reduce product/fulfillment build cost and accelerate offer testing, while increasing dependency on the producer, attribution rules, commission policy, and venue availability. An affiliate link is not a distribution strategy by itself.
 
-### Faceless content
+### Faceless/content systems
 
-The viable thesis is **not** "generate infinite AI sludge." The viable thesis is:
+The viable thesis is not unlimited AI output. It is:
 
 ```text
-cheap structured experimentation
-+ original/useful formats
+structured experimentation
++ useful/original creative
++ cross-surface distribution
 + measurement
 + mutation of winners
-+ channel specialization after evidence
++ monetization attachment
 ```
 
-### AI concierge / consulting
+### Services and consulting
 
-Can generate fast cash, but scales human time poorly. For this project it is more useful as:
-- discovery;
-- customer research;
-- wedge into a productized service;
-- source of vertical pain data.
+They can create cash and high-quality customer research but consume more human interaction. They are useful when expected economics dominate their human-time opportunity cost.
 
-### Micro-SaaS
+### Micro-SaaS/software
 
-Do not build software because AI makes coding cheap. Build only after evidence that a narrow problem has willingness-to-pay and recurring value.
-
-Preferred path:
-
-```text
-manual/productized solution
-→ repeated pain
-→ standardized workflow
-→ software substrate
-→ subscription asset
-```
+Cheap coding is not market evidence. Prefer software after repeated pain, willingness-to-pay, or recurring workflow value is demonstrated.
 
 ---
 
-## 7. Business Master anti-patterns
+## 8. Anti-patterns
 
-### Asset-count optimization
-
-Bad objective:
+### Throughput as objective
 
 ```text
 videos/day
-books/day
+PDFs/day
 stores/day
 channels/day
 ```
 
-Those are throughput metrics, not economic outcomes.
+are production metrics, not economic outcomes.
+
+### Attention mistaken for economics
+
+High reach may be valuable evidence, but attention, intent, purchase, contribution, and settlement remain different layers.
 
 ### Revenue screenshots as proof
 
-Revenue without costs, refunds, acquisition spend, platform fees, logistics, tax, labor and capital lock is insufficient evidence.
+Revenue without refunds, fees, direct costs, acquisition spend, working-capital effects, and settlement state is incomplete economic evidence.
 
 ### Production advantage treated as moat
 
-Using the same frontier model as everyone else is not durable advantage. Moats may emerge from:
-- audience;
-- customer relationships;
-- proprietary data;
-- workflow integration;
-- specialized domain knowledge;
-- faster learning loops;
-- accumulated creative/product evidence.
+Using a frontier model is not automatically durable advantage. Moats may emerge from audience, customer access, proprietary data/evidence, workflow integration, brand, domain knowledge, accumulated creative intelligence, or faster feedback loops.
 
 ### Premature scaling
 
-A winner on one observation is not a SCALE candidate. Replicate first.
+One winner is not automatically a SCALE candidate. Replication, evidence quality, resource feasibility, risk, and economics still govern allocation.
 
 ### Human-time leakage
 
-A workflow that needs a human every time it runs is not autonomous just because an AI drafted the output.
-
-Human minutes must be measured as a real scarce resource.
+A path that repeatedly consumes scarce human effort must compete economically against more autonomous alternatives.
 
 ---
 
-## 8. Canonical decision question
+## 9. Canonical decision question
 
 Every proposed action should eventually answer:
 
-> Why is this the highest-value next use of our constrained cash, compute, platform capacity and human attention given the evidence currently stored in the World Model?
+> **Why is this the highest expected-value next use of constrained cash, compute, platform capacity, human attention, and available market access given the evidence currently stored in the World Model?**
 
-If the system cannot answer that with evidence lineage, the action is not yet a mature autonomous decision.
+The answer may legitimately include information, option, asset, or capability value when direct cash evidence is sparse. It must still be an economic argument with causal lineage, not "learning for learning's sake."
