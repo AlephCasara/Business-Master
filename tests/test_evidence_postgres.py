@@ -116,6 +116,7 @@ def test_evidence_roundtrip_association_lineage_and_immutability(postgres_dsn: s
         provenance=EvidenceProvenance.OBSERVED_OFFICIAL_EXTERNAL,
         kind="metric_snapshot",
         source="youtube.analytics",
+        independence_key="channel:finance-01",
         source_event_id="video-123:2026-10-07T00:00:00Z",
         subject_type="experiment",
         subject_id=experiment.id,

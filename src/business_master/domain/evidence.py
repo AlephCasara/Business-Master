@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Self
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from business_master.domain.clock import utcnow
 from business_master.domain.enums import (
@@ -28,13 +28,20 @@ type EvidenceScalar = float | int | str | bool | None
 
 
 class EvidenceRecord(BaseModel):
-    """Immutable V2 evidence item with explicit class, provenance and lineage."""
+    """Immutable V2 evidence item with explicit class, provenance and lineage.
+
+    ``source`` identifies the collection/observation source. ``independence_key`` is
+    an optional semantic identity used when a policy needs to count independent
+    entities (for example distinct B2B companies) without overloading the source
+    field with two meanings.
+    """
 
     id: UUID = Field(default_factory=uuid4)
     evidence_class: EvidenceClass
     provenance: EvidenceProvenance
     kind: str = Field(min_length=1)
     source: str = Field(min_length=1)
+    independence_key: str | None = Field(default=None, min_length=1, max_length=255)
     source_event_id: str | None = Field(default=None, min_length=1)
     subject_type: str | None = Field(default=None, min_length=1)
     subject_id: UUID | None = None
@@ -44,6 +51,13 @@ class EvidenceRecord(BaseModel):
     payload_ref: str | None = None
     input_evidence_ids: list[UUID] = Field(default_factory=list)
     schema_version: int = Field(default=1, ge=1)
+
+    @field_validator("source", "independence_key")
+    @classmethod
+    def validate_trimmed_identity(cls, value: str | None) -> str | None:
+        if value is not None and value != value.strip():
+            raise ValueError("evidence source identities must be trimmed")
+        return value
 
     @model_validator(mode="after")
     def validate_record(self) -> Self:
