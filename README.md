@@ -390,9 +390,9 @@ When that loop exists against a real external surface, this section should conta
 
 The architecture above is the project direction, not a claim that every component is already complete.
 
-The public `main` branch contains the bootstrap autonomous-control core and its supporting RFCs, metrics, policies, persistence foundation, tests, and developer tooling.
+`main` is now the canonical development base and includes the PR0–PR4 migration foundations: characterized V0 invariants, the decomposed domain model, economic hypotheses and persisted belief-state foundations, immutable experiment contracts, and immutable evidence with provenance/lineage.
 
-The deeper V2 migration is being developed incrementally in [`expansion/knowledge-and-runtime`](https://github.com/AlephCasara/Business-Master/tree/expansion/knowledge-and-runtime), where structured beliefs, economic hypotheses, experiment contracts, evidence provenance, and later control layers are being introduced through bounded PRs.
+The next substrate is **multidimensional resource vectors and durable reservations**. Economic ledger, evidence-to-belief update, business-family policies, portfolio/capital control, and the real autonomous external closed loop remain future milestones.
 
 The public proof standard remains unchanged: **external evidence must autonomously cause the next experiment before the system is presented as a completed autonomous business operator.**
 
