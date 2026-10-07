@@ -108,6 +108,22 @@ class EvidenceClass(StrEnum):
     ECONOMIC = "economic"
 
 
+class EvidenceProvenance(StrEnum):
+    OBSERVED_OWN = "observed_own"
+    OBSERVED_OFFICIAL_EXTERNAL = "observed_official_external"
+    OBSERVED_PUBLIC = "observed_public"
+    CALCULATED = "calculated"
+    INFERRED = "inferred"
+    CREATOR_CLAIM = "creator_claim"
+    UNKNOWN = "unknown"
+
+
+class EvidenceTargetKind(StrEnum):
+    ECONOMIC_HYPOTHESIS = "economic_hypothesis"
+    EXPERIMENT_CONTRACT = "experiment_contract"
+    EXPERIMENT = "experiment"
+
+
 class ComparisonOperator(StrEnum):
     LT = "lt"
     LTE = "lte"
