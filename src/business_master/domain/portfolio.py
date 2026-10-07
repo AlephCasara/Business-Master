@@ -122,6 +122,7 @@ class PortfolioPlanRequest(BaseModel):
     idempotency_key: str = Field(min_length=1, max_length=255)
     candidates: tuple[PortfolioCandidate, ...]
     availability: ResourceAvailability
+    base_currency: str = Field(default="USD", min_length=3, max_length=3)
     max_candidates: int = Field(default=10, ge=1)
     exploration_fraction: float = Field(default=0.20, ge=0.0, le=1.0)
     max_group_fraction: float = Field(default=0.50, gt=0.0, le=1.0)
@@ -135,6 +136,14 @@ class PortfolioPlanRequest(BaseModel):
         if value != value.strip():
             raise ValueError("portfolio idempotency_key must be trimmed")
         return value
+
+    @field_validator("base_currency", mode="before")
+    @classmethod
+    def normalize_base_currency(cls, value: str) -> str:
+        normalized = value.strip().upper()
+        if len(normalized) != 3 or not normalized.isalpha():
+            raise ValueError("portfolio base_currency must be a 3-letter alphabetic code")
+        return normalized
 
     @field_validator("created_at")
     @classmethod
