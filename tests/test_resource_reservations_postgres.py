@@ -17,6 +17,8 @@ from business_master.storage.resource_reservations_postgres import (
     PostgresResourceReservationStore,
     ReservationConflictError,
     ResourceCapacityError,
+    ResourceNotFoundError,
+    ResourceUnavailableError,
 )
 
 
@@ -47,9 +49,9 @@ def _seed_resources(dsn: str) -> None:
     store.save_resource(
         Resource(
             name="cash.usd",
-            kind=ResourceKind.PLATFORM_SLOT,
+            kind=ResourceKind.CASH,
             capacity=100.0,
-            labels={"unit": "USD", "semantic": "cash"},
+            labels={"unit": "USD"},
         )
     )
     store.save_resource(
@@ -110,6 +112,43 @@ def test_reservation_is_idempotent_and_release_restores_capacity(postgres_dsn: s
     assert released_again.released_at == released.released_at
     assert store.availability().available.amount("cash.usd") == Decimal("100")
     assert store.availability().available.amount("gpu.local") == Decimal("1")
+
+
+def test_unknown_and_unavailable_resources_are_rejected(postgres_dsn: str) -> None:
+    _seed_resources(postgres_dsn)
+    world_store = PostgresStore(postgres_dsn)
+    world_store.save_resource(
+        Resource(
+            name="human.operator_minutes",
+            kind=ResourceKind.HUMAN,
+            available=False,
+            capacity=60.0,
+            labels={"unit": "minutes"},
+        )
+    )
+    store = PostgresResourceReservationStore(postgres_dsn)
+
+    with pytest.raises(ResourceNotFoundError, match="missing.resource"):
+        store.reserve(
+            ResourceReservationRequest(
+                owner_type="experiment_contract",
+                owner_id=uuid4(),
+                idempotency_key="missing:resource",
+                requirements=ResourceVector(quantities={"missing.resource": 1}),
+            )
+        )
+
+    with pytest.raises(ResourceUnavailableError, match="human.operator_minutes"):
+        store.reserve(
+            ResourceReservationRequest(
+                owner_type="experiment_contract",
+                owner_id=uuid4(),
+                idempotency_key="unavailable:human",
+                requirements=ResourceVector(
+                    quantities={"human.operator_minutes": Decimal("5")}
+                ),
+            )
+        )
 
 
 def test_concurrent_reservations_cannot_overbook_one_resource(postgres_dsn: str) -> None:
