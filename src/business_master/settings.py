@@ -18,7 +18,9 @@ class Settings(BaseSettings):
     database_url: str = "postgresql://business_master:business_master@127.0.0.1:5432/business_master"
     asset_root: Path = Path("./var/assets")
 
-    # Zero-cash bootstrap guardrails. Changing these is a policy action, not a hidden default.
+    # Operator-configured bootstrap safety ceilings only. They are not cash balances,
+    # financial authority, or spend authorization. Portfolio/capital policy must
+    # intersect these ceilings with authoritative ledger state before paid execution.
     paid_ads_budget_daily: float = Field(default=0.0, ge=0.0)
     external_ai_api_budget_daily: float = Field(default=0.0, ge=0.0)
     cloud_gpu_budget_daily: float = Field(default=0.0, ge=0.0)
@@ -34,6 +36,16 @@ class Settings(BaseSettings):
 
     # Human is an expensive/rare resource. Batch non-urgent requests.
     human_batch_interval_seconds: int = Field(default=3600, ge=60)
+
+    def paid_spend_hard_ceilings(self) -> dict[str, float]:
+        """Return operator safety ceilings without implying available financial capacity."""
+
+        return {
+            "paid_ads": self.paid_ads_budget_daily,
+            "external_ai_api": self.external_ai_api_budget_daily,
+            "cloud_gpu": self.cloud_gpu_budget_daily,
+            "paid_saas": self.paid_saas_budget_daily,
+        }
 
     def ensure_local_directories(self) -> None:
         self.asset_root.mkdir(parents=True, exist_ok=True)
