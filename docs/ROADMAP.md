@@ -18,6 +18,7 @@ The repository has already established the first V2 foundations:
 - multidimensional non-fungible resource vectors;
 - exact persisted resource capacity and durable atomic reservations with concurrency protection;
 - durable reservation expiry and separately persisted observed resource usage;
+- deterministic append-only economic ledger with currency-scoped financial state and explicit attribution;
 - PostgreSQL restart/idempotency coverage for the bootstrap reconciler;
 - deterministic local content generation/QC as an execution capability.
 
@@ -59,31 +60,36 @@ Implemented properties include:
 - exact decimal capacity storage;
 - V0 scalar allocation preserved behind compatibility boundaries while consumers migrate.
 
-Operational resource usage is now represented. **Economic settlement is not.** Revenue, fees, refunds, receivables/payables, authoritative cash movement, and contribution economics belong to the ledger substrate below.
+Operational resource usage is represented separately from authoritative financial state.
+
+---
+
+## Completed substrate — deterministic economic ledger
+
+Economic state no longer needs to be inferred from prose, mutable summaries, or execution telemetry.
+
+The ledger provides:
+- append-only double-entry economic transactions;
+- exact Decimal / PostgreSQL numeric arithmetic;
+- explicit single-currency transaction boundaries;
+- deterministic balance validation;
+- semantic idempotency for retries;
+- revenue recognition separated from cash settlement;
+- fees, refunds/returns, direct costs, and acquisition spend;
+- receivables and payables;
+- working-capital assets and exposure;
+- cash availability;
+- contribution-margin derivation;
+- explicit attribution to experiments, offers, and channels;
+- per-currency snapshots without implicit FX conversion.
+
+`BusinessOutcome`, execution cash-cost fields, and PR5 resource usage remain compatibility/telemetry surfaces. New monetary control logic should derive authoritative financial state from ledger postings as consumers migrate.
 
 ---
 
 ## Immediate architecture sequence
 
-### 1. Deterministic economic ledger
-
-Introduce authoritative financial state rather than deriving economics from prose or simplified outcome objects.
-
-The ledger should support, as applicable:
-- revenue and settlement;
-- fees;
-- refunds/returns;
-- direct costs;
-- contribution margin;
-- acquisition spend;
-- working-capital exposure;
-- receivables/payables;
-- cash availability;
-- attribution back to experiments/offers/channels.
-
-Financial arithmetic remains deterministic and currency-aware.
-
-### 2. Evidence → belief update engine
+### 1. Evidence → belief update engine
 
 Persisted evidence must be able to produce a new versioned belief state through an explicit policy.
 
@@ -97,7 +103,7 @@ The update path must preserve:
 
 No belief may be silently overwritten.
 
-### 3. Business-family evaluation policies
+### 2. Business-family evaluation policies
 
 Content, B2B, commerce, and capability experiments should stop sharing one permanently generic definition of success.
 
@@ -111,9 +117,9 @@ Introduce family-aware evaluation for:
 
 Legacy generic feedback/graduation behavior remains only as a compatibility surface until each consumer migrates.
 
-### 4. Portfolio and capital control
+### 3. Portfolio and capital control
 
-Once typed resources, economic state, and belief updates exist, migrate allocation from scalar `total_units` toward constrained portfolio decisions.
+Once typed resources, authoritative economic state, and belief updates exist, migrate allocation from scalar `total_units` toward constrained portfolio decisions.
 
 The controller should reason over:
 - expected economic value;
