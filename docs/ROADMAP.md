@@ -15,6 +15,7 @@ The repository has already established the first V2 foundations:
 - economic hypotheses and persisted versioned belief state foundations;
 - immutable experiment contracts with machine-readable measurement criteria;
 - immutable evidence records with provenance, derivation lineage, and target associations;
+- deterministic, versioned evidence-to-belief transitions with explicit interpretation and freshness semantics;
 - multidimensional non-fungible resource vectors;
 - exact persisted resource capacity and durable atomic reservations with concurrency protection;
 - durable reservation expiry and separately persisted observed resource usage;
@@ -87,39 +88,50 @@ The ledger provides:
 
 ---
 
+## Completed substrate — evidence → belief updates
+
+Persisted evidence can now cause an explicit, deterministic belief transition without silently overwriting prior state.
+
+The update substrate provides:
+- explicit supporting / falsifying / neutral / technical interpretation;
+- bounded interpretation strength and persisted rationale;
+- policy name/version on every update;
+- deterministic TTL, linear-decay, exponential-decay, and no-decay freshness semantics;
+- hard separation between technical failure and market/economic falsification;
+- append-only immutable belief-state versions;
+- latest `belief_state` retained as a compatibility/cache surface;
+- durable `belief_update` lineage with before/after state values;
+- evidence-association requirements before mutation;
+- retry idempotency and conflicting-reinterpretation rejection;
+- transactionally serialized updates so concurrent evidence receives distinct state versions.
+
+The bootstrap policy intentionally does not infer business semantics from raw evidence. It applies a versioned mathematical transition only after evidence interpretation is explicit. Business-family policy is the next layer.
+
+---
+
 ## Immediate architecture sequence
 
-### 1. Evidence → belief update engine
-
-Persisted evidence must be able to produce a new versioned belief state through an explicit policy.
-
-The update path must preserve:
-- provenance;
-- evidence class;
-- freshness/decay semantics;
-- supporting vs falsifying interpretation;
-- technical failure ≠ market rejection;
-- complete decision lineage.
-
-No belief may be silently overwritten.
-
-### 2. Business-family evaluation policies
+### 1. Business-family evaluation policies
 
 Content, B2B, commerce, and capability experiments should stop sharing one permanently generic definition of success.
 
 Introduce family-aware evaluation for:
+- which evidence supports or falsifies each hypothesis type;
 - sufficient evidence;
+- independent-source requirements;
 - replication;
 - falsification;
 - graduation;
 - economic readiness;
 - operational readiness.
 
+These policies should consume the PR7 update substrate rather than mutating belief state directly.
+
 Legacy generic feedback/graduation behavior remains only as a compatibility surface until each consumer migrates.
 
-### 3. Portfolio and capital control
+### 2. Portfolio and capital control
 
-Once typed resources, authoritative economic state, and belief updates exist, migrate allocation from scalar `total_units` toward constrained portfolio decisions.
+Once typed resources, authoritative economic state, versioned belief updates, and family-aware evaluation exist, migrate allocation from scalar `total_units` toward constrained portfolio decisions.
 
 The controller should reason over:
 - expected economic value;
@@ -131,6 +143,20 @@ The controller should reason over:
 - reversible exploration vs exploitation.
 
 Capital policy and platform/risk gates remain deterministic.
+
+### 3. Autonomous decision → experiment continuation
+
+Connect updated belief state and family evaluation to persisted autonomous decisions and child experiment creation.
+
+The transition must preserve:
+- decision policy/version;
+- evidence IDs;
+- belief state version;
+- expected resource demand;
+- explicit parent/child experiment lineage;
+- idempotent child creation under retry/restart.
+
+This layer is what mechanically closes the constitutional feedback loop once real external evidence is available.
 
 ---
 
