@@ -243,7 +243,10 @@ class PostgresCapitalAuthorizationStore:
             raise ValueError("capital request blast radius differs from portfolio allocation")
         if bool(risk_assessment.get("reversible", True)) is not request.reversible:
             raise ValueError("capital request reversibility differs from portfolio allocation")
-        if bool(risk_assessment.get("human_gate_required", False)) is not request.human_gate_required:
+        if (
+            bool(risk_assessment.get("human_gate_required", False))
+            is not request.human_gate_required
+        ):
             raise ValueError("capital request human-gate fact differs from portfolio allocation")
 
         allowed_stages: dict[str, set[CapitalStage]] = {
