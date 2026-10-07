@@ -41,7 +41,6 @@ from business_master.storage.family_evaluations_postgres import (
     PostgresFamilyEvaluationStore,
 )
 
-
 NOW = datetime(2026, 10, 7, tzinfo=UTC)
 
 
