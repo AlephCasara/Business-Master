@@ -12,6 +12,7 @@ from business_master.domain.enums import (
     EvidenceClass,
     MetricAggregation,
 )
+from business_master.domain.resources import ResourceVector
 
 
 class MetricCriterion(BaseModel):
@@ -45,7 +46,7 @@ class MeasurementContract(BaseModel):
 
 
 class ExperimentBudget(BaseModel):
-    """Coarse bounded envelope until typed resource reservations replace V0 costs."""
+    """Legacy scalar V0 envelope retained while callers migrate to ResourceVector."""
 
     max_cash_cost: float = Field(default=0.0, ge=0.0)
     max_compute_units: float = Field(default=0.0, ge=0.0)
@@ -57,9 +58,9 @@ class ExperimentBudget(BaseModel):
 class ExperimentContract(BaseModel):
     """Immutable pre-execution specification for one bounded economic experiment.
 
-    The contract describes what question is being tested and what observations are
-    decision-relevant. It intentionally does not evaluate evidence or change belief
-    state; later policies consume this contract together with persisted evidence.
+    ``resource_requirements`` is the canonical multidimensional pre-execution demand
+    introduced by PR5. ``budget`` remains as a compatibility envelope until legacy
+    callers stop expressing cash/compute/human cost as three fungible-ish scalars.
     """
 
     id: UUID = Field(default_factory=uuid4)
@@ -71,6 +72,7 @@ class ExperimentContract(BaseModel):
     expected_observation: str = Field(min_length=1)
     falsification_condition: str = Field(min_length=1)
     measurement: MeasurementContract
+    resource_requirements: ResourceVector = Field(default_factory=ResourceVector)
     budget: ExperimentBudget = Field(default_factory=ExperimentBudget)
     parent_contract_id: UUID | None = None
     supersedes_contract_id: UUID | None = None
