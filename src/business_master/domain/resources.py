@@ -82,6 +82,12 @@ class Resource(BaseModel):
         return capacity
 
 
+def _validate_aware_datetime(value: datetime | None) -> datetime | None:
+    if value is not None and (value.tzinfo is None or value.utcoffset() is None):
+        raise ValueError("resource timestamps must be timezone-aware")
+    return value
+
+
 class ResourceReservationRequest(BaseModel):
     owner_type: str = Field(min_length=1, max_length=64)
     owner_id: UUID
@@ -95,6 +101,11 @@ class ResourceReservationRequest(BaseModel):
         if value != value.strip():
             raise ValueError("reservation identifiers must be trimmed")
         return value
+
+    @field_validator("expires_at")
+    @classmethod
+    def validate_expires_at(cls, value: datetime | None) -> datetime | None:
+        return _validate_aware_datetime(value)
 
     @model_validator(mode="after")
     def validate_non_empty(self) -> Self:
@@ -114,6 +125,11 @@ class ResourceReservation(BaseModel):
     expires_at: datetime | None = None
     released_at: datetime | None = None
     expired_at: datetime | None = None
+
+    @field_validator("created_at", "expires_at", "released_at", "expired_at")
+    @classmethod
+    def validate_timestamps(cls, value: datetime | None) -> datetime | None:
+        return _validate_aware_datetime(value)
 
     @model_validator(mode="after")
     def validate_lifecycle(self) -> Self:
@@ -163,6 +179,13 @@ class ResourceUsage(BaseModel):
     actual: ResourceVector
     execution_id: UUID | None = None
     observed_at: datetime = Field(default_factory=utcnow)
+
+    @field_validator("observed_at")
+    @classmethod
+    def validate_observed_at(cls, value: datetime) -> datetime:
+        validated = _validate_aware_datetime(value)
+        assert validated is not None
+        return validated
 
     @model_validator(mode="after")
     def validate_actual_usage(self) -> Self:
