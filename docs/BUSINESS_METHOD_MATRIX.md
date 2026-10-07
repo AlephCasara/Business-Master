@@ -1,21 +1,29 @@
-# Business Method Matrix — Current Working Portfolio Map
+# Business Method Matrix — Research Priors Snapshot
 
-This is the canonical working map of the internet/AI business methodologies audited during project research.
+Status: **RESEARCH / NON-CANONICAL FOR CURRENT PRIORITY**
 
-It is deliberately **not** a promise of returns. Scores are comparative planning priors that should be replaced by Business Master's own evidence.
+This document preserves comparative priors extracted during the internet/AI business-method audit. It is useful for opportunity generation and historical context, but it is **not** the current roadmap, portfolio allocation policy, bootstrap sequence, or economic objective.
 
-Scale: 1 (low) to 10 (high). `Human` means recurring human dependence; lower is better for this project.
+Current authority lives in:
+- `ECONOMIC_THESIS.md` for the economic objective and strategic layers;
+- `ROADMAP.md` for the current implementation frontier;
+- `PORTFOLIO_ARCHITECTURE.md` for shared factories and portfolio composition;
+- persisted Business Master evidence for actual allocation decisions.
 
-| Business method | Cash speed | Signal speed | Automation | Parallelizability | Human | Capital need | Platform risk | 30–90d potential | Long-term asset value | Current role |
+The scores below are research-era heuristics. They must yield to measured evidence and should not be treated as calibrated forecasts or promises of returns.
+
+Scale: 1 (low) to 10 (high). `Human` means recurring human dependence; lower is more compatible with the project's autonomy objective.
+
+| Business method | Cash speed | Signal speed | Automation | Parallelizability | Human | Capital need | Platform risk | 30–90d potential | Long-term asset value | Research-era role |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| Productized B2B automation/service | 9 | 9 | 9 | 8 | 3 | 2 | 3 | 9 | 8 | Cash Engine |
-| AI video / UGC service | 8 | 9 | 9 | 9 | 3 | 2 | 4 | 8.5 | 7 | Cash + Media validation |
-| Lead generation / outreach service | 8 | 9 | 9 | 9 | 3 | 2 | 5 | 8 | 7 | Cash Engine |
-| Specialized SME automation | 7 | 8 | 9 | 8 | 3 | 2 | 3 | 9 | 9 | Cash → SaaS |
-| Faceless short-form factory | 3 | 10 | 10 | 10 | 1 | 1 | 7 | 7 | 8 | Signal Engine |
-| YouTube long-form factory | 3 | 7 | 8 | 8 | 2 | 2 | 6 | 5 | 9 | Audience/IP asset |
+| Productized B2B automation/service | 9 | 9 | 9 | 8 | 3 | 2 | 3 | 9 | 8 | Cash candidate |
+| AI video / UGC service | 8 | 9 | 9 | 9 | 3 | 2 | 4 | 8.5 | 7 | Cash + media validation |
+| Lead generation / outreach service | 8 | 9 | 9 | 9 | 3 | 2 | 5 | 8 | 7 | Cash candidate |
+| Specialized SME automation | 7 | 8 | 9 | 8 | 3 | 2 | 3 | 9 | 9 | Cash → SaaS candidate |
+| Faceless short-form factory | 3 | 10 | 10 | 10 | 1 | 1 | 7 | 7 | 8 | Signal/distribution candidate |
+| YouTube long-form factory | 3 | 7 | 8 | 8 | 2 | 2 | 6 | 5 | 9 | Audience/IP candidate |
 | TikTok Shop affiliate | 6 | 10 | 8 | 8 | 2 | 1 | 8 | 7.5 | 6 | Commerce signal/cash |
-| Owned ecommerce / dropship / POD | 5 | 9 | 8 | 8 | 3 | 4 | 7 | 7 | 8 | Commerce Engine |
+| Owned ecommerce / dropship / POD | 5 | 9 | 8 | 8 | 3 | 4 | 7 | 7 | 8 | Commerce candidate |
 | Marketplace zero-inventory resale | 6 | 7 | 8 | 9 | 3 | 3 | 6 | 7 | 8 | Commerce/radar |
 | Affiliate content/paid traffic | 5 | 9 | 9 | 9 | 2 | 2–6 | 7 | 7 | 5 | Demand discovery |
 | Low-ticket funnel | 6 | 9 | 9 | 9 | 2 | 2–7 | 6 | 8 | 8 | Acquisition architecture |
@@ -24,60 +32,69 @@ Scale: 1 (low) to 10 (high). `Human` means recurring human dependence; lower is 
 | Personal brand + service | 7 | 7 | 5 | 5 | 6 | 1 | 4 | 7 | 9 | Trust/distribution |
 | AI consulting/training | 10 | 8 | 4 | 4 | 8 | 1 | 2 | 9 | 6 | Discovery / premium cash |
 | Traditional AI concierge | 10 | 8 | 4 | 3 | 9 | 1 | 2 | 8 | 5 | Opportunistic only |
-| Vertical micro-SaaS | 3 | 5 | 9 after build | 10 | 2 | 2–5 | 3 | 8 | 10 | Asset Engine after pain proof |
+| Vertical micro-SaaS | 3 | 5 | 9 after build | 10 | 2 | 2–5 | 3 | 8 | 10 | Asset after pain proof |
 | Community | 4 | 5 | 6 | 7 | 5 | 1 | 4 | 6 | 8 | Later trust asset |
-| SEO/AdSense blog | 2 | 3 | 8 | 9 | 1 | 1 | 7 | 4 | 6 | Low priority |
+| SEO/AdSense blog | 2 | 3 | 8 | 9 | 1 | 1 | 7 | 4 | 6 | Low-priority research candidate |
 | Data collection / AI training gigs | 8 conditional | 8 | 3 | 3 | 8 | 1 | 6 | 3 | 1 | Conditional cash only |
 
 ---
 
 ## 1. How to interpret the matrix
 
-The project is not choosing one permanent business.
+The project is not choosing one permanent business from this table.
 
-The question is:
+The table is a **candidate-generation prior**. A method becomes important only after Business Master can justify its next experiment from expected economic value, resource constraints, risk and evidence lineage.
 
-> Which mix of experiments gives the best combination of early cash, fast information, reusable infrastructure and long-term asset formation?
+The research originally emphasized three roles — Signal, Cash and Asset. The implemented portfolio model now also includes **Capability**.
 
-This leads to three simultaneous portfolios.
+### Signal
 
-### Signal portfolio
-
-Optimizes rapid external evidence.
+Purpose: acquire decision-relevant external evidence cheaply and quickly.
 
 Examples:
 - short-form content;
-- YouTube formats;
 - product creatives;
 - offer pages;
-- outbound messages.
+- outbound messages;
+- platform/format probes.
 
-### Cash portfolio
+### Cash
 
-Optimizes probability of first revenue with bounded work.
+Purpose: generate near-term cash flow under bounded risk.
 
-Examples:
-- productized B2B;
-- AI video service;
-- lead generation;
-- affiliate commerce where eligible.
+Examples may include:
+- affiliate commerce;
+- digital products;
+- marketplace paths;
+- productized B2B when human-touch economics justify it.
 
-### Asset portfolio
+### Asset
 
-Consumes evidence from the first two and creates compounding ownership.
+Purpose: create compounding ownership from validated patterns.
 
 Examples:
 - vertical SaaS;
-- owned offer/product;
-- channel/IP portfolio;
+- owned offers/products;
+- channel/IP portfolios;
 - proprietary datasets;
-- durable supplier/customer network.
+- durable supplier/customer networks.
+
+### Capability
+
+Purpose: make future experiments cheaper, faster, safer or more successful.
+
+Examples:
+- production workflows;
+- publishing adapters;
+- telemetry collectors;
+- reusable creative intelligence;
+- infrastructure that measurably lowers marginal experiment cost.
 
 ---
 
-## 2. Current practical portfolio
+## 2. Historical practical-portfolio snapshot
 
-For a local zero-incremental-cash bootstrap, the default mix is:
+The following was an earlier research-era bootstrap sketch:
 
 ```text
 Machine A — Signal Engine
@@ -97,29 +114,31 @@ Machine D — Asset Builder
   dormant until repeated evidence justifies software/data/product asset
 ```
 
-These are logical machines and may share the same physical workstation.
+This is **not the current default bootstrap plan**. It is retained because it records how the research was originally decomposed.
+
+The current living strategy instead prioritizes the shortest low-human-touch path to real external and economic evidence: multi-surface short-form distribution plus low-ticket / affiliate / marketplace monetization where feasible, while B2B/services remain valid Layer 2 paths rather than mandatory first cash engines. See `ECONOMIC_THESIS.md` and `ROADMAP.md`.
 
 ---
 
-## 3. Method-specific conclusions
+## 3. Method-specific research conclusions
 
 ### AI coaching / concierge
 
-**Confirms:** AI expertise can be monetized quickly.
+Research conclusion:
+- AI expertise can be monetized quickly;
+- traditional one-to-one delivery conflicts with the project's human-scarcity objective.
 
-**Modifies:** traditional one-to-one delivery conflicts with the project's human-scarcity objective.
-
-Use it as:
+Possible roles:
 - paid discovery;
 - high-ticket exception;
 - pain mining;
 - transition into standardized delivery.
 
-Do not make calls the core scaling unit.
+Do not make calls the core autonomous scaling unit.
 
 ### Productized B2B
 
-**Confirms:** strongest fit for early cash + automation.
+Research conclusion: B2B can reach payment quickly and produce high-signal pain/objection data, but recurring sales/onboarding can consume scarce human attention.
 
 Good offers are narrow outcomes, for example:
 - respond to every review and summarize recurring complaints;
@@ -127,126 +146,131 @@ Good offers are narrow outcomes, for example:
 - generate/schedule a specific content package;
 - automate a narrow lead/reply workflow.
 
-The product is the delivered outcome, not "AI automation consulting."
+The economic object is the delivered outcome and offer, not generic "AI automation consulting."
 
 ### AI video / UGC service
 
-**Confirms:** media generation can be shared with the Content Engine.
-
-Synergy:
+Research conclusion: media-generation capabilities can be reused across internal experiments and external delivery.
 
 ```text
-internal media R&D
+production capability
 → content experiments
-→ external client capability
 → commerce creatives
+→ possible client delivery
 ```
 
-This makes media tooling unusually reusable.
+This makes production tooling a potentially valuable Capability asset even before a service business is prioritized.
 
-### Faceless / dark channels
+### Faceless / short-form channels
 
-**Modifies:** the architecture should automate production/render/publish/analytics early, but should not lock creative strategy before evidence.
+Research conclusion: automate production, publication and telemetry without locking creative strategy before evidence.
 
 Recommended autonomy split:
 
 ```text
 research            high automation
-asset retrieval      high automation
-render               full automation
-publishing           full automation where API permits
-analytics            full automation
-creative mutation    AI/statistical
-format strategy      evidence-driven, initially reviewed
+asset retrieval     high automation
+render              full automation
+publishing          full automation where legitimate API/adapter permits
+analytics           full automation
+creative mutation   AI/statistical
+format strategy     evidence-driven
 ```
 
-Avoid repetitive AI-sludge patterns. Original usefulness and differentiation are economic constraints even when platform policy permits AI assistance.
+Avoid repetitive AI-sludge patterns. Original usefulness and differentiation remain economic constraints even when platform policy permits AI assistance.
 
 ### TikTok Shop
 
-**Confirms:** potentially fast signal and direct commerce attribution.
+Research conclusion: potentially fast signal and direct commerce attribution.
 
-**Constraint:** eligibility, identity verification, posting caps and geography are first-class account state.
+Constraint: eligibility, identity verification, posting caps and geography are first-class account state.
 
-Do not build a strategy whose economics depend on an imaginary unlimited-account surface.
+Do not build economics around an imaginary unlimited-account surface.
 
-### Digital products
+### Digital products / low ticket
 
-**Modifies:** generic information is heavily commoditized. Outcome-oriented products, tools, templates, proof/support and narrow domain assets remain viable.
+Research conclusion: generic information is heavily commoditized, but narrow outcome-oriented products, tools, templates, checklists, packs, proof/support and specific domain assets remain useful offer candidates.
 
 The system should ask:
 
 ```text
-What does the customer obtain that a generic model response does not give them?
+What concrete outcome or reusable artifact does the customer obtain
+that a generic model response does not provide by itself?
 ```
+
+Low ticket should be modeled as an acquisition and monetization system, not merely "make an ebook".
 
 ### KDP
 
-**Confirms:** production parallelizes well.
-
-**Downgrades:** slow validation and distribution uncertainty make it a poor bootstrap cash engine.
+Research conclusion:
+- production parallelizes well;
+- slow validation and distribution uncertainty make it a weak first-loop candidate relative to faster-feedback surfaces.
 
 ### Ecommerce
 
-**Confirms:** AI reduces store/creative/ops work.
+Research conclusion: AI can reduce store/creative/operations work, but it does not create demand.
 
-**Rejects:** `create store -> find random product -> hope` as the operating model.
+Rejected operating model:
 
-Canonical loop:
+```text
+create store → find random product → hope
+```
+
+More defensible loop:
 
 ```text
 demand evidence
-→ exact product/offer identity
+→ product/offer identity
 → contribution underwriting
-→ supply/fulfillment reliability
+→ supply/fulfillment reliability where applicable
 → creative acquisition test
-→ order/settlement evidence
+→ order/payment/settlement evidence
 ```
 
 ### Vertical micro-SaaS
 
-**Confirms long-term priority.**
-
-**Constraint:** software is downstream of problem validation.
+Research conclusion: strong long-term asset candidate, but software should be downstream of problem validation.
 
 Preferred evidence path:
 
 ```text
 pain observed
-→ customer pays for outcome
+→ customer/user demonstrates willingness to pay or repeated value
 → workflow repeats
 → delivery standardizes
-→ software reduces marginal cost
+→ software reduces marginal cost or increases retention/value
 ```
 
 ---
 
 ## 4. Kill conditions common to methods
 
-A method should be paused or killed when one or more applies:
+A method or experiment may be paused/killed when one or more applies:
 
 - no meaningful external signal after the planned evidence window;
 - economics cannot become positive under plausible sensitivity ranges;
 - recurring human time grows linearly with scale and no productization path exists;
 - platform/account eligibility makes the proposed scale structurally impossible;
 - fulfillment/reliability risk can destroy account reputation faster than information is gained;
-- production cost exceeds expected information value;
-- the experiment tests multiple major variables simultaneously and cannot teach us why it won/lost;
+- production cost exceeds expected economic/information value;
+- the experiment changes too many major variables to produce useful evidence;
 - the same hypothesis has been repeated without material mutation.
+
+These are candidate policy inputs, not substitutes for the implemented family, portfolio, risk and capital controllers.
 
 ---
 
-## 5. Graduation conditions common to methods
+## 5. Graduation evidence
 
-A method moves toward SCALE only after replicated evidence.
+A method moves toward SCALE only after evidence appropriate to its business family and current policy.
 
-Evidence may include:
+Potential supporting evidence includes:
 - repeated positive contribution margin;
 - repeated high cohort-relative content signal;
 - multiple independent paying customers for the same productized outcome;
 - repeat purchase / retention;
 - consistent qualified replies from the same offer/segment;
-- stable product/supplier economics across more than one order;
+- stable product/supplier economics across multiple orders where fulfillment is owned;
 - lower marginal human minutes as volume increases.
 
 One viral video, one lucky sale or one friendly client is a PROBE result, not a mature business.
