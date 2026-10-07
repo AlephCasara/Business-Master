@@ -35,6 +35,7 @@ class PortfolioRole(StrEnum):
 
 class RiskAssessment(BaseModel):
     level: RiskLevel = RiskLevel.LOW
+    blast_radius: float = Field(default=0.0, ge=0.0, le=1.0)
     reversible: bool = True
     human_gate_required: bool = False
 
