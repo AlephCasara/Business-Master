@@ -15,6 +15,8 @@ The repository has already established the first V2 foundations:
 - economic hypotheses and persisted versioned belief state foundations;
 - immutable experiment contracts with machine-readable measurement criteria;
 - immutable evidence records with provenance, derivation lineage, and target associations;
+- multidimensional non-fungible resource vectors;
+- exact persisted resource capacity and durable atomic reservations with concurrency protection;
 - PostgreSQL restart/idempotency coverage for the bootstrap reconciler;
 - deterministic local content generation/QC as an execution capability.
 
@@ -22,13 +24,11 @@ These are substrates. They do **not** yet prove a complete autonomous economic l
 
 ---
 
-## Immediate architecture sequence
+## Completed substrate — multidimensional resources and reservations
 
-### 1. Multidimensional resources and reservations
+The system no longer needs to pretend all scarce capacity is one fungible scalar.
 
-Replace the assumption that all scarce capacity can be represented by one fungible scalar.
-
-The system must be able to represent and reserve dimensions such as:
+It can represent dimensions such as:
 
 ```text
 cash
@@ -43,16 +43,24 @@ account capacity
 human minutes
 ```
 
-Required properties:
+Implemented properties include:
 - deterministic vector arithmetic;
 - explicit capacity and availability;
 - durable reservations;
-- atomic over-allocation prevention;
-- idempotent release/expiry;
-- actual usage recorded separately from reserved usage;
-- V0 scalar allocation preserved behind compatibility boundaries until consumers migrate.
+- atomic over-allocation prevention under concurrent PostgreSQL transactions;
+- semantic idempotency for reservation retries;
+- idempotent release;
+- resource demand persisted on immutable experiment contracts;
+- exact decimal capacity storage;
+- V0 scalar allocation preserved behind compatibility boundaries while consumers migrate.
 
-### 2. Deterministic economic ledger
+Actual economic usage and settlement remain separate from temporary capacity reservations and belong to the ledger substrate below.
+
+---
+
+## Immediate architecture sequence
+
+### 1. Deterministic economic ledger
 
 Introduce authoritative financial state rather than deriving economics from prose or simplified outcome objects.
 
@@ -70,7 +78,7 @@ The ledger should support, as applicable:
 
 Financial arithmetic remains deterministic and currency-aware.
 
-### 3. Evidence → belief update engine
+### 2. Evidence → belief update engine
 
 Persisted evidence must be able to produce a new versioned belief state through an explicit policy.
 
@@ -84,7 +92,7 @@ The update path must preserve:
 
 No belief may be silently overwritten.
 
-### 4. Business-family evaluation policies
+### 3. Business-family evaluation policies
 
 Content, B2B, commerce, and capability experiments should stop sharing one permanently generic definition of success.
 
@@ -98,7 +106,7 @@ Introduce family-aware evaluation for:
 
 Legacy generic feedback/graduation behavior remains only as a compatibility surface until each consumer migrates.
 
-### 5. Portfolio and capital control
+### 4. Portfolio and capital control
 
 Once typed resources, economic state, and belief updates exist, migrate allocation from scalar `total_units` toward constrained portfolio decisions.
 

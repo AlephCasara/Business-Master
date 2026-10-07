@@ -308,7 +308,7 @@ account capacity
 human minutes
 ```
 
-An experiment should be able to express and eventually reserve the capacity it needs before execution.
+Experiments can now express multidimensional resource demand, and the control substrate can reserve persisted capacity atomically before execution.
 
 ```text
 candidate action
@@ -325,6 +325,8 @@ actual usage
       ↓
 release remainder
 ```
+
+Reservations prevent concurrent over-allocation. Actual economic usage and settlement remain separate ledger concerns.
 
 ---
 
@@ -390,9 +392,9 @@ When that loop exists against a real external surface, this section should conta
 
 The architecture above is the project direction, not a claim that every component is already complete.
 
-`main` is now the canonical development base and includes the PR0–PR4 migration foundations: characterized V0 invariants, the decomposed domain model, economic hypotheses and persisted belief-state foundations, immutable experiment contracts, and immutable evidence with provenance/lineage.
+`main` is now the canonical development base and includes the PR0–PR5 migration foundations: characterized V0 invariants, the decomposed domain model, economic hypotheses and persisted belief-state foundations, immutable experiment contracts, immutable evidence with provenance/lineage, and multidimensional resources with durable atomic reservations.
 
-The next substrate is **multidimensional resource vectors and durable reservations**. Economic ledger, evidence-to-belief update, business-family policies, portfolio/capital control, and the real autonomous external closed loop remain future milestones.
+The next substrate is the **deterministic economic ledger**. Evidence-to-belief update, business-family policies, portfolio/capital control, and the real autonomous external closed loop remain future milestones.
 
 The public proof standard remains unchanged: **external evidence must autonomously cause the next experiment before the system is presented as a completed autonomous business operator.**
 
@@ -511,6 +513,7 @@ The README is the front door, not the specification.
 | Document | Purpose |
 |---|---|
 | [`RFC-0001`](docs/RFC-0001-autonomous-control-plane.md) | autonomous control-plane architecture |
+| [`ADR-0003`](docs/ADR-0003-resource-vectors-and-reservations.md) | multidimensional resources and atomic reservation invariants |
 | [`METRICS_AND_OBJECTIVES`](docs/METRICS_AND_OBJECTIVES.md) | evidence and objective hierarchy |
 | [`TECH_STACK`](docs/TECH_STACK.md) | implementation and adapter choices |
 | [`SOURCE_LEARNINGS`](docs/SOURCE_LEARNINGS.md) | durable conclusions from research |
