@@ -26,7 +26,7 @@ class CapitalPolicy:
     """Pure bounded capital-admission policy; it never moves money."""
 
     name: str = "capital_control"
-    version: str = "3"
+    version: str = "4"
 
     def assess(
         self,
@@ -63,6 +63,12 @@ class CapitalPolicy:
             return denied("Capital envelope is locked; paid authorization is disabled.")
         if _RISK_ORDER[request.risk] > _RISK_ORDER[envelope.max_risk]:
             return denied("Requested risk exceeds the capital envelope risk limit.")
+        if request.blast_radius > envelope.max_blast_radius:
+            return denied("Requested blast radius exceeds the capital envelope limit.")
+        if not request.reversible and not envelope.allow_irreversible:
+            return denied("Irreversible capital action is not allowed by the active envelope.")
+        if request.human_gate_required and not envelope.allow_human_gate:
+            return denied("Capital action requires a human gate that the envelope does not allow.")
         if request.amount > envelope.max_per_authorization:
             return denied("Requested amount exceeds max_per_authorization.")
         if request.expires_at is not None and request.expires_at <= assessed_at:
@@ -92,6 +98,7 @@ class CapitalPolicy:
             authorizable_cash=authorizable_cash,
             rationale=(
                 "Request fits ledger cash, active commitments, envelope limits, "
-                "operator ceiling, expiry, category, and risk policy."
+                "operator ceiling, expiry, category, risk, blast-radius, reversibility, "
+                "and human-gate policy."
             ),
         )
