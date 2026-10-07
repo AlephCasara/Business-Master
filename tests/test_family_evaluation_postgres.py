@@ -33,7 +33,9 @@ from business_master.policies.family_evaluation import policy_for_family
 from business_master.storage.belief_updates_postgres import PostgresBeliefUpdateEngine
 from business_master.storage.beliefs_postgres import PostgresBeliefStore
 from business_master.storage.evidence_postgres import PostgresEvidenceStore
-from business_master.storage.experiment_contracts_postgres import PostgresExperimentContractStore
+from business_master.storage.experiment_contracts_postgres import (
+    PostgresExperimentContractStore,
+)
 from business_master.storage.family_evaluations_postgres import (
     FamilyEvaluationConflictError,
     PostgresFamilyEvaluationStore,
