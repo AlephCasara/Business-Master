@@ -392,9 +392,9 @@ When that loop exists against a real external surface, this section should conta
 
 The architecture above is the project direction, not a claim that every component is already complete.
 
-`main` is now the canonical development base and includes the PR0–PR6 migration foundations: characterized V0 invariants, the decomposed domain model, economic hypotheses and persisted belief-state foundations, immutable experiment contracts, immutable evidence with provenance/lineage, multidimensional resources with atomic reservations/expiry/observed usage, and a deterministic append-only economic ledger with currency-scoped financial state.
+`main` is now the canonical development base and includes the PR0–PR7 migration foundations: characterized V0 invariants, the decomposed domain model, economic hypotheses, immutable experiment contracts, immutable evidence with provenance/lineage, multidimensional resources with atomic reservations/expiry/observed usage, a deterministic append-only economic ledger with currency-scoped financial state, and versioned evidence-to-belief transitions with freshness, explicit interpretation, idempotency, and immutable belief history.
 
-The next substrate is the **Evidence → Belief Update engine**. Business-family policies, portfolio/capital control, and the real autonomous external closed loop remain future milestones.
+The next substrate is **business-family evaluation policy**. Portfolio/capital control and the real autonomous external closed loop remain future milestones.
 
 The public proof standard remains unchanged: **external evidence must autonomously cause the next experiment before the system is presented as a completed autonomous business operator.**
 
@@ -515,6 +515,7 @@ The README is the front door, not the specification.
 | [`RFC-0001`](docs/RFC-0001-autonomous-control-plane.md) | autonomous control-plane architecture |
 | [`ADR-0003`](docs/ADR-0003-resource-vectors-and-reservations.md) | multidimensional resources, reservations, usage, and expiry invariants |
 | [`ADR-0004`](docs/ADR-0004-deterministic-economic-ledger.md) | deterministic, currency-aware economic ledger invariants |
+| [`ADR-0005`](docs/ADR-0005-evidence-to-belief-updates.md) | versioned, auditable evidence-to-belief transition invariants |
 | [`METRICS_AND_OBJECTIVES`](docs/METRICS_AND_OBJECTIVES.md) | evidence and objective hierarchy |
 | [`TECH_STACK`](docs/TECH_STACK.md) | implementation and adapter choices |
 | [`SOURCE_LEARNINGS`](docs/SOURCE_LEARNINGS.md) | durable conclusions from research |
