@@ -169,8 +169,12 @@ def test_portfolio_plan_is_durable_and_retry_idempotent(postgres_dsn: str) -> No
 
     with psycopg.connect(postgres_dsn) as conn:
         experiment_count = conn.execute("SELECT COUNT(*) FROM experiment").fetchone()
-    assert experiment_count is not None
-    assert experiment_count[0] == 0
+        reservation_count = conn.execute(
+            "SELECT COUNT(*) FROM resource_reservation"
+        ).fetchone()
+
+    assert experiment_count == (0,)
+    assert reservation_count == (0,)
 
 
 def test_portfolio_idempotency_key_rejects_semantic_reuse(postgres_dsn: str) -> None:
