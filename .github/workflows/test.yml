@@ -41,7 +41,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e '.[dev]'
       - name: Ruff
-        run: ruff check src tests
+        run: |
+          ruff check --fix src tests
+          git diff -- src/business_master/storage/evidence_postgres.py
+          exit 1
       - name: Mypy
         run: mypy src/business_master
       - name: Pytest
