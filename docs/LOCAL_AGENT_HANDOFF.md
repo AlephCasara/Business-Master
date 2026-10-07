@@ -1,8 +1,8 @@
 # Local Agent Handoff — Implementation Contract
 
-This file is the minimum operating context for a local coding agent taking over Business Master on the NixOS workstation.
+This file is the minimum operating context for a coding agent taking over Business Master.
 
-The agent should not rely on the original ChatGPT conversation. Canonical context is in this repository.
+The agent should not rely on old conversation history. Canonical context is stored in this repository.
 
 ---
 
@@ -10,23 +10,24 @@ The agent should not rely on the original ChatGPT conversation. Canonical contex
 
 1. `README.md`
 2. `AGENTS.md`
-3. `docs/ECONOMIC_THESIS.md`
-4. `docs/PORTFOLIO_ARCHITECTURE.md`
-5. `docs/EXPERIMENTATION_AND_ALLOCATION.md`
-6. `docs/RFC-0001-autonomous-control-plane.md`
-7. `docs/METRICS_AND_OBJECTIVES.md`
-8. `docs/ENGINES_CONTENT.md`
-9. `docs/ENGINES_COMMERCE.md`
-10. `docs/ENGINES_B2B_AND_ASSETS.md`
-11. `docs/PLATFORMS_ACCOUNTS_AND_GATES.md`
-12. `docs/HARDWARE_AND_RUNTIME.md`
-13. `docs/MEDIA_AND_AGENT_STACK.md`
-14. `docs/TECH_STACK.md`
-15. `docs/SOURCE_CATALOG.md`
-16. `docs/SOURCE_LEARNINGS.md`
-17. `docs/ROADMAP.md`
+3. `docs/ADR-0002-economic-control-system-v2.md`
+4. `docs/ECONOMIC_THESIS.md`
+5. `docs/PORTFOLIO_ARCHITECTURE.md`
+6. `docs/EXPERIMENTATION_AND_ALLOCATION.md`
+7. `docs/RFC-0001-autonomous-control-plane.md`
+8. `docs/METRICS_AND_OBJECTIVES.md`
+9. the relevant engine document
+10. `docs/PLATFORMS_ACCOUNTS_AND_GATES.md`
+11. `docs/HARDWARE_AND_RUNTIME.md`
+12. `docs/MEDIA_AND_AGENT_STACK.md`
+13. `docs/TECH_STACK.md`
+14. `docs/SOURCE_CATALOG.md`
+15. `docs/SOURCE_LEARNINGS.md`
+16. `docs/ROADMAP.md`
 
-Then inspect open GitHub issues and current tests.
+Then inspect current tests, migrations, open issues, and recent merged PRs.
+
+Do not assume an old issue number or vendor-specific plan is still authoritative.
 
 ---
 
@@ -34,7 +35,7 @@ Then inspect open GitHub issues and current tests.
 
 Business Master is an autonomous economic control system.
 
-Normal operation is **not**:
+Normal operation is not:
 
 ```text
 human says "make a video"
@@ -45,20 +46,21 @@ Normal operation is:
 
 ```text
 system observes state/evidence
-→ chooses next bounded economic experiment
-→ schedules work
-→ acts
+→ updates beliefs
+→ chooses a bounded economic experiment
+→ reserves scarce resources
+→ executes
 → measures external result
-→ changes the portfolio
+→ changes the next decision
 ```
 
-The human is an exceptional scarce resource.
+Human attention is an explicit scarce resource and exception path.
 
 ---
 
 ## 3. Engineering hierarchy
 
-For any subproblem, choose in this order unless measured evidence justifies otherwise:
+For any subproblem, prefer:
 
 ```text
 deterministic code
@@ -70,23 +72,21 @@ deterministic code
 → human
 ```
 
-Do not add AI where a state machine or SQL query is sufficient.
+Do not add AI where a state machine, SQL query, or deterministic calculation is sufficient.
 
-Do not add microservices when one typed process/module is sufficient.
-
-Do not add Rust because it feels more serious. Profile first.
+Do not add infrastructure because it looks sophisticated. Complexity must earn its place through a real workload.
 
 ---
 
 ## 4. Safety and platform boundary
 
-Allowed design:
+Allowed design includes:
 - owned legitimate accounts;
 - documented multi-channel/account structures;
 - official APIs;
-- browser/mobile automation for ordinary owned-account workflows;
+- ordinary browser/mobile automation for owned-account workflows;
 - human KYC/2FA/liveness gates;
-- legitimate account/channel creation where platform permits it.
+- legitimate account/channel creation where the platform permits it.
 
 Do not implement:
 - fake identity/account farms;
@@ -97,13 +97,13 @@ Do not implement:
 - fake engagement;
 - anti-abuse circumvention.
 
-If a platform requires an audit/review, represent it as state and gate rather than building around it.
+If a platform requires review, consent, identity verification, or another gate, represent it as durable state instead of bypassing it.
 
 ---
 
 ## 5. Financial boundary
 
-Default bootstrap policy:
+Default bootstrap policy remains zero-cash for discretionary infrastructure:
 
 ```text
 paid ads        = 0
@@ -112,15 +112,15 @@ cloud GPU       = 0
 paid SaaS       = 0
 ```
 
-Do not create spend paths before policy explicitly unlocks them.
+Do not create spend paths before deterministic policy explicitly unlocks them.
 
-Local electricity/compute is allowed.
+Local electricity/compute may be used within declared resource constraints.
 
 ---
 
 ## 6. First local action
 
-Run:
+Run the repository's normal development checks before changing architecture:
 
 ```bash
 nix develop
@@ -130,87 +130,73 @@ bm policy
 pytest
 ```
 
-Extend `bm doctor` before making hardware assumptions.
+Extend capability discovery before making hardware assumptions.
 
-The declared baseline is:
-- Ryzen 9 7900;
-- 32 GB DDR5-6000 (~30 GB application-usable);
-- ~5 GB base system RAM;
-- browser can be closed for heavy workloads.
-
-Discover GPU/VRAM locally and record it in benchmark/runtime state, not a hard-coded module constant.
+The declared bootstrap host is Ryzen 9 7900 with 32 GB DDR5-6000 (~30 GB application-usable). GPU/VRAM and transient device/runtime availability are discovered at runtime rather than hard-coded.
 
 ---
 
-## 7. Implementation order
+## 7. Current implementation sequence
 
-### P0 — World Model reconciliation
+The immediate sequence is substrate-first.
 
-Resolve GitHub issue #2.
+### A. Multidimensional resource model
 
-Required behavior:
+Introduce typed resource vectors, capacity pools, durable reservations, atomic over-allocation prevention, release/expiry semantics, and actual-usage records.
+
+Do not replace legacy scalar allocation policy in the same change. Preserve compatibility until consumers migrate.
+
+### B. Deterministic economic ledger
+
+Create authoritative, currency-aware economic state for revenue, fees, refunds, costs, contribution, cash/working capital, and attribution.
+
+Language models must never be authoritative calculators or ledgers.
+
+### C. Evidence → belief update
+
+Persist a new belief version from relevant immutable evidence through an explicit policy with freshness/decay and technical-vs-market separation.
+
+### D. Business-family evaluation
+
+Move content, B2B, commerce, and capability experiments away from one permanently generic graduation/feedback interpretation.
+
+### E. Portfolio/capital migration
+
+Only after resources, economics, and belief updates are explicit should allocation move beyond the legacy scalar `total_units` model.
+
+### F. External closed-loop proof
+
+Prove:
 
 ```text
-active hypothesis
-+ no live experiment
-+ probe capacity
-→ exactly one persisted CREATE_PROBE intent
-→ exactly one Experiment
+Experiment A
+→ genuine external evidence
+→ persisted evidence
+→ belief/decision update
+→ Experiment B
 ```
 
-Restart/reconcile must not duplicate work.
-
-Use database constraints/idempotency keys, not "we probably won't call it twice."
-
-### P1 — Durable runtime
-
-Resolve issue #3 after the state path is correct.
-
-Use Hatchet embedded mode initially if implementation/CI remains simple.
-
-Domain policies must not depend on Hatchet imports.
-
-### P2 — First local content executor
-
-Resolve issue #4.
-
-The first executor can be deliberately simple/deterministic:
-- structured content spec;
-- local image/text/graphic frames;
-- FFmpeg vertical MP4;
-- metadata sidecar;
-- ffprobe/QC;
-- content hash/idempotency.
-
-The purpose is to prove the economic loop, not demonstrate the fanciest model.
-
-### P3 — Real externalization
-
-Issue #5.
-
-A live platform credential/account may require human onboarding. Software can reach `WAITING_HUMAN`, but do not fake the final acceptance test.
-
-Success requires one genuine external metric followed by an autonomous decision and child experiment.
-
-### P4 — Technology benchmark
-
-Issue #6.
-
-After `bm doctor` knows hardware, benchmark:
-- Playwright;
-- Stagehand;
-- Holo4 candidates;
-- SGLang;
-- vLLM;
-- llama.cpp/GGUF;
-- media workflows;
-- ADB/mobile candidates.
-
-Use Business Master workloads, not only public benchmark scores.
+with no new human instruction between evidence ingestion and Experiment B.
 
 ---
 
-## 8. Definition of done for autonomous features
+## 8. Durable runtime policy
+
+A durable runtime is required eventually, but no vendor is part of the domain architecture.
+
+Runtime requirements:
+- restart-safe execution;
+- durable timers/events;
+- idempotent retries;
+- resource-aware dispatch;
+- replaceable adapter boundary;
+- measurement/evaluation work must not be starved by speculative production.
+
+Select an implementation when a concrete workload exists. Benchmark candidates against Business Master tasks rather than adopting an old bootstrap choice by default.
+
+---
+
+## 9. Definition of done for autonomous features
 
 A feature is not done because a function exists.
 
@@ -220,133 +206,133 @@ For a durable action path require:
 - idempotency;
 - retry semantics;
 - failure classification;
-- observability/event lineage;
-- test;
+- lineage/observability;
+- tests;
 - recovery after restart where relevant.
 
 For an economic policy require:
-- input evidence definition;
-- output action definition;
-- policy version;
-- tests for boundaries;
-- no hidden model-only decision for hard financial constraints.
+- explicit evidence inputs;
+- explicit output action/state transition;
+- policy name/version;
+- deterministic hard constraints;
+- tests at boundaries;
+- auditable decision lineage.
 
 ---
 
-## 9. Git discipline
+## 10. Git discipline
 
 For substantial work:
-- use feature branch;
+- branch from current `main` unless repository state explicitly says otherwise;
+- keep the PR bounded to one architectural responsibility;
 - update tests/docs with behavior;
-- open PR;
-- require CI green;
-- avoid mixing unrelated architectural changes.
+- require CI green before merge;
+- use additive migrations during the strangler transition;
+- do not mix unrelated architecture cleanup into feature PRs.
 
-If changing a durable invariant, add/update ADR/RFC rather than silently changing semantics.
+If changing a durable invariant, update the owning ADR/RFC rather than silently drifting semantics.
 
 ---
 
-## 10. Database discipline
+## 11. Database discipline
 
-World Model is canonical state.
+PostgreSQL is canonical durable state for the control plane.
 
-Do not hard-code registries of:
-- active channels;
-- stores;
+Do not hard-code live registries of:
+- channels;
 - businesses;
 - hypotheses;
 - models;
 - accounts;
-- suppliers.
+- suppliers;
+- resource pools.
 
-The Master Trader precedent demonstrated how hard-coded live registries become stale and dangerous.
-
-Use migrations for schema evolution.
+Use migrations for schema evolution and real PostgreSQL tests when transactional/idempotency behavior is the claimed feature.
 
 ---
 
-## 11. Experiment discipline
+## 12. Experiment discipline
 
-Every experiment should expose:
+A V2 experiment should be traceable through:
 
 ```text
-parent lineage
-changed dimensions
-preserved dimensions
-expected evidence window
-resource budget
-externalization IDs
-raw metrics
-normalized signals
-decision
+economic hypothesis
+→ immutable experiment contract
+→ intervention / held-constant dimensions
+→ resource budget/reservation
+→ execution
+→ immutable evidence + provenance
+→ belief update
+→ decision
+→ child/superseding contract when required
 ```
 
-Do not create blind clones.
+Do not create blind clones or mutate persisted contracts/evidence in place.
 
 ---
 
-## 12. What not to overbuild now
+## 13. What not to overbuild now
 
-Do not block V0 on:
+Do not block the closed loop on:
 - a full dashboard;
-- 100 YouTube channels;
-- dozens of TikTok accounts;
+- large account/channel fleets;
 - paid ad infrastructure;
 - Kubernetes;
 - multiple VPS nodes;
 - an elaborate multi-agent swarm;
-- Holo4 production routing;
-- a universal ecommerce platform;
-- a perfect recommender/bandit model.
+- a fashionable local model/runtime;
+- a universal commerce platform;
+- a complex recommender/bandit model without clean data.
 
-Build the smallest substrate that can autonomously learn from the real world.
+Build the smallest substrate that can learn reliably from external reality.
 
 ---
 
-## 13. V0.1 acceptance test
+## 14. Autonomy acceptance standard
 
-The milestone is:
+The constitutional milestone is:
 
 ```text
-A: hypothesis
-→ autonomous probe
-→ valid asset/offer
-→ external exposure
-→ real external metric
-→ persisted evidence
-→ automatic feedback policy
-→ B: child mutation/continuation/kill action
+Hypothesis A
+→ bounded Experiment A
+→ real external exposure
+→ genuine external observation
+→ immutable evidence
+→ versioned belief/decision update
+→ Experiment B
 ```
 
-No new operator prompt between metric ingestion and the next experiment decision.
+No new operator prompt between evidence ingestion and the next experiment decision.
+
+One observation proves loop mechanics, not economic validity or SCALE readiness.
 
 ---
 
-## 14. When to ask the operator
+## 15. When to ask the operator
 
 Ask only when the machine cannot legitimately resolve the dependency itself, for example:
 - KYC;
 - 2FA/owner consent;
 - physical action;
-- missing business choice with material irreversible consequence;
 - credential/account not yet created;
 - spending authorization;
+- a material irreversible business choice;
 - policy/legal boundary.
 
 Batch human actions when possible.
 
 ---
 
-## 15. How to report progress
+## 16. How to report progress
 
-Report outcomes in terms of system state and evidence, not coding activity alone.
+Report outcomes in terms of system capability and evidence, not code volume.
 
 Good:
 
 ```text
-Reconciler now survives restart and cannot duplicate CREATE_PROBE.
-Content executor produced 9:16 canonical MP4, QC and lineage sidecar.
-TikTok adapter is blocked on API audit; state is persisted as WAITING_HUMAN.
+Resource reservations now prevent concurrent over-allocation in PostgreSQL.
+Evidence ingestion is immutable and source-event idempotent.
+An external observation created a new belief version and caused a child experiment.
 ```
 
 Weak:
@@ -355,4 +341,4 @@ Weak:
 I wrote 700 lines of code.
 ```
 
-Business Master ultimately cares about reliable economic capability, not code volume.
+Business Master ultimately cares about reliable economic capability, not implementation theater.
