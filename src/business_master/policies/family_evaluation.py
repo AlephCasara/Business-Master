@@ -53,7 +53,9 @@ class FamilyEvaluationPolicy:
             for record in request.evidence
             if record.evidence_class in {EvidenceClass.MARKET, EvidenceClass.ECONOMIC}
         ]
-        independent_sources = len({record.source for record in external_records})
+        independent_sources = len(
+            {self._independence_key(record) for record in external_records}
+        )
         external_observations = len(external_records)
         required = request.hypothesis.evidence_requirements
         required_kinds_present = {record.kind for record in request.evidence}
@@ -121,6 +123,11 @@ class FamilyEvaluationPolicy:
                 f"{self.family.value} policy cannot evaluate "
                 f"{request.contract.business_family!r} contract"
             )
+
+    def _independence_key(self, record: EvidenceRecord) -> str:
+        """Return the family-specific identity used for independence requirements."""
+
+        return f"source:{record.source}"
 
     def _evaluate_criteria(
         self,
@@ -412,6 +419,7 @@ class ContentEvaluationPolicy(FamilyEvaluationPolicy):
 
 
 class B2BEvaluationPolicy(FamilyEvaluationPolicy):
+    version = "2"
     family = BusinessFamily.B2B
     profile = FamilyGateProfile(
         probe_replications=1,
@@ -421,6 +429,14 @@ class B2BEvaluationPolicy(FamilyEvaluationPolicy):
         scale_requires_operational_ready=True,
         scale_requires_economic_ready=True,
     )
+
+    def _independence_key(self, record: EvidenceRecord) -> str:
+        # For B2B the economically independent unit is normally the company/account,
+        # not the transport or discovery surface. New adapters should therefore set
+        # subject_type/subject_id. Source remains the explicit legacy fallback.
+        if record.subject_type is not None and record.subject_id is not None:
+            return f"subject:{record.subject_type}:{record.subject_id}"
+        return super()._independence_key(record)
 
 
 class CommerceEvaluationPolicy(FamilyEvaluationPolicy):
