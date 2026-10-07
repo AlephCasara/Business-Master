@@ -58,10 +58,10 @@ class CapitalPolicy:
             return denied("Requested risk exceeds the capital envelope risk limit.")
         if request.amount > envelope.max_per_authorization:
             return denied("Requested amount exceeds max_per_authorization.")
-        if active_outstanding + request.amount > envelope.max_outstanding:
-            return denied("Requested amount exceeds max_outstanding after active commitments.")
         if request.amount > authorizable_cash:
             return denied("Requested amount exceeds ledger cash net of active authorizations.")
+        if active_outstanding + request.amount > envelope.max_outstanding:
+            return denied("Requested amount exceeds max_outstanding after active commitments.")
 
         if envelope.operator_hard_ceiling is not None:
             if envelope.period_start is None or envelope.period_end is None:
