@@ -34,13 +34,22 @@ class DecisionType(StrEnum):
 
 
 class ResourceKind(StrEnum):
+    CASH = "cash"
+    WORKING_CAPITAL = "working_capital"
     CPU = "cpu"
     GPU = "gpu"
     LLM = "llm"
+    API_QUOTA = "api_quota"
     BROWSER = "browser"
     MOBILE = "mobile"
     HUMAN = "human"
     PLATFORM_SLOT = "platform_slot"
+    ACCOUNT_CAPACITY = "account_capacity"
+
+
+class ResourceReservationStatus(StrEnum):
+    ACTIVE = "active"
+    RELEASED = "released"
 
 
 class RiskLevel(StrEnum):

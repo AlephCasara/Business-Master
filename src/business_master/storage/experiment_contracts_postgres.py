@@ -11,6 +11,7 @@ from business_master.domain.experiment_contracts import (
     ExperimentContract,
     ExperimentContractBinding,
 )
+from business_master.domain.resources import ResourceVector
 
 
 class PostgresExperimentContractStore:
@@ -27,16 +28,16 @@ class PostgresExperimentContractStore:
                 INSERT INTO experiment_contract (
                     id, economic_hypothesis_id, business_family, question,
                     intervention_dimensions, held_constant_dimensions,
-                    expected_observation, falsification_condition, measurement, budget,
-                    parent_contract_id, supersedes_contract_id, origin_decision_id,
-                    contract_version, created_at
+                    expected_observation, falsification_condition, measurement,
+                    resource_requirements, budget, parent_contract_id,
+                    supersedes_contract_id, origin_decision_id, contract_version, created_at
                 ) VALUES (
                     %(id)s, %(economic_hypothesis_id)s, %(business_family)s, %(question)s,
                     %(intervention_dimensions)s, %(held_constant_dimensions)s,
                     %(expected_observation)s, %(falsification_condition)s,
-                    %(measurement)s, %(budget)s, %(parent_contract_id)s,
-                    %(supersedes_contract_id)s, %(origin_decision_id)s,
-                    %(contract_version)s, %(created_at)s
+                    %(measurement)s, %(resource_requirements)s, %(budget)s,
+                    %(parent_contract_id)s, %(supersedes_contract_id)s,
+                    %(origin_decision_id)s, %(contract_version)s, %(created_at)s
                 )
                 ON CONFLICT (id) DO NOTHING
                 RETURNING id
@@ -51,6 +52,9 @@ class PostgresExperimentContractStore:
                     "expected_observation": contract.expected_observation,
                     "falsification_condition": contract.falsification_condition,
                     "measurement": Jsonb(payload["measurement"]),
+                    "resource_requirements": Jsonb(
+                        payload["resource_requirements"]["quantities"]
+                    ),
                     "budget": Jsonb(payload["budget"]),
                     "parent_contract_id": contract.parent_contract_id,
                     "supersedes_contract_id": contract.supersedes_contract_id,
@@ -135,6 +139,9 @@ class PostgresExperimentContractStore:
             expected_observation=row["expected_observation"],
             falsification_condition=row["falsification_condition"],
             measurement=row["measurement"],
+            resource_requirements=ResourceVector(
+                quantities=row["resource_requirements"]
+            ),
             budget=row["budget"],
             parent_contract_id=row["parent_contract_id"],
             supersedes_contract_id=row["supersedes_contract_id"],

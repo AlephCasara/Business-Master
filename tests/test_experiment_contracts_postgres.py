@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from decimal import Decimal
 from pathlib import Path
 
 import psycopg
@@ -20,6 +21,7 @@ from business_master.domain.experiment_contracts import (
     MetricCriterion,
 )
 from business_master.domain.hypotheses import EconomicHypothesis, Hypothesis
+from business_master.domain.resources import ResourceVector
 from business_master.storage.beliefs_postgres import PostgresBeliefStore
 from business_master.storage.experiment_contracts_postgres import PostgresExperimentContractStore
 from business_master.storage.postgres import PostgresStore
@@ -98,6 +100,9 @@ def test_contract_roundtrip_binding_and_immutability(postgres_dsn: str) -> None:
         expected_observation="At least one attributed external click inside 24 hours.",
         falsification_condition="No attributed click after the completed measurement window.",
         measurement=_measurement(),
+        resource_requirements=ResourceVector(
+            quantities={"gpu.local": Decimal("1"), "human.operator_minutes": Decimal("2")}
+        ),
     )
 
     store = PostgresExperimentContractStore(postgres_dsn)
@@ -111,7 +116,11 @@ def test_contract_roundtrip_binding_and_immutability(postgres_dsn: str) -> None:
     store.bind_experiment(binding)
     store.bind_experiment(binding)
 
-    assert store.get_contract(contract.id) == contract
+    restored_contract = store.get_contract(contract.id)
+    assert restored_contract == contract
+    assert restored_contract is not None
+    assert restored_contract.resource_requirements.amount("gpu.local") == Decimal("1")
+
     restored_binding = store.get_binding(experiment.id)
     assert restored_binding is not None
     assert restored_binding.experiment_id == experiment.id
