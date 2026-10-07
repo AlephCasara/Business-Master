@@ -11,7 +11,6 @@ from psycopg.types.json import Jsonb
 from business_master.domain.enums import EvidenceClass, EvidenceTargetKind
 from business_master.domain.evidence import EvidenceAssociation, EvidenceRecord
 
-
 _TARGET_TABLES: dict[EvidenceTargetKind, str] = {
     EvidenceTargetKind.ECONOMIC_HYPOTHESIS: "economic_hypothesis",
     EvidenceTargetKind.EXPERIMENT_CONTRACT: "experiment_contract",
