@@ -38,7 +38,7 @@
 >
 > It is a control plane over evolving economic hypotheses.
 
-Business Master continuously observes the world, maintains structured beliefs, designs bounded experiments, allocates scarce resources, executes through reusable business engines, measures real outcomes, and updates what it does next.
+Business Master is designed to continuously observe the world, maintain structured beliefs, design bounded experiments, allocate scarce resources, execute through reusable business engines, measure real outcomes, and update what it does next.
 
 Its core question is:
 
@@ -57,31 +57,6 @@ Human attention is one of those resources.
   </picture>
 </p>
 
-```text
-World
-  ↓
-Observation
-  ↓
-Evidence
-  ↓
-Belief
-  ↓
-Economic hypothesis
-  ↓
-Bounded experiment
-  ↓
-Resource allocation
-  ↓
-Real-world action
-  ↓
-Measurement
-  ↓
-Belief update
-  ↓
-Kill · Wait · Mutate · Replicate · Graduate · Scale
-  ↺
-```
-
 The loop is not closed when Business Master generates something.
 
 It is not closed when it publishes something.
@@ -91,6 +66,8 @@ It is not even closed when it measures something.
 The loop closes when:
 
 > **external evidence changes the system's beliefs and causes a different autonomous decision.**
+
+That distinction is the center of the project.
 
 ---
 
@@ -110,9 +87,9 @@ Code, text, images, video, research, storefronts, prospecting, and automation ar
 | **Human attention** | judgment, KYC, irreversible decisions |
 | **Time** | feedback latency and opportunity windows |
 
-Business Master does not optimize for output volume.
+Business Master therefore does not optimize for **output volume**.
 
-It optimizes for **validated learning, economic outcomes, and durable assets**.
+It is designed to optimize for **validated learning, economic outcomes, and durable assets**.
 
 ---
 
@@ -120,7 +97,7 @@ It optimizes for **validated learning, economic outcomes, and durable assets**.
 
 A "business idea" is too coarse to be the fundamental unit of reasoning.
 
-Business Master decomposes it into falsifiable economic hypotheses.
+Business Master decomposes it into smaller falsifiable economic hypotheses.
 
 ```text
 "AI ecommerce business"
@@ -134,7 +111,7 @@ Business Master decomposes it into falsifiable economic hypotheses.
           └─ unit economics survive scale
 ```
 
-A business becomes real only when enough of these beliefs survive contact with the market.
+A business becomes real only when enough of those beliefs survive contact with the market.
 
 ```text
 BUSINESS CANDIDATE
@@ -154,7 +131,7 @@ Businesses are therefore **emergent compositions of evidence-backed beliefs**, n
 
 ## Evidence hierarchy
 
-Business Master distinguishes three fundamentally different layers of evidence.
+Business Master distinguishes three fundamentally different evidence layers.
 
 ### Factory evidence
 
@@ -238,9 +215,9 @@ PORTFOLIO
 sustainable economic value
 ```
 
-During cold start, a zero-revenue experiment can still be valuable if it cheaply eliminates a bad hypothesis.
+During cold start, a zero-revenue experiment may still be valuable if it cheaply eliminates a bad hypothesis.
 
-As economic evidence becomes available, proxy metrics progressively lose decision weight.
+As economic evidence appears, proxy metrics should progressively lose decision weight.
 
 ---
 
@@ -255,7 +232,7 @@ As economic evidence becomes available, proxy metrics progressively lose decisio
 
 The **control plane decides what should happen**.
 
-Business engines provide reusable capabilities for making it happen.
+Execution engines provide reusable capabilities for making it happen.
 
 ### Content
 
@@ -271,7 +248,7 @@ Content can become audience, affiliate demand, product demand, leads, or owned d
 discover → validate → convert → improve fulfillment → source → scale
 ```
 
-Demand is tested before significant inventory or sourcing commitments whenever possible.
+Demand should be tested before significant inventory or sourcing commitments whenever possible.
 
 ### B2B
 
@@ -295,7 +272,7 @@ Engines are **not separate autonomous brains**. They are execution capabilities 
 
 ## Portfolio control
 
-Business Master can maintain different economic roles simultaneously.
+Business Master can reason about different economic roles simultaneously.
 
 | Portfolio | Purpose |
 |---|---|
@@ -304,13 +281,13 @@ Business Master can maintain different economic roles simultaneously.
 | **Asset** | accumulate durable economic value |
 | **Capability** | make future experiments cheaper or better |
 
-A capability does not need to generate revenue directly. If it reduces the cost of every future validated experiment, it may deserve resources.
+A capability does not need to generate revenue directly. If it reduces the cost of every future validated experiment, it can still have high economic value.
 
 ---
 
 ## Resource-aware by design
 
-The system does not pretend all resources are one interchangeable budget.
+The system should not pretend all resources are one interchangeable budget.
 
 ```text
 cash
@@ -331,7 +308,7 @@ account capacity
 human minutes
 ```
 
-An experiment must be able to express and eventually reserve the scarce capacity it needs.
+An experiment should be able to express and eventually reserve the capacity it needs before execution.
 
 ```text
 candidate action
@@ -348,8 +325,6 @@ actual usage
       ↓
 release remainder
 ```
-
-As scarcity changes, the economic cost of resources can change with it.
 
 ---
 
@@ -373,40 +348,7 @@ Different problems belong to different mechanisms.
 
 AI may propose actions.
 
-It does not get unrestricted authority over capital, accounting, or irreversible state.
-
----
-
-## Every decision has lineage
-
-Autonomous decisions must be explainable.
-
-```text
-Decision D-184
-
-Action
-  REPLICATE experiment E-044
-
-Because
-  Evidence EV-301
-  Evidence EV-309
-
-Changed belief
-  B-017: 0.41 → 0.67
-
-Policy
-  replication-policy@3
-
-Expected cost
-  cash: 0
-  GPU: 480 s
-  human: 0 min
-
-Blast radius
-  LOW
-```
-
-No important autonomous decision should exist only as an LLM explanation.
+It should not get unrestricted authority over capital, accounting, or irreversible state.
 
 ---
 
@@ -444,53 +386,15 @@ When that loop exists against a real external surface, this section should conta
 
 ## Current status
 
-> **Bootstrap / architecture migration**
+> **Bootstrap / active architecture migration**
 
-The architecture described above is the target control system. Implementation is being migrated incrementally without a rewrite.
+The architecture above is the project direction, not a claim that every component is already complete.
 
-| Capability | Status |
-|---|---|
-| Architecture invariants / V0 characterization | ✅ Implemented |
-| Decomposed domain model | ✅ Implemented |
-| Economic hypotheses | ✅ Foundation |
-| Persisted belief state | ✅ Foundation |
-| Immutable experiment contracts | ✅ Implemented |
-| Immutable evidence + provenance | ✅ Implemented |
-| Multidimensional resource vectors | ⚪ Planned |
-| Economic ledger | ⚪ Planned |
-| Business-family policies | ⚪ Planned |
-| Evidence → belief update engine | ⚪ Planned |
-| Portfolio controller | ⚪ Planned |
-| Capital controller | ⚪ Planned |
-| Autonomous external closed loop | ⚪ Major milestone |
-| Offer / Funnel / Creative domain | ⚪ Planned |
-| Business composition / adjacency | ⚪ Planned |
-| Capability self-optimization | ⚪ Planned |
+The public `main` branch contains the bootstrap autonomous-control core and its supporting RFCs, metrics, policies, persistence foundation, tests, and developer tooling.
 
-Implementation proceeds through small, reversible pull requests with characterization tests and additive migrations. Exact PR numbering is intentionally **not** part of the README contract: implementation order may evolve as new invariants or missing substrates are discovered.
+The deeper V2 migration is being developed incrementally in [`expansion/knowledge-and-runtime`](https://github.com/AlephCasara/Business-Master/tree/expansion/knowledge-and-runtime), where structured beliefs, economic hypotheses, experiment contracts, evidence provenance, and later control layers are being introduced through bounded PRs.
 
-The canonical public contract is the architecture and its invariants; the current PR/issue history records the migration path.
-
----
-
-## Three learning loops
-
-The long-term system learns at three levels.
-
-```text
-MARKET LEARNING
-"What does the world want?"
-
-        ↓
-
-BUSINESS LEARNING
-"What mechanism captures value?"
-
-        ↓
-
-FACTORY LEARNING
-"What is the best way to execute?"
-```
+The public proof standard remains unchanged: **external evidence must autonomously cause the next experiment before the system is presented as a completed autonomous business operator.**
 
 ---
 
@@ -555,8 +459,6 @@ media generation
 external platform APIs
 ```
 
-Business Master deliberately avoids premature Kubernetes, microservices, Kafka, generic vector databases, multi-agent swarms, reinforcement learning without data, and speculative schemas.
-
 Complexity must earn its place.
 
 ---
@@ -574,12 +476,6 @@ Retries must not duplicate real-world actions.
 
 **Financial arithmetic is deterministic.**  
 Revenue, cost, margin, and capital accounting never depend on generated prose.
-
-**Reserve before spending.**  
-No policy may consume unreserved scarce resources.
-
-**Every temporal belief can age.**  
-Markets, platforms, tactics, and supplier conditions change.
 
 **Human attention is measured.**  
 Human intervention is an explicit economic cost.
@@ -614,52 +510,13 @@ The README is the front door, not the specification.
 
 | Document | Purpose |
 |---|---|
-| [`ADR-0002`](docs/ADR-0002-economic-control-system-v2.md) | V2 economic-control-system invariants |
 | [`RFC-0001`](docs/RFC-0001-autonomous-control-plane.md) | autonomous control-plane architecture |
-| [`ECONOMIC_THESIS`](docs/ECONOMIC_THESIS.md) | economic objective and business thesis |
-| [`EXPERIMENTATION_AND_ALLOCATION`](docs/EXPERIMENTATION_AND_ALLOCATION.md) | experiment and allocation model |
 | [`METRICS_AND_OBJECTIVES`](docs/METRICS_AND_OBJECTIVES.md) | evidence and objective hierarchy |
 | [`TECH_STACK`](docs/TECH_STACK.md) | implementation and adapter choices |
 | [`SOURCE_LEARNINGS`](docs/SOURCE_LEARNINGS.md) | durable conclusions from research |
-| [`SOURCE_CATALOG`](docs/SOURCE_CATALOG.md) | audited research surface and provenance |
-| [`ENGINES_CONTENT`](docs/ENGINES_CONTENT.md) | Content Engine design |
-| [`ENGINES_COMMERCE`](docs/ENGINES_COMMERCE.md) | Commerce Engine design |
-| [`ENGINES_B2B_AND_ASSETS`](docs/ENGINES_B2B_AND_ASSETS.md) | B2B and Asset Engine design |
-| [`HARDWARE_AND_RUNTIME`](docs/HARDWARE_AND_RUNTIME.md) | workstation and runtime constraints |
-| [`AGENTS.md`](AGENTS.md) | rules for coding agents working in this repository |
+| [`BOOTSTRAP_24H`](docs/BOOTSTRAP_24H.md) | bootstrap execution plan |
 
-Creator material is treated as a **source of hypotheses**, not as authoritative platform truth. Claims that matter operationally must survive cross-comparison or current verification before they become system assumptions.
-
----
-
-## Repository boundaries
-
-Git stores the reproducible system:
-
-```text
-source
-schemas
-migrations
-policies
-tests
-RFCs
-ADRs
-skills
-versioned prompts
-```
-
-Runtime state stays outside Git:
-
-```text
-credentials
-database state
-model weights
-browser sessions
-generated media
-raw datasets
-device state
-large caches
-```
+Creator material is treated as a **source of hypotheses**, not as authoritative platform truth. Operational claims should survive independent verification before they become policy.
 
 ---
 
@@ -673,7 +530,7 @@ It is:
 
 > **How effectively can it convert scarce resources into validated economic knowledge, cash flow, and durable assets — while continuously improving the quality of its own decisions?**
 
-The intended end state is a persistent economic organism that can:
+The intended end state is a persistent economic control system that can:
 
 ```text
 observe
