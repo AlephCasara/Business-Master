@@ -12,14 +12,17 @@ PR9 introduces deterministic portfolio selection and capital authorization on to
 - `PortfolioAllocation` is a durable selection artifact, not a resource lease; execution must still acquire the required PR5 `ResourceReservation` transactionally;
 - if resource availability changes after planning and reservation acquisition fails, the allocation must be replanned rather than executed optimistically;
 - bootstrap exploration floor and concentration cap are explicit versioned policy parameters;
+- concentration is a strict ceiling and never rounds upward to admit a group beyond the configured share;
 - every portfolio run declares and durably persists an explicit base currency;
 - financially material foreign-currency candidates require explicit valuation/FX evidence; PR9 performs no implicit currency conversion;
 - capital authorization is a separate durable artifact from portfolio/resource allocation and from actual ledger spend;
 - financial authority comes from the deterministic economic ledger, not `Settings`, legacy scalar costs, `BusinessOutcome`, resource names, or generated text;
 - active capital authorizations reduce spendable capital for concurrent requests;
 - capital authorization is transactionally safe, retry-idempotent, and releases/expires unused capacity without fabricating ledger activity;
+- a persisted portfolio allocation may mint at most one capital authorization; terminal authorization requires replan rather than reauthorization of stale allocation state;
 - caller-supplied request timestamps are audit inputs, not control-plane clock authority;
 - authorization, control-period checks, release, and expiry use a timezone-aware trusted store clock and persist `authorized_at` separately from `requested_at`;
+- a release attempted after expiry preserves `expired` lifecycle semantics;
 - bootstrap settings may remain hard operator ceilings but cannot become accounting truth;
 - operator hard ceilings are category-local: an explicit envelope category locks the category, while an unset category uses the request category as the effective ceiling scope;
 - committed ceiling usage is counted within the same currency, category, and explicit control period;
@@ -27,7 +30,10 @@ PR9 introduces deterministic portfolio selection and capital authorization on to
 - consuming an authorization requires a separate authoritative ledger transaction explicitly linked to that authorization;
 - a consuming ledger event must have an exact authorized cash outflow, occur within the authorization window, and not be future-dated relative to reconciliation time;
 - PR9 supports full authorization consumption only; partial consumption is not inferred;
-- risk/blast-radius facts are explicit inputs to authorization;
+- risk facts are explicit and durable: risk level, blast radius, reversibility, and human-gate requirement;
+- capital requests must match the persisted allocation risk facts and may not understate them;
+- capital envelopes deterministically bound risk level and blast radius and explicitly gate irreversible/human-gated actions;
+- capital stage may not be escalated beyond the evidence tier of the persisted allocation; `graduate` is not equivalent to `scale` authority;
 - portfolio and capital policies are deterministic/versioned and require no LLM call;
 - persisted allocation/authorization artifacts retain complete decision lineage and rationale.
 
@@ -41,7 +47,7 @@ The suite must prove at least:
 4. Concurrent PR5 resource reservations cannot overbook the same non-fungible resource.
 5. Portfolio selection consumes an authoritative availability snapshot but does not masquerade as a resource reservation.
 6. Exploration floor preserves bounded learning capacity when viable probes exist.
-7. Concentration policy never rounds upward beyond the configured portfolio share.
+7. Concentration policy never rounds upward beyond the configured portfolio share, including the sub-one-slot edge case.
 8. Existing reservations change scarcity ranking while resource dimensions remain distinct.
 9. A portfolio run requires an explicit base currency and persists it through a database round trip.
 10. Foreign-currency financial candidates are rejected/deferred without explicit valuation.
@@ -57,12 +63,17 @@ The suite must prove at least:
 20. An explicitly category-scoped capital envelope rejects a request from another spend category.
 21. An unscoped category-local ceiling consistently uses the request category as its effective scope.
 22. Capital authorization rejects tampered lineage where authorization currency differs from the persisted portfolio base currency.
-23. Consumption rejects a ledger transaction that does not explicitly cite the capital authorization.
-24. Consumption rejects a ledger transaction whose cash outflow differs from the authorized amount.
-25. Consumption rejects spend events outside the authorization window or future-dated relative to reconciliation time.
-26. Valid consumption preserves authorization → ledger transaction lineage while keeping authorization and spend as separate artifacts.
-27. No portfolio allocation or capital authorization creates a child experiment or closes the autonomous-loop milestone.
-28. PR0–PR8 compatibility remains green.
+23. Capital authorization rejects requests whose risk facts differ from the persisted allocation.
+24. Capital authorization rejects stage escalation above the persisted allocation tier.
+25. Blast-radius, irreversibility, and human-gate envelope limits are deterministic.
+26. A terminal capital authorization cannot be replaced by a second authorization for the same allocation; replan is required.
+27. A release after expiry is persisted as `expired`, not rewritten as a timely manual release.
+28. Consumption rejects a ledger transaction that does not explicitly cite the capital authorization.
+29. Consumption rejects a ledger transaction whose cash outflow differs from the authorized amount.
+30. Consumption rejects spend events outside the authorization window or future-dated relative to reconciliation time.
+31. Valid consumption preserves authorization → ledger transaction lineage while keeping authorization and spend as separate artifacts.
+32. No portfolio allocation or capital authorization creates a child experiment or closes the autonomous-loop milestone.
+33. PR0–PR8 compatibility remains green.
 
 ## Explicit boundary
 
@@ -77,6 +88,8 @@ PR9 must not:
 - infer FX rates;
 - reinterpret category-local operator ceilings as a global accounting budget;
 - infer partial capital consumption from unrelated ledger activity;
+- infer a lower risk/blast radius than the persisted portfolio allocation;
+- let a caller promote `probe` evidence directly into `scale` capital authority;
 - introduce contextual bandits/RL before comparable observations exist;
 - let an LLM authorize capital or rewrite live capital policy;
 - remove V0 compatibility surfaces before the V2 path is proven.
