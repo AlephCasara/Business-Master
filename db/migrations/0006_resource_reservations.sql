@@ -1,5 +1,14 @@
 BEGIN;
 
+ALTER TABLE resource
+    ALTER COLUMN capacity TYPE numeric(24, 6)
+    USING capacity::numeric;
+
+ALTER TABLE resource
+    DROP CONSTRAINT IF EXISTS ck_resource_capacity_nonnegative;
+ALTER TABLE resource
+    ADD CONSTRAINT ck_resource_capacity_nonnegative CHECK (capacity >= 0);
+
 ALTER TABLE experiment_contract
     ADD COLUMN IF NOT EXISTS resource_requirements jsonb NOT NULL DEFAULT '{}'::jsonb;
 
