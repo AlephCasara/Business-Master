@@ -21,10 +21,14 @@ The repository has already established the first V2 foundations:
 - exact persisted resource capacity and durable atomic reservations with concurrency protection;
 - durable reservation expiry and separately persisted observed resource usage;
 - deterministic append-only economic ledger with currency-scoped financial state and explicit attribution;
-- PostgreSQL restart/idempotency coverage for the bootstrap reconciler;
+- deterministic constrained portfolio selection with explicit exploration, concentration, risk, and currency boundaries;
+- transactional capital authorization with ledger-derived financial authority and no implicit spend;
+- persisted autonomous continuation decisions derived from PR7–PR9 authority;
+- atomic child-contract, resource-reservation, and child-experiment materialization under retry/restart;
+- PostgreSQL concurrency, rollback, restart, and idempotency coverage for the V2 continuation path;
 - deterministic local content generation/QC as an execution capability.
 
-These are substrates. They do **not** yet prove a complete autonomous economic loop.
+These are substrates. They do **not** yet prove a complete autonomous economic loop in the real world.
 
 ---
 
@@ -132,37 +136,93 @@ Family recommendations are evaluation artifacts, not autonomous control-plane `D
 
 ---
 
+## Completed substrate — portfolio and capital control
+
+The V2 control plane can now select bounded work without collapsing every resource, risk, and economic constraint into one scalar score.
+
+The portfolio/capital substrate provides:
+- explicit `Signal`, `Cash`, `Asset`, and `Capability` portfolio roles;
+- deterministic candidate utility over economic value, information value, option value, asset value, feedback speed, uncertainty, and scarcity pressure;
+- hard multidimensional resource feasibility separate from ranking;
+- explicit exploration floors and strict concentration ceilings;
+- persisted family-evaluation, hypothesis, contract, and belief-version lineage on allocations;
+- deterministic risk/blast-radius and human-gate constraints;
+- explicit base currency and rejection of implicit FX assumptions;
+- ledger-derived cash as financial authority;
+- transactional capital authorization with concurrency protection;
+- authorization lifecycle distinct from actual ledger spend;
+- stage authority bounded by persisted evidence tier;
+- one capital authorization per persisted allocation, requiring replan after terminal lifecycle state.
+
+A portfolio allocation is selection authority, not an execution lease. Capital authorization is permission to commit bounded capital, not evidence that spend occurred.
+
+---
+
+## Completed substrate — autonomous decision → experiment continuation
+
+The internal control plane can now turn persisted PR7–PR9 state into a durable autonomous continuation without trusting caller-supplied business authority.
+
+The continuation substrate provides:
+- a minimal caller request containing only idempotency key, parent experiment, portfolio allocation, and optional reservation expiry;
+- derivation of family evaluation, latest belief version, source contract, risk, resource demand, and capital authority from PostgreSQL;
+- rejection of stale family evaluations or belief versions;
+- rejection of parent/source-contract lineage drift;
+- persisted decision policy/version, evidence IDs, belief version, allocation lineage, risk facts, rationale, and chosen continuation;
+- deterministic `CONTINUE`, `PAUSE`, `KILL`, `REPLICATE`, and `GRADUATE` mapping;
+- same-tier bounded replication;
+- exactly-one-tier graduation (`PROBE → PILOT → SCALE`) with no implicit resource/capital inflation;
+- immutable descendant contracts with explicit parent/origin-decision lineage;
+- atomic PR5 resource reservation and child materialization in one serializable transaction;
+- PR9 capital authorization enforcement without consuming authorization or inventing spend;
+- human-gate enforcement before child materialization;
+- deterministic child/contract/reservation identities;
+- exact retry/restart idempotency;
+- one persisted autonomous decision per portfolio allocation;
+- rollback with no partial decision/contract/child/reservation when admission fails;
+- concurrent resource over-allocation prevention proven by PostgreSQL integration tests.
+
+This completes the **internal continuation substrate**. It does not prove that real external evidence has autonomously caused a subsequent experiment.
+
+---
+
 ## Immediate architecture sequence
 
-### 1. Portfolio and capital control
+### 1. Genuine external closed-loop demonstration
 
-Typed resources, authoritative economic state, versioned beliefs, and family-aware evaluation now exist. The next step is to migrate allocation from scalar `total_units` toward constrained portfolio decisions.
+The next priority is not another internal policy layer. It is a reproducible real-world proof that the existing substrates connect end to end:
 
-The controller should reason over:
-- expected economic value;
-- information value;
-- uncertainty;
-- scarce-resource opportunity cost;
-- portfolio role (`Signal`, `Cash`, `Asset`, `Capability`);
-- risk/blast radius;
-- reversible exploration vs exploitation.
+```text
+bounded external action
+→ external observation
+→ immutable evidence
+→ versioned belief update
+→ family evaluation
+→ portfolio allocation
+→ autonomous continuation decision
+→ Experiment B
+```
 
-Capital policy and platform/risk gates remain deterministic. A family recommendation alone must not authorize spend or irreversible scale.
+The demonstration must preserve the existing constitutional boundaries:
+- real external evidence, not a fixture or manually injected success claim;
+- no new human instruction between evidence ingestion and Experiment B;
+- deterministic resource, capital, risk, and tier gates remain authoritative;
+- complete persisted lineage must make the run auditable and reproducible;
+- a successful mechanical loop proves autonomy plumbing, not SCALE economics.
 
-### 2. Autonomous decision → experiment continuation
+### 2. Durable runtime hardening where the demonstration requires it
 
-Connect updated belief state, family evaluation, resource/capital constraints, and portfolio policy to persisted autonomous decisions and child experiment creation.
+Introduce runtime infrastructure only to make the real loop restart-safe and operable. The runtime must remain an adapter, not become constitutional authority.
 
-The transition must preserve:
-- decision policy/version;
-- family evaluation ID;
-- evidence IDs;
-- belief state version;
-- expected resource demand;
-- explicit parent/child experiment lineage;
-- idempotent child creation under retry/restart.
+Priorities include:
+- durable timers/events;
+- restart-safe workers;
+- idempotent retries around external side effects;
+- resource-aware dispatch;
+- measurement/evaluation priority over speculative production;
+- explicit platform/account gates;
+- replayable execution records sufficient to reproduce the external proof.
 
-This layer is what mechanically closes the constitutional feedback loop once real external evidence is available.
+Do not choose a permanent orchestration vendor before a concrete workload demonstrates the need.
 
 ---
 
@@ -186,6 +246,8 @@ There must be **no new human instruction between evidence ingestion and Experime
 A single legitimate external observation can be enough to prove that the loop is mechanically closed. It is not enough to justify SCALE.
 
 The repository should contain a reproducible recorded demonstration when this milestone is reached.
+
+PR10 supplies the internal decision/continuation machinery required by the final two arrows. Until the external demonstration exists, the project must not claim Level 4 autonomy merely because the internal substrate is implemented.
 
 ---
 
@@ -374,4 +436,4 @@ The system reallocates scarce resources among competing validated strategies.
 ### Level 8 — Compounding assets
 Validated businesses continuously create owned capabilities/assets that improve future economics.
 
-The project should always report the highest level actually demonstrated, not the level implied by its architecture diagrams.
+The project should always report the highest level actually demonstrated, not the level implied by its architecture diagrams. Internal PR10 continuation capability is a prerequisite for Level 4, not proof that Level 4 has occurred.
