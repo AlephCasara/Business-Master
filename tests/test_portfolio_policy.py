@@ -244,6 +244,7 @@ def test_scarcity_penalty_prefers_less_constrained_candidate() -> None:
             base_currency="USD",
             max_candidates=1,
             exploration_fraction=0.0,
+            max_group_fraction=1.0,
         )
     )
 
@@ -285,6 +286,7 @@ def test_existing_reservations_change_scarcity_ranking_without_fungibility() -> 
             base_currency="USD",
             max_candidates=1,
             exploration_fraction=0.0,
+            max_group_fraction=1.0,
         )
     )
 
@@ -320,6 +322,7 @@ def test_foreign_currency_financial_candidates_require_explicit_valuation() -> N
             base_currency="USD",
             max_candidates=2,
             exploration_fraction=0.0,
+            max_group_fraction=1.0,
         )
     )
 
@@ -352,6 +355,7 @@ def test_exploration_floor_can_override_higher_exploitation_utility() -> None:
             base_currency="USD",
             max_candidates=1,
             exploration_fraction=1.0,
+            max_group_fraction=1.0,
         )
     )
 
@@ -409,3 +413,20 @@ def test_concentration_cap_does_not_round_above_configured_fraction() -> None:
 
     assert len(plan.allocations) == 3
     assert sum(item.group_key == "dominant" for item in plan.allocations) == 1
+
+
+def test_concentration_cap_can_admit_zero_when_share_is_below_one_slot() -> None:
+    candidate = _candidate(group_key="dominant", economic=1.0, information=1.0)
+    plan = PortfolioPolicy().plan(
+        PortfolioPlanRequest(
+            idempotency_key="concentration-zero-slot",
+            candidates=(candidate,),
+            availability=_availability(**{"gpu.local": Decimal("1")}),
+            base_currency="USD",
+            max_candidates=1,
+            exploration_fraction=0.0,
+            max_group_fraction=0.5,
+        )
+    )
+
+    assert plan.allocations == []
