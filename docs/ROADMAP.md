@@ -4,6 +4,12 @@ This roadmap describes **capability order**, not a permanent feature backlog. Bu
 
 Implemented invariants live in ADRs/tests. Living architecture docs describe current direction. Vendors are implementation choices unless an accepted ADR explicitly says otherwise.
 
+The current operating rule is stronger than before:
+
+> **reuse mature external systems first; give Business Master only the authority it proves it can use economically better.**
+
+See `ECOSYSTEM_ARCHITECTURE.md` for current external-system roles and authority boundaries.
+
 ---
 
 ## Current baseline — PR0–PR10 implemented
@@ -36,159 +42,264 @@ Important consequences already proven in code/tests include:
 - transactional PR5 resource reservation + child continuation;
 - retry/restart/concurrency protections around the PR10 continuation path.
 
-These are **internal substrates**. They do not prove real external autonomy, public distribution, a sale, or settled cash.
+These are **internal substrates**. They do not prove real external autonomy, public distribution, a sale, settled cash, or that Business Master's policies outperform simpler alternatives.
 
 ---
 
 # Current forward path
 
-## PR11 — Durable Execution Architecture
+The previous plan assumed that the next large step was a custom durable-execution layer followed by platform-specific distribution work.
+
+That assumption is superseded by the availability of mature external agent/runtime/orchestration systems and must now be earned by production evidence.
+
+## PR11A — Ecosystem / Authority Reset
 
 Goal:
 
-> make existing control decisions safely executable across process failure and long-running real work.
+> define Business Master's smallest defensible role inside a larger operational ecosystem before adding more runtime code.
 
-Required behavior, not vendor:
+Required outcomes:
 
-```text
-Job / Attempt
-durable state transitions
-lease / ownership
-heartbeat or equivalent recovery signal where needed
-retry/backoff
-idempotency / reconciliation
-durable timers/events
-resource-aware dispatch
-ArtifactStore / ArtifactRef
-ExecutionReceipt
-health/readiness
-structured operational telemetry
-```
+- preserve PR0–PR10 implemented invariants;
+- document external systems and authority boundaries;
+- make opportunity discovery capability-owned rather than constitutionally Business-Master-owned;
+- define `OBSERVE → SHADOW → CONTROL` as the rollout model for external authority;
+- remove stale assumptions that Hatchet or a custom durable runtime is the next mandatory implementation;
+- prefer permissively licensed mature components over internal reimplementation;
+- define provenance/licensing rules before third-party code is transplanted.
 
-PR11 does **not** mean Business Master installs or configures its host. NixOS/systemd/container/runtime integration is deployment/host infrastructure around these contracts.
-
-Acceptance center:
+Acceptance:
 
 ```text
-work is dispatched
-→ process dies
-→ durable state survives
-→ work is reconciled/resumed/retried safely
-→ irreversible effect is not duplicated
-→ receipt/artifact lineage remains reconstructible
+an engineering agent can read the repository
+→ understand that Business Master is not the universal orchestrator
+→ know which external systems are candidates
+→ know which state each system may own
+→ know that Business Master begins with zero external authority
 ```
 
-Do not make Hatchet, systemd, or another runtime the domain architecture.
+PR11A is documentation/contract realignment, not a new orchestration framework.
 
 ---
 
-## PR12 — Multi-Surface External Edge
+## Operational Gate A — Prove the external baseline
 
-Goal:
+Before PR11B, run a real local workload outside Business Master's control.
 
-> externalize one production system across the minimum strategically required distribution set.
-
-Initial distribution surfaces:
+Current preferred first baseline:
 
 ```text
-TikTok
-Instagram
-YouTube
+NixOS
+  ↓
+Hermes / Nous inference bridge
+  ↓
+StarNet source runtime
+  ↓
+small real agent team
 ```
 
-The strategy is:
+Measure actual behavior rather than architecture claims:
 
 ```text
-one production system
-→ few mandatory surfaces
-→ measure differential performance
-→ specialize from evidence
+startup / restart
+state persistence
+agent task success
+model/tool compatibility
+latency
+retries
+human intervention
+model cost
+artifacts produced
+external effects, if any
 ```
 
-Do not build three independent content factories and do not require blind identical cross-posting. Preserve clean source artifacts and platform-specific lineage.
+No Business Master authority is required for this gate.
 
-Conceptual external-edge responsibilities include:
-
-```text
-Platform / ExternalSurface
-PlatformAccount
-ExternalAction
-ExternalEntity
-ExternalActionReceipt
-Publisher
-CredentialRef
-Eligibility / AccountHealth
-HumanGate
-```
-
-Publishing may use official APIs, direct adapters, or a replaceable aggregator when that materially reduces time-to-evidence. Provider identity must not become domain architecture.
-
-PR12 is about **external action capability**. It does not make publishing telemetry authoritative.
+The purpose is to learn what the external runtime actually emits and where it actually fails.
 
 ---
 
-## PR13 — Telemetry + Real Autonomous Closed Loop
+## PR11B — Runtime Observation Vertical Slice
 
 Goal:
 
-> prove that the external world changes what Business Master does next.
+> let Business Master observe one real external runtime without controlling it.
 
-Initial collectors should obtain authoritative/native telemetry for TikTok, Instagram, and YouTube when available.
+Implement only after Operational Gate A reveals the real interfaces and payloads.
 
-```text
-ExternalExposure
-→ MetricObservation
-→ immutable Evidence
-→ Belief update
-→ FamilyEvaluation
-→ PortfolioAllocation
-→ AutonomousDecision
-→ Experiment B
-```
-
-No new operator instruction between Evidence ingestion and Experiment B.
-
-Publishing and measurement remain separate capabilities:
+Required behavior:
 
 ```text
-Publisher != MetricCollector
+real external run
+→ stable runtime/run identity
+→ operational observation
+→ normalized provenance
+→ optional linkage to Experiment / Evidence where semantically valid
 ```
 
-A publishing aggregator is acceptable as a replaceable execution shortcut. Business Master should own/normalize the intelligence used for decision-making.
+Initial fields should be driven by real available data, but likely include:
 
-Acceptance proves loop mechanics, not SCALE economics.
+```text
+runtime
+run / task identity
+agent / worker identity where available
+task class
+model / provider
+start / end
+success / failure
+retry count
+resource / token / cash cost where observed
+human intervention
+artifact references
+external result references
+```
+
+Important invariants:
+
+- runtime logs are not automatically market Evidence;
+- model self-assessment is not external outcome truth;
+- technical failure remains distinct from market rejection;
+- raw traces need not be copied into economic state;
+- adapter/provider identity remains replaceable.
+
+Acceptance:
+
+```text
+StarNet/Hermes performs real work
+→ Business Master ingests real observations
+→ restart does not corrupt identity/lineage
+→ Business Master can report what happened
+→ Business Master still cannot change external work
+```
 
 ---
 
-## PR14 — First Economic Loop
+## Operational Gate B — Shadow policy
+
+After enough real observations exist, Business Master may calculate recommendations without applying them.
+
+Examples:
+
+```text
+would route task X to model Y
+would kill experiment A
+would allocate more budget to B
+would choose variant C
+```
+
+Compare those recommendations to subsequent real outcomes.
+
+Do not promote Business Master to external authority because a policy looks elegant in simulation.
+
+---
+
+## PR12 — First bounded external authority
+
+PR12 is no longer defined as "TikTok + Instagram + YouTube".
 
 Goal:
 
-> connect attention/intent to a real monetizable Offer and deterministic economic events.
+> give Business Master authority over exactly one measured variable where shadow evidence suggests it can improve economic-task performance.
 
-Initial preferred paths are low-human-touch:
-
-```text
-owned low-ticket digital product
-affiliate offer
-marketplace / content-commerce offer
-```
-
-B2B remains valid but is not a prerequisite for the first economic loop.
-
-The architecture must preserve:
+Candidate first control variables include:
 
 ```text
-Product
-!= Offer
-!= Opportunity
-!= Checkout
-!= Order
-!= Payment
-!= Settlement
+model tier for one task class
+budget within one experiment family
+allocation among pre-approved variants
+kill / continue inside a fixed envelope
 ```
 
-A representative loop:
+The first variable should be chosen from observed production data.
+
+If adaptive optimization becomes justified, prefer integrating a mature policy engine such as Ax behind a narrow policy port rather than implementing bespoke Bayesian optimization/bandit algorithms.
+
+Acceptance must compare controlled performance against a baseline.
+
+---
+
+# Capability branches after the first baseline
+
+The next integrations are selected by bottleneck, not by architectural completeness.
+
+## Company / task orchestration
+
+If StarNet alone does not provide the required durable company/task/ownership/heartbeat semantics, evaluate current Paperclip upstream.
+
+AmriTech (`tr00x/paperclip`, `opensource`) is a reference implementation for operating protocols and SOPs, not automatically the runtime base.
+
+## Intelligence / acquisition
+
+If external information acquisition is a bottleneck, evaluate Ninja Tools and existing permissively licensed acquisition components.
+
+Business Master may consume candidate opportunities without owning the crawler/scraper that discovered them.
+
+## Agent observability / evaluation
+
+Start with structured events and OpenTelemetry-compatible semantics where practical.
+
+Add Langfuse or another dedicated observability/evaluation product only when operational trace volume or debugging/evaluation needs justify its runtime cost.
+
+## Experiment statistics
+
+For product/web experiments with real assignment/exposure units, evaluate GrowthBook rather than creating a new statistical experimentation platform.
+
+## Adaptive experimentation / allocation
+
+When repeated comparable trials provide enough data, evaluate Ax before building custom Bayesian optimization, contextual bandit, or multi-objective optimization machinery.
+
+## Generic durable execution
+
+If real non-agent workflows require durable semantics that StarNet/Paperclip/Hermes/systemd do not provide, evaluate Hatchet/Temporal or another mature engine.
+
+Do not create a generic workflow engine preemptively.
+
+## Media production
+
+ComfyUI remains the current aesthetic workflow candidate; FFmpeg and deterministic renderers remain appropriate for deterministic transforms.
+
+## Distribution / commerce
+
+TikTok, Instagram, YouTube, affiliate, owned offers, marketplaces, B2B and other surfaces remain valid economic experiment surfaces.
+
+They are no longer predeclared as mandatory PR sequence.
+
+Reality chooses which external edge is worth implementing first.
+
+---
+
+# Economic loop remains the target
+
+The target loop is still:
+
+```text
+Market Intelligence
+↓
+Opportunity
+↓
+Underwriting
+↓
+Hypothesis
+↓
+Experiment
+↓
+Reality
+↓
+Evidence
+↓
+Belief
+↓
+Evaluation
+↓
+Portfolio
+↓
+Allocation
+↺
+```
+
+The diagram describes semantic flow, not mandatory software ownership.
+
+A representative monetized path may still become:
 
 ```text
 Opportunity
@@ -202,15 +313,23 @@ Opportunity
 → next allocation/decision
 ```
 
-The first real adapter may target a venue such as Hotmart/Kiwify or another provider whose current capabilities fit the acceptance scenario. That choice is replaceable; PR14 is **not** "the Hotmart architecture."
+The architecture must preserve:
 
-Commerce providers should advertise supported capabilities instead of being forced into one giant universal interface, e.g. offer discovery/management, commerce events, attribution, or settlement.
+```text
+Product
+!= Offer
+!= Opportunity
+!= Checkout
+!= Order
+!= Payment
+!= Settlement
+```
 
 ---
 
 # Shared production/composition direction
 
-Business models are compositions of shared capabilities rather than separate autonomous brains:
+Business models are compositions of capabilities rather than separate autonomous brains:
 
 ```text
 Intelligence
@@ -221,6 +340,8 @@ Distribution
 Monetization
 Telemetry
 ```
+
+But capability implementations can live outside Business Master.
 
 Examples:
 
@@ -233,41 +354,38 @@ affiliate
 = Intelligence + offer discovery + Creative + Production
 + Distribution + attribution + Telemetry
 
-content/audience
-= Intelligence + Creative + Production + Distribution + Telemetry
-(+ monetization attachment when justified)
+B2B/service
+= Intelligence + prospecting + qualification + outreach
++ delivery + CRM + payment + Telemetry
 ```
-
-The economic control plane remains above all of them.
 
 ---
 
-# After PR14 — production-driven development
+# Production-driven development
 
-Do **not** predeclare PR15–PR24 as horizontal architecture.
-
-After a genuine external loop and first economic attachment:
+Once external operation exists:
 
 ```text
 OPERATE
 → observe measured bottleneck
 → estimate opportunity cost
-→ fix the bottleneck
+→ reuse / integrate / build the smallest fix
 → measure again
 ```
 
 Examples:
 
 ```text
-poor reach             → creative/distribution
-reach + poor clicks    → CTA/offer
-clicks + poor sales    → product/checkout/offer
-sales + poor margin    → unit economics
-render latency         → production/execution
-GPU contention         → resource routing
-publisher failures     → distribution reliability
-missing attribution    → telemetry/commerce integration
-manual gate dominates  → justified automation
+agent task failures      → runtime/tool/model routing
+high LLM cost            → cheaper worker / deterministic code
+weak lead quality        → acquisition / scoring
+poor reach               → creative/distribution
+reach + poor clicks      → CTA/offer
+clicks + poor sales      → product/checkout/offer
+sales + poor margin      → unit economics
+missing attribution      → telemetry/commerce integration
+human gate dominates     → justified automation
+allocation quality weak  → mature optimization engine
 ```
 
 No new architecture exists merely because it would be aesthetically complete.
@@ -279,19 +397,20 @@ No new architecture exists merely because it would be aesthetically complete.
 Track reality, not only merged PRs:
 
 ```text
-M0  repository/runtime can execute on target environment
-M1  first real external exposure
-M2  first genuine external reaction observed
-M3  first autonomous decision caused by the world
-M4  first sellable Product/Offer
-M5  first real money received
-M6  first sale attributable to Business Master lineage
-M7  positive economics replicated
-M8  first real reallocation across competing opportunities
-M9  economics sustain continued operation
+M0  external runtime works on target environment
+M1  first real external task completed by the operational stack
+M2  Business Master observes real external execution
+M3  Business Master produces a shadow decision with later measurable outcome
+M4  first bounded Business Master policy beats or usefully matches baseline
+M5  first genuine external market reaction observed
+M6  first real money received
+M7  first sale attributable through preserved lineage
+M8  positive economics replicated
+M9  first evidence-backed reallocation across competing opportunities
+M10 economics sustain continued operation
 ```
 
-Never claim a milestone from architecture diagrams, fixtures, or internal-only continuation.
+Never claim a milestone from architecture diagrams, fixtures, internal-only continuation, or agent prose.
 
 ---
 
@@ -299,4 +418,4 @@ Never claim a milestone from architecture diagrams, fixtures, or internal-only c
 
 When the system is operating, **reality chooses the next PR**.
 
-Preserve the implemented economic substrate. Add capability only when observed production or economics demonstrate its value.
+Preserve the implemented economic substrate. Prefer mature external implementations. Add Business Master authority only when measured evidence demonstrates its value.
