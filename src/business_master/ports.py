@@ -55,7 +55,8 @@ class ResourceRepository(Protocol):
 class WorkDispatcher(Protocol):
     """Runtime-neutral dispatch boundary.
 
-    Hatchet is the initial implementation target, but controllers depend only on this port.
+    External runtimes and durable-execution systems are replaceable implementations.
+    Business Master policy must not depend on a specific orchestration vendor.
     """
 
     def dispatch(self, work_type: str, payload: dict[str, object]) -> str: ...
