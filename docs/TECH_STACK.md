@@ -1,44 +1,55 @@
 # Technical Stack — Contracts vs Current Implementations
 
-Last alignment pass: 2026-10-07.
+Last alignment pass: 2026-10-11.
 
 This document distinguishes **architectural contracts** from **current implementation candidates**. A tool can be the best current implementation without becoming Business Master's domain architecture.
 
 Governing rule:
 
-> choose the implementation that produces the best reliable economic-task outcome under current cash, compute, latency, quality, risk, and human-attention constraints.
+> choose the implementation that produces the best reliable economic-task outcome under current cash, compute, latency, quality, risk, licensing, and human-attention constraints.
+
+Business Master is not required to own the operational runtime. See `ECOSYSTEM_ARCHITECTURE.md`.
 
 ---
 
-## 1. Architecture/implementation map
+## 1. Architecture / implementation map
 
 | Concern | Architectural contract / boundary | Current implementation or candidate |
 |---|---|---|
-| Control language | typed deterministic control-plane code | Python 3.13 |
+| Economic control language | typed deterministic domain/control code | Python 3.13 |
 | Validation | typed domain/config boundaries | Pydantic |
-| Durable state | authoritative relational world/economic state | PostgreSQL 17 |
+| Durable economic state | authoritative relational economic/world state | PostgreSQL 17 |
 | DB access | explicit transactional persistence | psycopg / SQL |
 | Schema evolution | additive/versioned migrations | SQL migrations; Alembic only if justified |
 | Operator/debug surface | thin diagnostic/administrative commands | Typer CLI |
-| Durable execution | Job/Attempt/lease/retry/timer/receipt/dispatcher contracts | PostgreSQL-native runtime and/or Hatchet candidate; decide from PR11 workload |
-| Artifact persistence | `ArtifactStore` / `ArtifactRef` | local filesystem first, replaceable later |
-| Model cognition | provider-neutral model/cognitive adapter | local OpenAI-compatible servers and paid APIs when justified |
-| Browser execution | structured browser-executor contract | Playwright first; semantic recovery candidate where useful |
-| Aesthetic production | semantic aesthetic-workflow boundary | **ComfyUI** as current canonical aesthetic workflow runtime |
+| Human agent-ops cockpit | external replaceable operator surface | StarNet candidate |
+| Company/task coordination | external replaceable organization/task plane | StarNet and/or Paperclip depending on measured workload |
+| Agent/delegation runtime | replaceable execution runtime | Hermes, StarNet, external coding agents |
+| Nous subscription inference bridge | OpenAI-compatible local provider boundary | Hermes subscription proxy candidate |
+| Durable generic execution | Job/Attempt/lease/retry/timer/receipt boundary | existing external runtimes first; Hatchet/Temporal only if a measured gap remains |
+| Artifact persistence | `ArtifactStore` / `ArtifactRef` | local filesystem first; external runtime artifact refs allowed |
+| Model cognition | provider-neutral model/cognitive adapter | Hermes/Nous, local OpenAI-compatible servers, hosted APIs |
+| Market/data acquisition | replaceable intelligence-source/tool boundary | Ninja Tools; direct APIs; SearXNG/Common Crawl/crawlers as justified |
+| Browser execution | structured browser-executor contract | runtime-native browser / Playwright first; semantic recovery where useful |
+| Aesthetic production | semantic aesthetic-workflow boundary | **ComfyUI** as current canonical aesthetic workflow candidate |
 | Deterministic media/file transforms | typed deterministic executor | FFmpeg / ordinary renderers |
 | Distribution | `Publisher` + external-action/receipt contracts | official APIs/direct adapters or replaceable aggregator |
 | Platform telemetry | `MetricCollector` | authoritative/native platform APIs where available |
-| Commerce | capability-based offer/event/settlement adapters | Hotmart/Kiwify/Eduzz/marketplace adapters as justified |
-| Observability | structured events/receipts/resource telemetry | structlog/OpenTelemetry path; external products only if justified |
+| Commerce | capability-based offer/event/settlement adapters | actual venue/provider selected from acceptance scenario |
+| Operational observability | runtime traces/spans/evals | structured events + OpenTelemetry; Langfuse candidate when justified |
+| Product experiment statistics | experiment-analysis boundary | GrowthBook candidate when assignment/exposure semantics fit |
+| Adaptive optimization | policy recommendation boundary | Ax candidate before custom Bayesian/bandit implementation |
+| Causal inference | optional analysis capability over accumulated observations | DoWhy/EconML candidates when observational causal questions justify them |
 | Host/deployment | reproducible Linux/NixOS deployment boundary | NixOS + systemd/cgroups/containers where useful |
+| Inter-agent interoperability | narrow protocol selected by topology | MCP for tools; A2A for independent agents; HTTP/events for systems |
 
-Do not infer architecture from the rightmost column.
+Do not infer domain architecture from the rightmost column.
 
 ---
 
 ## 2. Core control plane
 
-Current foundation:
+Current Business Master foundation:
 
 ```text
 Python 3.13
@@ -50,86 +61,254 @@ structlog
 pytest
 ```
 
-Python remains the default control language because it fits the current AI/statistics/integration ecosystem and existing codebase.
+Python remains the default language for Business Master's economic/control semantics because it fits the existing codebase and statistics/integration ecosystem.
 
-Rust/TypeScript/other languages are justified only where a measured dependency/runtime ecosystem makes them materially better behind a language-neutral boundary.
+Rust/TypeScript/other languages are justified where an external runtime or measured workload makes them materially better behind a language-neutral boundary.
 
 See `ADR-0001-language-boundaries.md`.
 
 ---
 
-## 3. Durable execution — no constitutional vendor
+## 3. External authority rollout
 
-PR11 should implement behavior, not adopt a brand as architecture.
-
-Required concepts include, where the workload requires them:
+External integration must progress through:
 
 ```text
-Job
-Attempt
-lease / ownership
-heartbeat/recovery signal
-retry/backoff
-durable timer/event
-reconciliation/idempotency
-resource-aware dispatch
-ExecutionReceipt
-ArtifactRef
-health/readiness
+OBSERVE
+  ↓
+SHADOW
+  ↓
+CONTROL
 ```
 
-Hatchet remains a candidate because its Python/durable-work features may fit, but the earlier "Hatchet target" assumption is superseded. A minimal PostgreSQL-backed runtime can be better if it satisfies the required failure semantics with less operational complexity.
+### OBSERVE
+
+Read real runtime/economic events. Do not dispatch or mutate external work.
+
+### SHADOW
+
+Produce recommendations that are recorded and evaluated later, but not applied.
+
+### CONTROL
+
+Grant authority over one bounded variable only after evidence shows the policy is safe/useful enough.
+
+This rollout is a control-plane invariant, independent of vendor.
+
+---
+
+## 4. Execution — external systems first
+
+The earlier assumption that PR11 must construct a custom durable execution architecture is superseded.
+
+Required semantics still matter where the workload requires them:
+
+```text
+stable run identity
+attempt / retry
+ownership / lease where necessary
+heartbeat/recovery signal
+idempotency / reconciliation
+timers/events
+resource-aware dispatch
+artifact references
+execution receipts
+health/readiness
+structured operational telemetry
+```
+
+But the implementation order is now:
+
+```text
+existing runtime semantics
+→ narrow adapter
+→ generic mature durable engine if a gap remains
+→ custom runtime only if measured evidence justifies it
+```
+
+StarNet, Hermes and Paperclip may already provide substantial portions of runtime/company semantics.
+
+Hatchet remains an MIT, Postgres-backed candidate for generic background/durable work. Temporal remains a mature heavier candidate for workflows whose failure semantics justify it.
 
 Domain policy must not import an orchestration vendor.
 
 ```text
-policy decides WHY/WHAT
-runtime decides durable WHEN/WHERE
-adapter/executor decides HOW
+Business Master decides economic WHY / WHAT / constraints
+runtime decides operational WHEN / WHERE
+executor/tool decides HOW
 ```
 
 ---
 
-## 4. Local/model cognition
+## 5. Human-facing operations — StarNet candidate
 
-Expose a provider-neutral model contract. OpenAI-compatible transport is useful where practical but is not itself a domain concept.
+StarNet is currently the preferred first system to evaluate for human supervision of an agent workforce because its visual station represents live runtime state, capabilities, rooms/teams, handoffs and tools.
 
-Candidates such as SGLang, vLLM, llama.cpp/GGUF, or hosted model APIs should be benchmarked on actual Business Master tasks rather than public tokens/sec alone.
+Initial deployment target is source/browser mode on NixOS rather than a custom fork.
+
+Do not fork until operational experience demonstrates a concrete need.
+
+If a derivative is later distributed, remember that upstream states its code is MIT but branding/artwork/sprites are not licensed as part of the code license.
+
+Business Master should integrate through stable runtime/API contracts rather than importing StarNet domain concepts wholesale.
+
+---
+
+## 6. Hermes / model cognition / worker economics
+
+Hermes is a current candidate for:
+
+- Nous subscription inference bridge;
+- independent agent runtime;
+- subagent/delegation workers;
+- future A2A interactions where independent runtime boundaries justify them.
+
+Expose provider-neutral cognition.
+
+Benchmark models on actual task classes rather than public model rankings alone.
 
 Measure:
 
 ```text
 successful task rate
+validation pass rate
 quality/error rate
 wall time
+retry rate
 RAM/VRAM pressure
 GPU time / tokens
 cash cost
 human recovery
+attributable downstream outcome
 ```
 
-Paid APIs are not constitutionally forbidden. PR9 Capital Control/operator policy/evidence determine whether their expected value justifies cost.
+The future intelligence-routing objective is economic, not merely cognitive:
+
+```text
+marginal value of better model
+≈ improvement in downstream expected outcome
+  - additional model/resource cost
+```
+
+Do not hard-code current free model names into domain architecture. Query actual provider/account state.
 
 ---
 
-## 5. Context/tool architecture
+## 7. Market intelligence and Ninja
+
+Business Master does not constitutionally own opportunity discovery or web acquisition.
+
+Ninja is the current project candidate for a reusable acquisition/tooling layer, especially through its tooling/MCP work.
+
+Potential backends include ordinary HTTP, search, crawlers, browsers, Common Crawl, SearXNG and analytical/preservation systems when implemented and justified.
+
+Ninja may emit signals or candidate opportunities. Business Master may underwrite them without owning the acquisition machinery.
+
+---
+
+## 8. Context/tool architecture
 
 Do not expose every integration/tool to every model call.
 
-The cognitive layer should discover/retrieve only the small tool/skill/context set relevant to the current task. Detailed context/skill/memory semantics live in `MEDIA_AND_AGENT_STACK.md`.
+The cognitive layer should discover/retrieve only the small tool/skill/context set relevant to the current task.
 
-Large third-party tool ecosystems/MCP servers are execution/integration catalogs, not the Business Master control plane.
+Prefer:
+
+```text
+deterministic code
+→ small constrained model
+→ stronger model only where marginal value justifies it
+```
+
+Large tool ecosystems/MCP servers are execution/integration catalogs, not the Business Master control plane.
 
 ---
 
-## 6. Browser / computer use
+## 9. Experiment statistics — reuse mature systems
+
+Business Master owns experiment meaning and economic lineage, but should not automatically own every statistical engine.
+
+### GrowthBook candidate
+
+GrowthBook is relevant when an experiment has meaningful assignment/exposure units and metrics that match a mature product-experimentation model.
+
+Useful capabilities include sequential statistics, Bayesian analysis, CUPED, SRM checks, bandits, API and MCP surfaces.
+
+GrowthBook is open-core: verify the license of any exact code copied because enterprise directories are not covered by the permissive core license.
+
+A statistical result from GrowthBook can become an input to Business Master Evidence; GrowthBook should not become authority for settlement, capital, or broad economic ontology.
+
+---
+
+## 10. Adaptive optimization — Ax before custom algorithms
+
+Ax is the current preferred candidate when Business Master reaches enough repeated comparable experiments to justify adaptive optimization.
+
+Potential uses:
+
+```text
+creative parameter search
+offer parameter search
+model/task routing experiments
+budget or traffic allocation among bounded variants
+multi-objective optimization under constraints
+early stopping poor trials
+```
+
+Business Master remains responsible for:
+
+- defining admissible action space;
+- normalized economic objectives;
+- resource/capital/risk constraints;
+- causal/evidence lineage;
+- deciding whether an optimizer recommendation has authority.
+
+Ax recommends. It does not become the economic ledger or permission authority.
+
+Do not build bespoke Bayesian optimization or bandit math before benchmarking Ax on the real workload.
+
+---
+
+## 11. Causal analysis — optional, data-dependent
+
+DoWhy/EconML and related mature causal-inference libraries are candidates once observational data volume and causal questions justify them.
+
+They should not be introduced during cold start merely because the architecture contains the word "causal".
+
+Business Master Evidence provenance should make later causal analysis possible without pretending observational correlation is experimental proof.
+
+---
+
+## 12. Operational observability — OpenTelemetry first, Langfuse when justified
+
+Operational traces and economic Evidence are different things.
+
+Preferred shape:
+
+```text
+runtime / LLM / tool spans
+       ↓
+OpenTelemetry-compatible observability
+       ├──► debugging/evaluation store
+       └──► normalized economically relevant observations
+```
+
+OpenTelemetry semantic conventions are transport/observability standards, not Business Master domain ontology.
+
+Langfuse is a strong candidate for dedicated agent/LLM tracing, evaluation, prompt/dataset work and cost inspection when the operational volume justifies running it.
+
+Do not duplicate full prompts, tool payloads and trace trees into Business Master's economic PostgreSQL state by default.
+
+---
+
+## 13. Browser / computer use
 
 Preferred hierarchy for known external workflows:
 
 ```text
 official API / SDK
 → direct structured HTTP
-→ deterministic Playwright/browser execution
+→ runtime-native deterministic browser / Playwright
 → semantic browser/computer-use recovery
 → legitimate human gate
 ```
@@ -140,23 +319,19 @@ Do not automate protected identity/anti-abuse boundaries.
 
 ---
 
-## 7. ComfyUI — canonical aesthetic workflow runtime
+## 14. ComfyUI — aesthetic workflow runtime
 
-ComfyUI is the current production architecture for **aesthetic generative workflows**, behind Business Master's semantic production boundary.
+ComfyUI remains the current candidate for **aesthetic generative workflows** behind a semantic production boundary.
 
-It is not merely an image generator and not the economic/creative controller. It is a programmable node-graph inference/workflow runtime capable of composing models, references, conditioning, edits, video/image/audio generation, compositing, enhancement, QC, and local/remote model nodes.
+It is not the economic/creative controller. It is a programmable inference/workflow runtime for models, references, conditioning, edits, video/image/audio generation, compositing, enhancement and QC.
 
-Business Master supplies economic/semantic intent and constraints; ComfyUI workflows materialize the aesthetic solution.
-
-Production use should be headless/API-driven through versioned validated workflows. The visual UI remains valuable for workflow authoring/R&D/debugging.
-
-Detailed workflow lifecycle, queue/reconciliation, provenance, headless compatibility, and aesthetic authority are specified in `MEDIA_AND_AGENT_STACK.md`.
+Production use should be headless/API-driven through versioned validated workflows when justified. The visual UI remains useful for authoring/R&D/debugging.
 
 Models/checkpoints/custom nodes remain dependencies of workflows, not domain architecture.
 
 ---
 
-## 8. Deterministic media/document execution
+## 15. Deterministic media/document execution
 
 FFmpeg and ordinary deterministic renderers remain useful for operations that do not require aesthetic judgment:
 
@@ -165,53 +340,49 @@ FFmpeg and ordinary deterministic renderers remain useful for operations that do
 - file validation/ffprobe;
 - deterministic crop/scale;
 - serialization/export;
-- final PDF/HTML/file emission from an already resolved layout/spec when appropriate.
+- final deterministic emission from an already resolved specification.
 
-A deterministic serializer can execute an aesthetic decision without becoming the aesthetic authority.
+A deterministic serializer can execute an aesthetic decision without becoming aesthetic authority.
 
 ---
 
-## 9. Distribution
+## 16. Distribution
 
-The distribution contract should remain provider-neutral.
+The distribution contract remains provider-neutral.
 
-Initial required surfaces:
+TikTok, Instagram, YouTube, email/outbound, marketplaces and other channels are candidate experiment surfaces, not a predeclared mandatory implementation sequence.
 
-```text
-TikTok
-Instagram
-YouTube
-```
-
-Publication can initially use:
+Publication may use:
 
 ```text
 official direct API
 or
-replaceable multi-platform publishing adapter/aggregator
+replaceable external runtime/tool
+or
+replaceable aggregator
 ```
 
-Do not create separate content architectures for each surface.
-
-A publishing convenience layer must not become Business Master's telemetry/intelligence authority.
+A publishing convenience layer must not become telemetry/intelligence authority.
 
 ---
 
-## 10. Telemetry
+## 17. Telemetry and external truth
 
-Prefer native/authoritative sources for decision-grade platform metrics where available.
+Prefer native/authoritative sources for decision-grade market/platform metrics where available.
 
 Keep:
 
 ```text
-Publisher != MetricCollector
+Executor / Publisher != MetricCollector
+Runtime trace != market Evidence
+Agent opinion != economic truth
 ```
 
 Telemetry adapters normalize raw observations/events; Evidence and economic interpretation remain separate layers.
 
 ---
 
-## 11. Commerce / monetization adapters
+## 18. Commerce / monetization adapters
 
 Commerce providers are capability sets, not one universal interface.
 
@@ -224,54 +395,76 @@ CommerceEventSource
 SettlementSource
 ```
 
-Current candidate venues for digital/affiliate economic loops include Hotmart, Kiwify and related providers; marketplace adapters can expose different capability combinations. Select the first adapter from the acceptance scenario and current provider evidence.
+Select the first adapter from the real acceptance scenario and current provider evidence.
 
-Do not make Hotmart/Kiwify/Mercado Livre/etc. domain architecture.
+Do not make any one checkout/marketplace provider domain architecture.
 
 ---
 
-## 12. NixOS / host layer
+## 19. NixOS / host layer
 
 NixOS is the current target host environment, not the economic domain.
 
-Repository deployment support may eventually include Nix package/module/service definitions so the local engineering agent can integrate Business Master reproducibly.
+Use host mechanisms such as systemd user services, cgroups and containers where they improve restart policy, isolation, state directories, credential delivery or physical resource ceilings.
 
-Host mechanisms such as systemd/cgroups can enforce restart policy, process isolation, state directories, credential delivery and physical resource ceilings. Business Master owns economic/resource admission semantics; the host owns physical enforcement.
+Business Master owns economic/resource admission semantics only where it has earned that authority; the host owns physical enforcement.
 
-Do not make Business Master a workstation installer for itself.
+Do not make Business Master a workstation installer for itself or for every external tool.
 
 ---
 
-## 13. Secrets and security
+## 20. Secrets and security
 
 Persist credential metadata/references, not raw secret values in model context or Git.
 
-Prefer deterministic adapters to resolve credentials at the execution boundary. Isolate untrusted-web/browser/platform-write/financial/aesthetic workloads by blast radius when evidence shows a distinct security/failure boundary.
+Prefer deterministic adapters to resolve credentials at the execution boundary. Isolate untrusted-web/browser/platform-write/financial/aesthetic workloads by actual blast radius.
 
 Process boundaries should exist for concrete authority/resource reasons, not one-per-agent-persona.
 
+External local services should bind to loopback by default unless remote exposure is explicitly designed and secured.
+
 ---
 
-## 14. Repository vs runtime state
+## 21. Repository vs runtime state
 
 ### Git repository
 
-Contains source, migrations, policies, ADRs/living docs, adapters, tests, versioned workflow definitions/configuration, and reproducible deployment definitions.
+Contains source, migrations, policies, ADRs/living docs, adapters, tests, versioned workflow/config definitions, provenance records and reproducible deployment definitions.
 
 ### Runtime/host
 
-Contains PostgreSQL state, secrets/tokens, model weights, generated/raw artifacts, caches, browser session state where permitted, and large/sensitive outputs.
+Contains PostgreSQL state, secrets/tokens, model weights, generated/raw artifacts, caches, browser/session state where permitted, external runtime workspaces and large/sensitive outputs.
 
-Never commit credentials, cookies/session tokens, KYC material, private customer raw data, model weights, or large generated assets.
+Never commit credentials, cookies/session tokens, KYC material, private customer raw data, model weights or large generated assets.
 
 ---
 
-## 15. Technology routing is an experiment
+## 22. Third-party source policy
 
-For any meaningful interchangeable adapter/runtime/model/workflow, measure:
+Before incorporating source code:
+
+```text
+verify exact source revision
+verify exact license
+record provenance
+preserve notices
+avoid unlicensed brand assets
+```
+
+Prefer MIT / Apache-2.0 / similarly compatible permissive components for direct reuse.
+
+AGPL/GPL/source-available code may be studied or interoperated with as separate software, but must not be copied into a permissively licensed Business Master codebase without an explicit licensing decision.
+
+The Business Master repository itself currently requires an explicit project-license decision before third-party source transplantation becomes routine.
+
+---
+
+## 23. Technology routing is an experiment
+
+For any meaningful interchangeable adapter/runtime/model/workflow/policy engine, measure:
 
 - success/failure rate;
-- quality/QC outcome;
+- validation/QC outcome;
 - latency;
 - resource use;
 - retries/recovery;
@@ -280,4 +473,4 @@ For any meaningful interchangeable adapter/runtime/model/workflow, measure:
 - licensing/production restrictions;
 - downstream economic effect when attributable.
 
-Public SOTA produces candidates. **Business Master's own workloads determine production routing.**
+Public SOTA produces candidates. **Real Business Master workloads determine production routing and whether Business Master should own the function at all.**
