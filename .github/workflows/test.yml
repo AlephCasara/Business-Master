@@ -2,13 +2,25 @@ name: test
 
 on:
   push:
-    branches: [main, "bootstrap/**", "expansion/**", "feature/**", "refactor/**"]
+    branches: [main, "bootstrap/**", "expansion/**", "feature/**", "feat/**", "refactor/**"]
   pull_request:
 
 permissions:
   contents: read
 
 jobs:
+  lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          version: latest-known
+          python-version: "3.12"
+      - name: Verify uv lockfile
+        run: uv lock --check
+
   unit:
     runs-on: ubuntu-latest
     strategy:
@@ -40,10 +52,27 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
       - name: Sync project
-        run: uv sync
+        run: uv sync --locked
       - name: Ruff
-        run: uv run ruff check src tests
+        run: uv run ruff check src tests examples
       - name: Mypy
         run: uv run mypy src/business_master
       - name: Pytest
         run: uv run pytest
+      - name: Golden example
+        run: uv run python examples/pricing_optimization.py
+
+  ax-adapter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          version: latest-known
+          python-version: "3.12"
+          enable-cache: true
+      - name: Sync project with Ax
+        run: uv sync --locked --extra ax
+      - name: Ax adapter smoke test
+        run: uv run pytest tests/test_ax_optimizer.py

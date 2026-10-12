@@ -38,6 +38,7 @@ External runtimes, CRMs, browsers, commerce systems, media stacks, model servers
 11. **Human attention is scarce and explicit.** Human gates are observable economic costs.
 12. **No abuse architecture.** Do not build anti-abuse circumvention, fake engagement, identity masquerading, CAPTCHA/KYC/2FA bypass, or similar mechanisms.
 13. **No speculative infrastructure.** Reuse mature libraries behind ports where possible. Build infrastructure only after a measured workload demonstrates a missing capability.
+14. **Optimizer != economic authority.** Optimization engines may suggest parameterizations but never become authoritative for Evidence, ledger, capital, risk, or decision lineage.
 
 ## Authority modes
 
@@ -62,55 +63,70 @@ Always inspect:
 Then route by task:
 
 - experiments/evidence/beliefs → experiment/evidence ADRs and domain code;
+- optimization/search spaces/adaptive trials → `docs/OPTIMIZATION.md` + `src/business_master/optimization/`;
 - portfolio/capital → `docs/ADR-0007-portfolio-capital-control.md`;
 - resources → `docs/ADR-0003-resource-vectors-and-reservations.md`;
 - ledger → `docs/ADR-0004-deterministic-economic-ledger.md`;
 - continuation → `docs/ADR-0008-autonomous-decision-continuation.md`;
-- implementation order → `docs/ROADMAP.md`;
+- implementation direction → `docs/ROADMAP.md`;
 - dependency/tooling decisions → `docs/TECH_STACK.md`.
 
 Older documents about specific channels, media stacks, external platforms, or runtime candidates are research/history unless the current architecture or an accepted ADR explicitly promotes them.
 
 ## Current frontier
 
-PR0–PR10 already implement the internal economic substrate. Do not rebuild it.
-
-Current product program:
+The planned product baseline is complete:
 
 ```text
-Stage 1 — Standalone Core Reset
-    ↓
-Stage 2 — Adaptive Optimization
-    ↓
+PR0–PR10 — economic-control substrate
+Stage 1  — standalone core boundary
+Stage 2  — adaptive optimization + optional Ax adapter
+```
+
+Do not create a speculative Stage 3.
+
+The forward path is:
+
+```text
 real operation
     ↓
+real evidence
+    ↓
 measured bottleneck
+    ↓
+reuse before build
     ↓
 smallest justified change
 ```
 
-Stage 1 must not add new runtime/platform integrations.
-
-Stage 2 adds a provider-neutral optimization contract and an optional adaptive optimizer adapter; the economic domain must remain functional without it.
+Optimizer improvements must be evaluated against a baseline on actual Business Master workloads. Public benchmark superiority is not sufficient evidence.
 
 ## Development workflow
 
-`uv` is the canonical Python environment and command runner.
+`uv` is the canonical Python environment and command runner. The committed lockfile is authoritative for repository development and CI.
 
 ```bash
-uv sync
-uv run ruff check src tests
+uv sync --locked
+uv run ruff check src tests examples
 uv run mypy src/business_master
 uv run pytest
+uv run python examples/pricing_optimization.py
+```
+
+For the optional Ax adapter:
+
+```bash
+uv sync --locked --extra ax
+uv run pytest tests/test_ax_optimizer.py
 ```
 
 On NixOS:
 
 ```bash
 nix develop
-uv sync
+uv sync --locked
 ```
 
 Keep PRs bounded and migrations additive. Do not perform architectural rewrites merely to obtain a prettier folder tree.
 
-Claims about transactionality, restart behavior, concurrency, idempotency, ledger, reservations, or capital authority require relevant PostgreSQL-backed tests.
+Claims about transactionality, restart behavior, concurrency, idempotency, ledger, reservations, or capital authority require relevant PostgreSQL-backed tests. Claims about optimizer quality require comparison against an explicit baseline using representative workloads.

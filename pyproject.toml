@@ -17,6 +17,11 @@ dependencies = [
   "typer>=0.15",
 ]
 
+[project.optional-dependencies]
+ax = [
+  "ax-platform>=1.3.1,<1.4",
+]
+
 [project.urls]
 Repository = "https://github.com/AlephCasara/Business-Master"
 Issues = "https://github.com/AlephCasara/Business-Master/issues"

@@ -181,7 +181,9 @@ An optimization engine may decide:
 
 The optimizer is never the source of truth for Business Master evidence, ledger, capital authorization, or decision lineage.
 
-Stage 2 will introduce a provider-neutral optimization port and an optional Ax adapter. Business Master must remain useful without Ax.
+The provider-neutral optimization contract lives under `business_master.optimization`. A dependency-free random-search baseline is always available, while Meta Ax is an optional adapter behind the same contract. Provider state may guide trial generation, but Business Master derives decision-facing results from its own recorded observations and constraints.
+
+See [`OPTIMIZATION.md`](OPTIMIZATION.md).
 
 ## 9. Persistence and PostgreSQL
 

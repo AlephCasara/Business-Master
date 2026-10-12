@@ -117,6 +117,44 @@ CONTROL
 
 This model lets Business Master be useful before it is trusted with external side effects.
 
+## Adaptive optimization
+
+Business Master now exposes a provider-neutral optimization contract.
+
+```text
+OptimizationSpec
+      │
+      ▼
+OptimizationEngine
+  ┌───────────────┬──────────────┐
+  │               │              │
+random baseline   Ax adapter   future adapters
+  │               │
+  └───────┬───────┘
+          ▼
+  TrialSuggestion
+          │
+      real outcome
+          │
+          ▼
+  TrialObservation
+          │
+          ▼
+ OptimizationResult
+```
+
+The optimizer never becomes the source of truth for Evidence, ledger state, capital authorization, or decision lineage.
+
+The built-in `RandomOptimizationEngine` provides a dependency-free baseline with seeded random search, outcome constraints, best-observed selection, and Pareto-frontier selection.
+
+Optional Meta Ax support uses the modern `ax.api.Client` API:
+
+```bash
+uv sync --extra ax
+```
+
+See [`docs/OPTIMIZATION.md`](docs/OPTIMIZATION.md).
+
 ## Standalone architecture
 
 ```text
@@ -132,14 +170,14 @@ observations ─────► │      BUSINESS MASTER      │ ────�
                                   │
                          optional engines
                                   │
-                         statistical optimizer
+                    baseline / Meta Ax / future
 ```
 
 The core is ports-and-adapters by intent: the domain defines economic meaning; external implementations sit at the edges.
 
 ## Current status
 
-`main` already contains the internal economic substrate built through PR0–PR10:
+The repository contains the internal economic substrate built through PR0–PR10 plus the standalone/adaptive-optimization reset:
 
 - hypotheses and beliefs;
 - immutable experiment contracts and Evidence;
@@ -148,16 +186,14 @@ The core is ports-and-adapters by intent: the domain defines economic meaning; e
 - evidence-to-belief transitions;
 - family-aware evaluation;
 - portfolio and capital control;
-- persisted bounded autonomous continuation.
+- persisted bounded autonomous continuation;
+- provider-neutral optimization contracts;
+- standalone random-search baseline;
+- optional Meta Ax adapter.
 
 These prove internal invariants. They do **not** prove economic superiority or a production autonomous business.
 
-The current development program has only two planned product stages:
-
-1. **Standalone Core Reset** — freeze the product boundary, simplify packaging/tooling, and make the repository independently useful.
-2. **Adaptive Optimization** — add a provider-neutral optimization contract plus an optional Ax adapter and baseline optimizer.
-
-After that, development is operation-driven: run real experiments, observe bottlenecks, and build only what measured use justifies.
+After the two planned product stages, development becomes operation-driven: run real experiments, observe bottlenecks, and build only what measured use justifies.
 
 See [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
@@ -165,7 +201,7 @@ See [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ### uv — canonical workflow
 
-Requires `uv` and a supported Python version.
+Requires `uv` and Python 3.12+.
 
 ```bash
 git clone https://github.com/AlephCasara/Business-Master.git
@@ -175,6 +211,18 @@ uv sync
 uv run bm --help
 uv run bm doctor
 uv run pytest
+```
+
+To enable the tested Ax adapter:
+
+```bash
+uv sync --extra ax
+```
+
+Run the standalone golden example:
+
+```bash
+uv run python examples/pricing_optimization.py
 ```
 
 ### NixOS
@@ -202,16 +250,18 @@ The Nix shell is a development convenience, not part of the economic domain.
 
 ```text
 src/business_master/
-  domain/       economic types and invariants
-  policies/     pure decision policies
-  controllers/  application coordination
-  storage/      PostgreSQL adapters
-  ports.py      integration boundaries
-  cli.py        thin operator/debug surface
-
-db/migrations/ durable schema evolution
-tests/          domain + PostgreSQL-backed invariants
-docs/           ADRs, architecture, roadmap and economic semantics
+  domain/         economic types and invariants
+  policies/       pure decision policies
+  controllers/    application coordination
+  optimization/   provider-neutral optimization contract + baseline
+  adapters/       optional infrastructure/provider integrations
+  storage/        PostgreSQL adapters
+  ports.py        integration boundaries
+  cli.py          thin operator/debug surface
+examples/         executable standalone examples
+db/migrations/    durable schema evolution
+tests/            domain + PostgreSQL + optimizer invariants
+docs/             ADRs, architecture, optimization and roadmap
 ```
 
 The current layout will evolve incrementally; there is no rewrite requirement.
@@ -221,6 +271,7 @@ The current layout will evolve incrementally; there is no rewrite requirement.
 Start with:
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — current product boundary and authority model;
+- [`docs/OPTIMIZATION.md`](docs/OPTIMIZATION.md) — optimization contract and Ax boundary;
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — implementation sequence;
 - [`docs/ADR-0003-resource-vectors-and-reservations.md`](docs/ADR-0003-resource-vectors-and-reservations.md);
 - [`docs/ADR-0004-deterministic-economic-ledger.md`](docs/ADR-0004-deterministic-economic-ledger.md);
