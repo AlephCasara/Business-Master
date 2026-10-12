@@ -5,10 +5,11 @@ build-backend = "hatchling.build"
 [project]
 name = "business-master"
 version = "0.1.0"
-description = "Autonomous economic control system for continuously testing and allocating business hypotheses."
-requires-python = ">=3.13"
+description = "Evidence-driven economic experimentation and allocation engine."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "Apache-2.0"
 dependencies = [
-  "Pillow>=11.0",
   "pydantic>=2.10",
   "pydantic-settings>=2.6",
   "psycopg[binary]>=3.2",
@@ -16,19 +17,20 @@ dependencies = [
   "typer>=0.15",
 ]
 
-[project.optional-dependencies]
-orchestration = ["hatchet-sdk"]
-ai = ["pydantic-ai"]
-observability = ["opentelemetry-api>=1.28", "opentelemetry-sdk>=1.28"]
+[project.urls]
+Repository = "https://github.com/AlephCasara/Business-Master"
+Issues = "https://github.com/AlephCasara/Business-Master/issues"
+
+[project.scripts]
+bm = "business_master.cli:app"
+
+[dependency-groups]
 dev = [
   "pytest>=8.3",
   "pytest-asyncio>=0.25",
   "ruff>=0.8",
   "mypy>=1.13",
 ]
-
-[project.scripts]
-bm = "business_master.cli:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/business_master"]
@@ -39,13 +41,13 @@ testpaths = ["tests"]
 addopts = "-q"
 
 [tool.ruff]
-target-version = "py313"
+target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.12"
 strict = true
 packages = ["business_master"]

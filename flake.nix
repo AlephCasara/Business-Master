@@ -1,5 +1,5 @@
 {
-  description = "Business Master autonomous economic control system dev shell";
+  description = "Business Master standalone economic core dev shell";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -16,16 +16,14 @@
             python313
             uv
             git
-            ffmpeg
             postgresql_17
-            android-tools
             jq
           ];
 
           shellHook = ''
             export PYTHONUNBUFFERED=1
             echo "Business Master dev shell"
-            echo "Run: uv sync --extra dev && uv run bm doctor"
+            echo "Run: uv sync && uv run bm doctor"
           '';
         };
       });
