@@ -1,12 +1,12 @@
-# Roadmap — Two Product Stages, Then Real Operation
+# Roadmap — Product Baseline Complete, Then Real Operation
 
-This roadmap intentionally avoids a long speculative feature backlog.
+Business Master intentionally avoids a speculative feature backlog.
 
-Business Master already contains a substantial internal economic-control substrate. The current goal is to make that substrate independently useful, then add mature adaptive optimization without turning the repository into a universal business runtime.
+The repository now has two completed product stages: a standalone economic-control core and a provider-neutral adaptive-optimization layer. From this point, new architecture should be justified by measured operation rather than aesthetic completeness.
 
-## Implemented baseline — PR0–PR10
+## Implemented economic substrate — PR0–PR10
 
-Current `main` already provides:
+The repository provides:
 
 ```text
 PR0  baseline / invariants
@@ -22,63 +22,40 @@ PR9  Portfolio + Capital Control
 PR10 persisted Decision → bounded child Experiment continuation
 ```
 
-These prove internal invariants, including PostgreSQL-backed durability, resource concurrency protections, deterministic ledger semantics, and bounded autonomous continuation.
+These establish durable economic state, explicit evidence lineage, non-fungible resources, deterministic ledger semantics, bounded continuation, and tested PostgreSQL-backed invariants.
 
-They do not prove production economic advantage.
-
----
-
-# Stage 1 — Standalone Core Reset
-
-Goal:
-
-> make Business Master a coherent standalone economic experimentation and allocation engine with a stable product boundary.
-
-Deliverables:
-
-- freeze economic-domain ownership in `docs/ARCHITECTURE.md`;
-- remove runtime/media/platform concerns from the core package;
-- keep external execution behind generic boundaries;
-- preserve all implemented economic invariants;
-- make `uv` the canonical development/install workflow;
-- remove speculative dependencies;
-- add normal open-source project hygiene;
-- verify supported Python versions in CI rather than assuming them;
-- keep NixOS as a reproducible development environment without making it product architecture.
-
-Acceptance:
-
-```text
-fresh clone
-  ↓
-uv sync
-  ↓
-uv run bm --help
-uv run bm doctor
-uv run ruff check src tests
-uv run mypy src/business_master
-uv run pytest
-```
-
-A user must be able to understand and use the economic core without knowing any external runtime used by the repository author.
-
-No new external runtime/platform adapters belong in Stage 1.
+They do **not** prove production economic advantage.
 
 ---
 
-# Stage 2 — Adaptive Optimization
+# Stage 1 — Standalone Core Reset — COMPLETE
 
-Goal:
+Business Master is now defined as an independent **evidence-driven economic experimentation and allocation engine**.
 
-> add mature statistical experiment selection without surrendering economic authority or standalone operation.
+Delivered:
 
-First define provider-neutral Business Master types:
+- normative product boundary in `docs/ARCHITECTURE.md`;
+- runtime/media/platform concerns removed from the core package;
+- generic integration boundaries instead of named runtime dependencies;
+- `uv` as the canonical install/development workflow;
+- reduced dependency surface;
+- Apache-2.0, contribution and security documentation;
+- Python 3.12/3.13 CI backed by PostgreSQL 17;
+- preserved PR0–PR10 economic invariants.
+
+---
+
+# Stage 2 — Adaptive Optimization — COMPLETE
+
+Business Master now has a provider-neutral optimization layer.
+
+Implemented public concepts:
 
 ```text
 OptimizationSpec
-ParameterSpace
-Objective
-OutcomeConstraint
+ParameterSpec
+ObjectiveSpec
+OutcomeConstraintSpec
 OptimizationRun
 TrialSuggestion
 TrialObservation
@@ -86,47 +63,54 @@ OptimizationResult
 OptimizationEngine
 ```
 
-Then provide two implementations:
+Implemented engines:
 
-1. a minimal native baseline optimizer for standalone/reproducible comparison;
-2. an optional Ax adapter for adaptive/Bayesian optimization.
+1. `RandomOptimizationEngine` — dependency-free seeded baseline;
+2. `AxOptimizationEngine` — optional adapter for Meta Ax 1.3.x.
 
-Boundary:
+Authority remains explicit:
 
 ```text
 Business Master
-  decides eligibility, objectives, constraints, risk and capital envelope
+  decides hypothesis eligibility, objectives, constraints,
+  risk/resource/capital envelope and evidence meaning
         ↓
 OptimizationEngine
-  selects parameterizations inside the approved experiment space
+  selects parameterizations inside that approved space
         ↓
-observations
+real-world execution outside the optimizer
         ↓
-Business Master Evidence / Belief / Evaluation / Decision
+TrialObservation + Evidence lineage
+        ↓
+Business Master
+  derives decision-facing results from its own observations
 ```
 
-The optimizer must not own Business Master evidence, ledger, authorization, or decision truth.
+The optimizer does not own Evidence, ledger truth, capital authorization, or Business Master decision lineage.
 
-Acceptance includes a standalone golden example that can run without external business infrastructure and demonstrate:
+The built-in result layer supports hard outcome constraints, single-objective best-observed selection, and Pareto-frontier selection for multiple objectives.
+
+The standalone golden example demonstrates:
 
 ```text
-Hypothesis
+EconomicHypothesis
 → OptimizationSpec
 → TrialSuggestion
-→ Observation
-→ Evidence
-→ Belief update
-→ economic evaluation
-→ continue / stop / scale
+→ synthetic external outcome
+→ EvidenceRecord
+→ TrialObservation linked to Evidence
+→ OptimizationResult
 ```
+
+It deliberately does not pretend that a simulation proves a market belief update or a continue/stop/scale decision. Existing belief/evaluation/portfolio policy remains a separate economic-control layer and should be connected to real evidence when operation begins.
+
+See `docs/OPTIMIZATION.md`.
 
 ---
 
-# After Stage 2 — stop building by default
+# Current frontier — operate
 
 There is deliberately no predeclared Stage 3.
-
-After Stage 2:
 
 ```text
 OPERATE
@@ -142,9 +126,9 @@ build the smallest missing boundary only if justified
 measure again
 ```
 
-Possible future work such as an HTTP API, additional persistence adapters, event transports, dashboards, or new statistical engines must be justified by a real workload.
+Possible future work — persistent optimizer state, HTTP APIs, event transports, more adapters, dashboards, additional statistical engines — is not automatically roadmap work. A real workload must justify it.
 
-## Product truth milestones
+## Product-truth milestones
 
 Track external reality rather than feature count:
 
@@ -158,8 +142,8 @@ M5  repeated evidence that a BM policy improves a decision baseline
 M6  first real reallocation across competing opportunities
 ```
 
-Do not infer these milestones from simulations, fixtures, architecture diagrams, or number of merged PRs.
+M0 is an engineering milestone. M1–M6 require real-world evidence; simulations, fixtures, diagrams, and green CI cannot satisfy them.
 
 ## Stop rule
 
-When real operation exists, **reality chooses the next PR**.
+From here, **reality chooses the next PR**.
