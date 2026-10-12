@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from typing import Protocol
 from uuid import UUID
 
@@ -50,17 +50,6 @@ class ResourceRepository(Protocol):
     def list_available(self) -> Sequence[Resource]: ...
 
     def save(self, resource: Resource) -> None: ...
-
-
-class WorkDispatcher(Protocol):
-    """Runtime-neutral dispatch boundary.
-
-    Hatchet is the initial implementation target, but controllers depend only on this port.
-    """
-
-    def dispatch(self, work_type: str, payload: dict[str, object]) -> str: ...
-
-    def dispatch_many(self, work_type: str, payloads: Iterable[dict[str, object]]) -> list[str]: ...
 
 
 class Clock(Protocol):

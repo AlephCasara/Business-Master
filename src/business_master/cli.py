@@ -36,25 +36,15 @@ def _command_version(command: str, args: list[str]) -> str | None:
 
 @app.command()
 def doctor() -> None:
-    """Inspect local capabilities without changing machine state."""
-    tools = {
-        "ffmpeg": _command_version("ffmpeg", ["-version"]),
-        "psql": _command_version("psql", ["--version"]),
-        "docker": _command_version("docker", ["--version"]),
-        "podman": _command_version("podman", ["--version"]),
-        "nvidia-smi": _command_version(
-            "nvidia-smi",
-            ["--query-gpu=name,memory.total", "--format=csv,noheader"],
-        ),
-        "rocminfo": _command_version("rocminfo", ["--version"]),
-        "adb": _command_version("adb", ["version"]),
-        "git": _command_version("git", ["--version"]),
-    }
+    """Inspect the standalone Business Master runtime without changing machine state."""
     report = {
         "python": sys.version.split()[0],
         "platform": platform.platform(),
         "machine": platform.machine(),
-        "tools": tools,
+        "tools": {
+            "psql": _command_version("psql", ["--version"]),
+            "git": _command_version("git", ["--version"]),
+        },
     }
     typer.echo(json.dumps(report, indent=2, ensure_ascii=False))
 
@@ -77,7 +67,7 @@ def policy() -> None:
 
 @app.command("reconcile-demo")
 def reconcile_demo() -> None:
-    """Show that liveness can create work without an operator scheduling a task."""
+    """Demonstrate bounded internal continuation planning without external execution."""
     hypothesis_id = uuid4()
     snapshot = ReconcileSnapshot(
         hypotheses_without_live_experiment=(hypothesis_id,),
